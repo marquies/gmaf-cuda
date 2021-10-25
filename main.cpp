@@ -7,12 +7,33 @@ using json = nlohmann::json;
 #include <fstream>
 
 #include <vector>
+
+
+#ifdef __CUDACC__
+#warning using nvcc
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+
+#elif __GNUC__
+#  include <features.h>
+#  if __GNUC_PREREQ(8,0)
+//      If  gcc_version >= 8.0
 #include <filesystem>
+namespace fs = std::filesystem;
+
+#  else
+//       Else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#  endif
+#else
+//    If not gcc
+#include <filesystem>
+namespace fs = std::__fs::filesystem;
+#endif
+
 
 int getPosition(std::string string, std::vector<std::string> dictionary);
-
-namespace fs = std::__fs::filesystem;
-
 
 
 
@@ -143,9 +164,10 @@ int getPosition(std::string string, std::vector<std::string> dictionary) {
     }
     return -1;
 }
-
+/*
 int main() {
 
+             kernel<<<1,1>>>();
 
     std::vector<json> arr;
 
@@ -161,7 +183,6 @@ int main() {
             float resultMetrics[3];
             calculateSimilarity(arr.at(0), arr.at(i), resultMetrics);
 
-            // kernel<<<1,1>>>();
 
 
             std::cout << "Similarity " << resultMetrics[0] << std::endl;
@@ -172,3 +193,5 @@ int main() {
 
     return 0;
 }
+
+*/
