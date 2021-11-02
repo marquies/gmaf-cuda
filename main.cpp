@@ -1,5 +1,9 @@
 #include <nlohmann/json.hpp>
 #include<string.h>
+#include <thread>
+#include <chrono>
+#include <ctime>
+
 // for convenience
 using json = nlohmann::json;
 
@@ -13,7 +17,6 @@ using json = nlohmann::json;
 #warning using nvcc
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
-
 #elif __GNUC__
 #  include <features.h>
 #  if __GNUC_PREREQ(8,0)
@@ -47,7 +50,7 @@ int getPosition(std::string string, std::vector<std::string> dictionary);
 int main() {
 
     auto start = std::chrono::system_clock::now();
-             kernel<<<1,1>>>();
+    //kernel<<<1,1>>>();
 
     std::vector<json> arr;
 

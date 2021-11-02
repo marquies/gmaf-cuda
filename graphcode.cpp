@@ -1,6 +1,9 @@
 //
 // Created by Patrick Steinert on 16.10.21.
 //
+#include <thread>
+#include <chrono>
+#include <ctime>
 
 #include "graphcode.h"
 
