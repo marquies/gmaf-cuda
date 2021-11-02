@@ -26,6 +26,7 @@
 
 
 
+int getPosition(std::string string, std::vector<std::string> dictionary);
 
 
 
@@ -60,7 +61,7 @@ void myThreadFun(int i, const std::vector<std::string> &files, std::vector<json>
 
 }
 
-int *loadGraphCodes(char *directory, std::vector<json> *arr) {
+void loadGraphCodes(char *directory, int limit,  std::vector<json> *arr) {
 
 //    int limit = 10000;
     int i = 0;
@@ -73,8 +74,12 @@ int *loadGraphCodes(char *directory, std::vector<json> *arr) {
     }
 
     int s = 4;
-    //int x = files.size() / s;
-    int x = 10000 / s;
+    int x;
+    if (limit > files.size()) {
+        x = files.size() / s;
+    } else {
+        x = limit / s;
+    }
     std::vector<std::thread> threads;
 
     std::vector<json> tmp_jsons[s];
@@ -231,7 +236,7 @@ void runFoo() {
     std::vector<json> arr;
 
 
-    loadGraphCodes((char *) "/Users/breucking/dev/data/GraphCodes/WAPO_CG_Collection", &arr);
+    //loadGraphCodes((char *) "/Users/breucking/dev/data/GraphCodes/WAPO_CG_Collection", &arr);
 
     auto loaded = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = loaded - start;

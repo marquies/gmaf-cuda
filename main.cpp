@@ -4,6 +4,12 @@
 #include <chrono>
 #include <ctime>
 
+
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 // for convenience
 using json = nlohmann::json;
 
@@ -47,15 +53,43 @@ int getPosition(std::string string, std::vector<std::string> dictionary);
 
 
 
-int main() {
+int main(int argc, char *argv[]) {
+
+    bool isCaseInsensitive = false;
+    int opt;
+
+    char *cvalue = NULL;
+    int limit = 100;
+
+    while ((opt = getopt(argc, argv, "d:c:")) != -1) {
+        switch (opt) {
+	case 'd':
+	    cvalue = optarg;
+	    break;
+	case 'c':
+	    limit = atoi(optarg);
+	    break;
+
+        default:
+            fprintf(stderr, "Usage: %s -d dir -c limit_files\n", argv[0]);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    if (cvalue == NULL) {
+            fprintf(stderr, "Usage: %s -d dir -c limit_files\n", argv[0]);
+            exit(EXIT_FAILURE);
+    }
+
 
     auto start = std::chrono::system_clock::now();
     //kernel<<<1,1>>>();
 
     std::vector<json> arr;
 
-
-    loadGraphCodes((char *) "/Users/breucking/dev/data/GraphCodes/WAPO_CG_Collection", &arr);
+    
+    //loadGraphCodes((char *) "/Users/breucking/dev/data/GraphCodes/WAPO_CG_Collection", &arr);
+    loadGraphCodes(cvalue, limit, &arr);
 
     auto loaded = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = loaded - start;
@@ -71,7 +105,6 @@ int main() {
     int s = 4;
     int x = arr.size() / s;
     std::vector<std::thread> threads;
-
 
     for (int i = 0; i < s; i++) {
         //std::vector<std::string>   sub(&arr[i*x+1],&arr[(i+1)*x]);
@@ -110,7 +143,7 @@ int main() {
 
     std::cout << "finished computation at " << std::ctime(&end_time)
               << "elapsed time: " << elapsed_seconds.count() << "s\n";
-
+    return 0;
 }
 
 
