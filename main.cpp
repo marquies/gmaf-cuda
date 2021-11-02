@@ -1,9 +1,5 @@
 #include <nlohmann/json.hpp>
 #include<string.h>
-#include <thread>
-#include <chrono>
-#include <ctime>
-
 // for convenience
 using json = nlohmann::json;
 
@@ -11,14 +7,39 @@ using json = nlohmann::json;
 #include <fstream>
 
 #include <vector>
+
+
+#ifdef __CUDACC__
+#warning using nvcc
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+
+#elif __GNUC__
+#  include <features.h>
+#  if __GNUC_PREREQ(8,0)
+//      If  gcc_version >= 8.0
 #include <filesystem>
+namespace fs = std::filesystem;
+
+
+#  else
+//       Else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#  endif
+#else
+//    If not gcc
+#include <filesystem>
+namespace fs = std::__fs::filesystem;
+#endif
+
+
 
 #include "graphcode.cpp"
 
 int getPosition(std::string string, std::vector<std::string> dictionary);
 
-namespace fs = std::__fs::filesystem;
-
+//__global__ void kernel( void ) {}
 
 
 
@@ -26,6 +47,8 @@ namespace fs = std::__fs::filesystem;
 int main() {
 
     auto start = std::chrono::system_clock::now();
+             kernel<<<1,1>>>();
+
     std::vector<json> arr;
 
 
@@ -70,7 +93,6 @@ int main() {
             float resultMetrics[3];
             calculateSimilarity(arr.at(0), arr.at(i), resultMetrics);
 
-            // kernel<<<1,1>>>();
 
 
             std::cout << "Similarity " << resultMetrics[0] << std::endl;
@@ -87,3 +109,5 @@ int main() {
               << "elapsed time: " << elapsed_seconds.count() << "s\n";
 
 }
+
+
