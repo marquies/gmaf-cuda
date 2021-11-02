@@ -41,8 +41,9 @@ int getPosition(std::string string, std::vector<std::string> dictionary);
 
 
 
-int *loadGraphCodes(char *directory, std::vector<json> *arr) {
-
+int loadGraphCodes(char *directory, std::vector<json> *arr) {
+    std::cout << "Checking data in " << directory << std::endl;
+    
     for (const auto &entry: fs::directory_iterator(directory)) {
         std::cout << entry.path() << std::endl;
         try {
@@ -57,6 +58,8 @@ int *loadGraphCodes(char *directory, std::vector<json> *arr) {
             std::cerr << e.what() << '\n';
         }
     }
+
+    return 0;
 
 }
 
