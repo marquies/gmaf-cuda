@@ -13,6 +13,8 @@ if(NOT json_POPULATED)
     add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
-set(CMAKE_CXX_STANDARD 14)
+#find_package(CUDA 8.1 REQUIRED)
+
+#set(CMAKE_CXX_STANDARD 14)
 add_executable(test main.cpp)
 target_link_libraries(test PRIVATE nlohmann_json::nlohmann_json)
