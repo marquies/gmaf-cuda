@@ -10,7 +10,7 @@ include(FetchContent)
 
 FetchContent_Declare(json
         GIT_REPOSITORY https://github.com/nlohmann/json.git
-        GIT_TAG v3.7.3)
+        GIT_TAG v3.2.0)
 
 FetchContent_GetProperties(json)
 if(NOT json_POPULATED)
@@ -21,18 +21,19 @@ endif()
 
 find_package(CUDA 8.1 REQUIRED)
 #find_package(Thrust REQUIRED CONFIG)
-find_package(Thrust)
+#find_package(Thrust)
 
 SET(GCC_COVERAGE_LINK_FLAGS    "-lstdc++fs")
 
 add_definitions(${GCC_COVERAGE_COMPILE_FLAGS})
 
 
-
+#set_target_properties(test PROPERTIES CUDA_ARCHITECTURES "35;50;72")
 
 set(CMAKE_CXX_STANDARD 17)
-#add_executable(test main.cpp main.cu )
-add_executable(test  main.cu )
+add_executable(test main.cu )
+
+#add_executable(test  main.cpp )
 
 set_property(TARGET test PROPERTY CUDA_STANDARD 17)
 

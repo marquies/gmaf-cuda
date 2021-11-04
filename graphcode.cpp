@@ -5,6 +5,9 @@
 #include <chrono>
 #include <ctime>
 
+#include <nlohmann/json.hpp>
+
+
 #include "graphcode.h"
 
 //0. Ein File haben wir (gcQuery), dazu die similarity berehcnen
@@ -25,12 +28,24 @@
 //1.c Sortieren
 
 
+using json = nlohmann::json;
+
 
 int getPosition(std::string string, std::vector<std::string> dictionary);
 
+#define N 10000000
+
+__global__ void vector_add(float *out, float *a, float *b, int n) {
+    for(int i = 0; i < n; i++){
+        out[i] = a[i] + b[i];
+    }
+}
 
 
 
+__global__ void kernel( void ) {
+
+}
 
 //__global__ void kernel( void ) {}
 
@@ -121,6 +136,7 @@ int calculateSimilarity(json gc1, json gc2, float *results) {
     int sim = 0;
 
 
+
     int matrix1[gc1Dictionary.size()][gc1Dictionary.size()];
     int matrix2[gc2Dictionary.size()][gc2Dictionary.size()];
 
@@ -168,6 +184,24 @@ int calculateSimilarity(json gc1, json gc2, float *results) {
     int edge_type = 0;
     for (int i = 0; i < gc1Dictionary.size(); i++) {
         for (int j = 0; j < gc1Dictionary.size(); j++) {
+            float *a, *b, *out;
+            float *d_a;
+
+            a = (float*)malloc(sizeof(float) * N);
+
+            // Allocate device memory for a
+            cudaMalloc((void**)&d_a, sizeof(float) * N);
+
+            // Transfer data from host to device memory
+            cudaMemcpy(d_a, a, sizeof(float) * N, cudaMemcpyHostToDevice);
+
+
+            vector_add<<<1,1>>>(out, d_a, b, N);
+
+
+            // Cleanup after kernel execution
+            cudaFree(d_a);
+            free(a);
             if (i != j && matrix1[i][j] != 0) {
                 num_of_non_zero_edges++;
 

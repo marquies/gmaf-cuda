@@ -18,6 +18,7 @@ using json = nlohmann::json;
 
 #include <vector>
 
+#include "main.cu"
 
 #ifdef __CUDACC__
 #warning using nvcc
@@ -51,7 +52,7 @@ int getPosition(std::string string, std::vector<std::string> dictionary);
 //__global__ void kernel( void ) {}
 
 
-
+/*
 
 int main(int argc, char *argv[]) {
 
@@ -136,6 +137,7 @@ int main(int argc, char *argv[]) {
             std::cout << "Inferencing " << resultMetrics[2] << std::endl;
         }
    // }*/
+/*
     auto end = std::chrono::system_clock::now();
 
     elapsed_seconds = end - start;
@@ -146,4 +148,4 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-
+*/
