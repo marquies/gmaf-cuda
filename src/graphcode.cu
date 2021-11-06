@@ -58,6 +58,7 @@ using json = nlohmann::json;
 
 int getPosition(std::string string, std::vector<std::string> dictionary);
 
+void convertDict2Matrix(int size, int *destMatrix, json jsonMatrix);
 #define N 1000
 
 __global__ void vector_add(int *a, int *b, int *c) {
@@ -156,26 +157,10 @@ int calculateSimilarityThreaded(json gc1, json gc2, float *results) {
 
 
     int matrix1[gc1Dictionary.size()][gc1Dictionary.size()];
+    convertDict2Matrix(gc1Dictionary.size(), (int *) matrix1, gc1["matrix"]);
+
     int matrix2[gc2Dictionary.size()][gc2Dictionary.size()];
-
-    json jsonMatrix1 = gc1["matrix"];
-    json jsonMatrix2 = gc2["matrix"];
-
-    //std::cout << jsonMatrix1.at(0).at(0) << std::endl;
-
-    for (int i = 0; i < gc1Dictionary.size(); i++) {
-        for (int j = 0; j < gc1Dictionary.size(); j++) {
-
-            matrix1[i][j] = jsonMatrix1.at(i).at(j);
-        }
-    }
-
-    for (int i = 0; i < gc2Dictionary.size(); i++) {
-        for (int j = 0; j < gc2Dictionary.size(); j++) {
-
-            matrix2[i][j] = jsonMatrix2.at(i).at(j);
-        }
-    }
+    convertDict2Matrix(gc2Dictionary.size(), (int *) matrix2, gc2["matrix"]);
 
 
     std::vector<std::string> dict2;
@@ -240,6 +225,16 @@ int calculateSimilarityThreaded(json gc1, json gc2, float *results) {
 
 }
 
+void convertDict2Matrix(int size, int *destMatrix, json jsonMatrix) {
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+
+           //destMatrix[i][j] = jsonMatrix.at(i).at(j);
+            *((destMatrix+i*size) + j) = jsonMatrix.at(i).at(j);
+        }
+    }
+}
+
 int calculateSimilarityCuda(json gc1, json gc2, float *results) {
     json gc1Dictionary = gc1["dictionary"];
     json gc2Dictionary = gc2["dictionary"];
@@ -252,27 +247,13 @@ int calculateSimilarityCuda(json gc1, json gc2, float *results) {
 
 
 
+
     int matrix1[gc1Dictionary.size()][gc1Dictionary.size()];
+    convertDict2Matrix(gc1Dictionary.size(), (int *) matrix1, gc1["matrix"]);
+
     int matrix2[gc2Dictionary.size()][gc2Dictionary.size()];
+    convertDict2Matrix(gc2Dictionary.size(), (int *) matrix2, gc2["matrix"]);
 
-    json jsonMatrix1 = gc1["matrix"];
-    json jsonMatrix2 = gc2["matrix"];
-
-    //std::cout << jsonMatrix1.at(0).at(0) << std::endl;
-
-    for (int i = 0; i < gc1Dictionary.size(); i++) {
-        for (int j = 0; j < gc1Dictionary.size(); j++) {
-
-            matrix1[i][j] = jsonMatrix1.at(i).at(j);
-        }
-    }
-
-    for (int i = 0; i < gc2Dictionary.size(); i++) {
-        for (int j = 0; j < gc2Dictionary.size(); j++) {
-
-            matrix2[i][j] = jsonMatrix2.at(i).at(j);
-        }
-    }
 
 
     std::vector<std::string> dict2;

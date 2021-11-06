@@ -18,14 +18,12 @@
 //#include <thrust/host_vector.h>
 //#include <thrust/device_vector.h>
 
-//#include "main.cpp"
-
 
 
 int main(int argc, char *argv[]) {
 
+    // Handling the command line arguments
     int opt;
-
     char *cvalue = NULL;
     int limit = 100;
 
@@ -49,24 +47,20 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    // Starting the main part
+
 
     auto start = std::chrono::system_clock::now();
-    //kernel<<<1,1>>>();
 
     std::vector<json> arr;
 
 
-    //loadGraphCodes((char *) "/Users/breucking/dev/data/GraphCodes/WAPO_CG_Collection", &arr);
+    // Loading the graph codes
     gmaf::GraphCode gc;
     gc.loadGraphCodes(cvalue, limit, &arr);
-    //gc.foo();
 
     auto loaded = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = loaded - start;
-    std::time_t inter_time = std::chrono::system_clock::to_time_t(loaded);
-
-    //std::cout << "finished computation at " << std::ctime(&inter_time)
-    //          << "elapsed time: " << elapsed_seconds.count() << "s\n";
 
     std::cout << "loaded " << arr.size() << " graph code files. (" << "elapsed time: " << elapsed_seconds.count() << ")"
               << std::endl;
@@ -77,14 +71,9 @@ int main(int argc, char *argv[]) {
     std::vector<std::thread> threads;
 
     for (int i = 0; i < s; i++) {
-        //std::vector<std::string>   sub(&arr[i*x+1],&arr[(i+1)*x]);
-
-        //calculateSimilarity(i, arr.at(0), arr,  i*x+1, (i+1)*x);
-        //std::thread(calculateSimilarityV, i, arr.at(0), arr, (i*x+1), ((i+1)*x));
         int end = i == s - 1 ? arr.size() : (i + 1) * x;
 
         threads.push_back(std::thread(&gmaf::GraphCode::calculateSimilarityV, gc, i, &arr.at(0), &arr, i * x + 1, end));
-//        threads.push_back(std::thread(myThreadFun, i, sub, &tmp_jsons[i]));
 
     }
 
@@ -92,20 +81,6 @@ int main(int argc, char *argv[]) {
         th.join();
     }
 
-    /*
-    //while(true) {
-        for (int i = 1; i < arr.size(); i++) {
-
-            float resultMetrics[3];
-            calculateSimilarity(arr.at(0), arr.at(i), resultMetrics);
-
-
-
-            std::cout << "Similarity " << resultMetrics[0] << std::endl;
-            std::cout << "Recommendation " << resultMetrics[1] << std::endl;
-            std::cout << "Inferencing " << resultMetrics[2] << std::endl;
-        }
-   // }*/
     auto end = std::chrono::system_clock::now();
 
     elapsed_seconds = end - start;
