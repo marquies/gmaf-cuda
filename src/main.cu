@@ -23,7 +23,7 @@
 void runThreaded(std::vector<json> &arr, const gmaf::GraphCode &gc, int s);
 void runSequential(std::vector<json> &arr, gmaf::GraphCode gc);
 
-int main(int argc, char *argv[]) {
+int main_init(int argc, char *argv[]) {
 
     // Handling the command line arguments
     int opt;
@@ -69,8 +69,8 @@ int main(int argc, char *argv[]) {
               << std::endl;
 
 
-    runThreaded(arr, gc, 4);
-    //runSequential(arr, gc);
+    //runThreaded(arr, gc, 4);
+    runSequential(arr, gc);
 
     auto end = std::chrono::system_clock::now();
 

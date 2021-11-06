@@ -16,6 +16,7 @@
 
 #ifdef __CUDACC__
 #include <experimental/filesystem>
+
 namespace fs = std::experimental::filesystem;
 #elif __GNUC__
   #include <features.h>
@@ -53,6 +54,17 @@ namespace fs = std::experimental::filesystem;
 //1.c Sortieren
 
 
+static void HandleError( cudaError_t err,
+                         const char *file,
+                         int line ) {
+    if (err != cudaSuccess) {
+        printf( "%s in %s at line %d\n", cudaGetErrorString( err ),
+                file, line );
+        exit( EXIT_FAILURE );
+    }
+}
+#define HANDLE_ERROR( err ) (HandleError( err, __FILE__, __LINE__ ))
+
 using json = nlohmann::json;
 
 
@@ -61,51 +73,75 @@ int getPosition(std::string string, std::vector<std::string> dictionary);
 void convertDict2Matrix(int size, int *destMatrix, json jsonMatrix);
 #define N 1000
 
-__global__ void
-vector_add(int *a, int *b, int *c, std::basic_string<char> *gc1Dict, int n, std::vector<std::string> dict2,
-           int **matrix1) {
+__global__ void check(int *data, unsigned long matrixSize, int *pInt) {
     int tid = blockIdx.x;
-    if(tid < N) {
-        c[tid] = a[tid] + b[tid];
-    }
 
-
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-
-            if (i != j && matrix1[i][j] != 0) {
-                //num_of_non_zero_edges++;
-
-                //int position1 = getPosition(gc1Dict[i], dict2);
-                int position1 = -1;
-                for (int i = 0; i < dict2.size(); i++) {
-                    if (dict2.at(i) == gc1Dict[i]) {
-                        position1 = i;
-                        break;
-                    }
-                }
-
-
-
-                int position2 = getPosition(gc1Dict[j], dict2);
-                //std::cout << "Pos " << position1 << " " << position2 << std::endl;
-                if (position1 == -1 || position2 == -1) {
-                    continue;
-                }
-                /*
-                int edge = matrix2[position1][position2];
-                if (edge != 0) {
-                    edge_metric_count++;
-                }
-                if (edge == matrix1[i][j]) {
-                    edge_type++;
-                }
-                 /*
-
-            }
+    //if (tid % matrixSize != 0) {
+        if (data[tid] != 0) {
+            pInt[tid] = 1;
         }
-    }
+    //}
+
 }
+/*
+__global__ void check( cudaArray_t data) {
+    ((cudaArray *)data)
+}
+*/
+//
+//__global__ void
+//vector_add(int *a, int *b, int *c, std::basic_string<char> *gc1Dict, int n, std::vector<std::string> dict2,
+//           int * matrix1) {
+//    int tid = blockIdx.x;
+//    //if(tid < N) {
+//    //    c[tid] = a[tid] + b[tid];
+//    //}
+//
+//
+//    for (int i = 0; i < n; i++) {
+//        for (int j = 0; j < n; j++) {
+//
+//            if (i != j && matrix1[i][j] != 0) {
+//                //num_of_non_zero_edges++;
+//
+//                //int position1 = getPosition(gc1Dict[i], dict2);
+//                int position1 = -1;
+//                for (int i = 0; i < dict2.size(); i++) {
+//                    if (dict2.at(i) == gc1Dict[i]) {
+//                        position1 = i;
+//                        break;
+//                    }
+//                }
+//
+//
+//
+//                //int position2 = getPosition(gc1Dict[j], dict2);
+//                int position2 = -1;
+//                for (int i = 0; i < dict2.size(); i++) {
+//                    if (dict2.at(i) == gc1Dict[j]) {
+//                        position2 = i;
+//                        break;
+//                    }
+//                }
+//
+//                //std::cout << "Pos " << position1 << " " << position2 << std::endl;
+//                if (position1 == -1 || position2 == -1) {
+//                    continue;
+//                }
+//                /*
+//                int edge = matrix2[position1][position2];
+//                if (edge != 0) {
+//                    edge_metric_count++;
+//                }
+//                if (edge == matrix1[i][j]) {
+//                    edge_type++;
+//                }
+//                 */
+//
+//            }
+//        }
+//    }
+//}
 
 
 
@@ -278,6 +314,8 @@ int calculateSimilarityCuda(json gc1, json gc2, float *results) {
     json gc1Dictionary = gc1["dictionary"];
     json gc2Dictionary = gc2["dictionary"];
 
+
+
     std::string gc1Dict[gc1Dictionary.size()];
 
     int n = 0;
@@ -318,38 +356,64 @@ int calculateSimilarityCuda(json gc1, json gc2, float *results) {
     int edge_metric_count = 0;
     int edge_type = 0;
 
-    int a[N], b[N], c[N];
-    int *d_a, *d_b, *d_c;
-    //float *d_a;
+    int a[gc1Dictionary.size() * gc1Dictionary.size()];
+    int count = 0;
+    for (int i = 0; i < gc1Dictionary.size(); i++)
+        for (int j = 0; j < gc1Dictionary.size(); j++) {
+            a[count++] = matrix1[i][j];
+        }
 
-    //a = (float*)malloc(sizeof(float) * N);
-
-    // Allocate device memory for a
-    cudaMalloc((void**)&d_a, sizeof(int) * N);
-    cudaMalloc((void**)&d_b, sizeof(int) * N);
-    cudaMalloc((void**)&d_c, sizeof(int) * N);
-
-    for(int z=0; z<N; z++) {
-        a[z] = -z;
-        b[z] = z * z;
+    int items = gc1Dictionary.size() * gc1Dictionary.size();
+    for(int i = 0; i < items; i++) {
+        std::cout << "pos: " << i << " value: " << a[i] << std::endl;
     }
 
+    //cudaArray_t dst;
+    int *d_a;
+    int *founds;
+    // Allocate device memory for a
+    //cudaMalloc((void**)&d_a, sizeof(int) );
+
+
+    HANDLE_ERROR(cudaMalloc((void**)&d_a, sizeof(int) * items) );
+    HANDLE_ERROR(cudaMalloc((void**)&founds, sizeof(int) * items) );
+    /*
+    cudaMemcpy2DToArray (dst,
+                         0,
+                         0,
+                         matrix1,
+                         sizeof(int),
+                         gc1Dictionary.size() * sizeof(int),
+                         gc1Dictionary.size(),
+                         cudaMemcpyHostToDevice );
+
+    */
+
     // Transfer data from host to device memory
-    cudaMemcpy(d_a, a, sizeof(int) * N, cudaMemcpyHostToDevice);
+    HANDLE_ERROR(cudaMemcpy(d_a, a, sizeof(int) * gc1Dictionary.size() * gc1Dictionary.size(), cudaMemcpyHostToDevice));
+
+
+    /*
     cudaMemcpy(d_b, b, sizeof(int) * N, cudaMemcpyHostToDevice);
     cudaMemcpy(d_c, c, sizeof(int) * N, cudaMemcpyHostToDevice);
+    */
+
+    //vector_add<<<N, 1>>>(d_a, d_b, d_c, gc1Dict, gc1Dictionary.size(), dict2, (int *) matrix1);
+    check<<<items, 1>>>(d_a, gc1Dictionary.size(), founds);
 
 
-    vector_add<<<N, 1>>>(d_a, d_b, d_c, gc1Dict, gc1Dictionary.size(), dict2);
+    int f[items];
+    HANDLE_ERROR(cudaMemcpy(f, founds, sizeof (int)* gc1Dictionary.size() * gc1Dictionary.size(), cudaMemcpyDeviceToHost));
 
-    cudaMemcpy(c, d_c, N * sizeof(int), cudaMemcpyDeviceToHost);
-
-
+    for(int i = 0; i < items; i++) {
+        std::cout << "pos: " << i << " value: " << f[i] << std::endl;
+    }
 
     // Cleanup after kernel execution
-    cudaFree(d_a);
-    cudaFree(d_b);
-    cudaFree(d_c);
+    HANDLE_ERROR(cudaFree(d_a));
+    //cudaFree(d_b);
+    //cudaFree(d_c);
+    //cudaFree(dst);
 
 
 
@@ -381,12 +445,17 @@ int getPosition(std::string string, std::vector<std::string> dictionary) {
 void gmaf::GraphCode::foo() {}
 
 void gmaf::GraphCode::calculateSimilarityV(int index, json *gcQuery, std::vector<json> *compares, int start, int end) {
+    if (compares == NULL) {
+        std::cout << "Argument compare is NULL" << std::endl;
+        exit(1);
+    }
     for (int i = start; i < end; i++) {
 
         std::cout << "Idx " << index << " i " << i << " limit(" << end << ")" << std::endl;
 
         float resultMetrics[3];
-        calculateSimilaritySequential(*gcQuery, compares->at(i), resultMetrics);
+        //calculateSimilaritySequential(*gcQuery, compares->at(i), resultMetrics);
+        calculateSimilarityCuda(*gcQuery, compares->at(i), resultMetrics);
 
         std::cout << "Similarity " << resultMetrics[0] << std::endl;
         std::cout << "Recommendation " << resultMetrics[1] << std::endl;

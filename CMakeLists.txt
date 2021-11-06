@@ -4,7 +4,7 @@ enable_language(CUDA)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules")
 
 
-project(test)
+project(gcsim)
 
 
 
@@ -40,6 +40,11 @@ SET(GCC_COVERAGE_LINK_FLAGS    "-lstdc++fs")
 
 add_definitions(${GCC_COVERAGE_COMPILE_FLAGS})
 
+set(CMAKE_CXX_STANDARD 17)
+#set (CUDA_PROPAGATE_HOST_FLAGS ON)
+#list(APPEND CUDA_NVCC_FLAGS "-std=c++11")
+
+
 
 #set_target_properties(test PROPERTIES CUDA_ARCHITECTURES "35;50;72")
 
@@ -47,24 +52,29 @@ add_definitions(${GCC_COVERAGE_COMPILE_FLAGS})
 #include_directories(src)
 #link_directories(src)
 
-add_executable(test ${Foo_SOURCES})
+#add_executable(gcsim ${Foo_SOURCES})
+add_library (GCS ${Foo_SOURCES})
 
-target_include_directories(test PUBLIC ${Foo_INCLUDE_DIRS})
-target_sources(test PRIVATE ${GMAF_SRC})
+add_executable (gcsim main2.cpp)
+
+target_include_directories(gcsim PUBLIC ${Foo_INCLUDE_DIRS})
+target_sources(gcsim PRIVATE ${GMAF_SRC})
+
+ENABLE_TESTING()
+ADD_SUBDIRECTORY( test )
 
 
-set(CMAKE_CXX_STANDARD 17)
-#set (CUDA_PROPAGATE_HOST_FLAGS ON)
-set_property(TARGET test PROPERTY CUDA_STANDARD 17)
-#list(APPEND CUDA_NVCC_FLAGS "-std=c++11")
+set_property(TARGET gcsim PROPERTY CUDA_STANDARD 17)
 
 
+target_link_libraries(GCS PRIVATE nlohmann_json::nlohmann_json)
 
-target_link_libraries(test PRIVATE nlohmann_json::nlohmann_json)
+target_link_libraries(gcsim PRIVATE GCS)
+target_link_libraries(gcsim PRIVATE nlohmann_json::nlohmann_json)
 #target_link_libraries(test PUBLIC std::__fs)
-target_link_libraries(test PUBLIC stdc++fs)
+target_link_libraries(gcsim PUBLIC stdc++fs)
 #target_link_libraries(test PRIVATE Thrust)
-target_link_libraries(test PUBLIC ${CUDA_LIBRARIES})
+target_link_libraries(gcsim PUBLIC ${CUDA_LIBRARIES})
 
 
 #target_link_directories(test PUBLIC src)
