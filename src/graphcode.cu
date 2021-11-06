@@ -61,10 +61,49 @@ int getPosition(std::string string, std::vector<std::string> dictionary);
 void convertDict2Matrix(int size, int *destMatrix, json jsonMatrix);
 #define N 1000
 
-__global__ void vector_add(int *a, int *b, int *c) {
+__global__ void
+vector_add(int *a, int *b, int *c, std::basic_string<char> *gc1Dict, int n, std::vector<std::string> dict2,
+           int **matrix1) {
     int tid = blockIdx.x;
     if(tid < N) {
         c[tid] = a[tid] + b[tid];
+    }
+
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+
+            if (i != j && matrix1[i][j] != 0) {
+                //num_of_non_zero_edges++;
+
+                //int position1 = getPosition(gc1Dict[i], dict2);
+                int position1 = -1;
+                for (int i = 0; i < dict2.size(); i++) {
+                    if (dict2.at(i) == gc1Dict[i]) {
+                        position1 = i;
+                        break;
+                    }
+                }
+
+
+
+                int position2 = getPosition(gc1Dict[j], dict2);
+                //std::cout << "Pos " << position1 << " " << position2 << std::endl;
+                if (position1 == -1 || position2 == -1) {
+                    continue;
+                }
+                /*
+                int edge = matrix2[position1][position2];
+                if (edge != 0) {
+                    edge_metric_count++;
+                }
+                if (edge == matrix1[i][j]) {
+                    edge_type++;
+                }
+                 /*
+
+            }
+        }
     }
 }
 
@@ -278,62 +317,41 @@ int calculateSimilarityCuda(json gc1, json gc2, float *results) {
     int num_of_non_zero_edges = 0;
     int edge_metric_count = 0;
     int edge_type = 0;
-    for (int i = 0; i < gc1Dictionary.size(); i++) {
-        for (int j = 0; j < gc1Dictionary.size(); j++) {
-            int a[N], b[N], c[N];
-            int *d_a, *d_b, *d_c;
-            //float *d_a;
 
-            //a = (float*)malloc(sizeof(float) * N);
+    int a[N], b[N], c[N];
+    int *d_a, *d_b, *d_c;
+    //float *d_a;
 
-            // Allocate device memory for a
-            cudaMalloc((void**)&d_a, sizeof(int) * N);
-            cudaMalloc((void**)&d_b, sizeof(int) * N);
-            cudaMalloc((void**)&d_c, sizeof(int) * N);
+    //a = (float*)malloc(sizeof(float) * N);
 
-            for(int z=0; z<N; z++) {
-                a[z] = -z;
-                b[z] = z * z;
-            }
+    // Allocate device memory for a
+    cudaMalloc((void**)&d_a, sizeof(int) * N);
+    cudaMalloc((void**)&d_b, sizeof(int) * N);
+    cudaMalloc((void**)&d_c, sizeof(int) * N);
 
-            // Transfer data from host to device memory
-            cudaMemcpy(d_a, a, sizeof(int) * N, cudaMemcpyHostToDevice);
-            cudaMemcpy(d_b, b, sizeof(int) * N, cudaMemcpyHostToDevice);
-            cudaMemcpy(d_c, c, sizeof(int) * N, cudaMemcpyHostToDevice);
-
-
-            vector_add<<<N,1>>>(d_a, d_b, d_c);
-
-            cudaMemcpy(c, d_c, N * sizeof(int), cudaMemcpyDeviceToHost);
-
-
-
-            // Cleanup after kernel execution
-            cudaFree(d_a);
-            cudaFree(d_b);
-            cudaFree(d_c);
-
-            if (i != j && matrix1[i][j] != 0) {
-                num_of_non_zero_edges++;
-
-                int position1 = getPosition(gc1Dict[i], dict2);
-                int position2 = getPosition(gc1Dict[j], dict2);
-                //std::cout << "Pos " << position1 << " " << position2 << std::endl;
-                if (position1 == -1 || position2 == -1) {
-                    continue;
-                }
-
-                int edge = matrix2[position1][position2];
-                if (edge != 0) {
-                    edge_metric_count++;
-                }
-                if (edge == matrix1[i][j]) {
-                    edge_type++;
-                }
-
-            }
-        }
+    for(int z=0; z<N; z++) {
+        a[z] = -z;
+        b[z] = z * z;
     }
+
+    // Transfer data from host to device memory
+    cudaMemcpy(d_a, a, sizeof(int) * N, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_b, b, sizeof(int) * N, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_c, c, sizeof(int) * N, cudaMemcpyHostToDevice);
+
+
+    vector_add<<<N, 1>>>(d_a, d_b, d_c, gc1Dict, gc1Dictionary.size(), dict2);
+
+    cudaMemcpy(c, d_c, N * sizeof(int), cudaMemcpyDeviceToHost);
+
+
+
+    // Cleanup after kernel execution
+    cudaFree(d_a);
+    cudaFree(d_b);
+    cudaFree(d_c);
+
+
 
     float node_metric = (float) sim / (float) gc1Dictionary.size();
     float edge_metric = 0.0;
