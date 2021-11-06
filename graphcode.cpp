@@ -33,11 +33,12 @@ using json = nlohmann::json;
 
 int getPosition(std::string string, std::vector<std::string> dictionary);
 
-#define N 10000000
+#define N 1000
 
-__global__ void vector_add(float *out, float *a, float *b, int n) {
-    for(int i = 0; i < n; i++){
-        out[i] = a[i] + b[i];
+__global__ void vector_add(int *a, int *b, int *c) {
+    int tid = blockIdx.x;
+    if(tid < N) {
+        c[tid] = a[tid] + b[tid];
     }
 }
 
@@ -125,7 +126,7 @@ void loadGraphCodes(char *directory, int limit,  std::vector<json> *arr) {
 }
 
 
-int calculateSimilarity(json gc1, json gc2, float *results) {
+int calculateSimilarityThreaded(json gc1, json gc2, float *results) {
     json gc1Dictionary = gc1["dictionary"];
     json gc2Dictionary = gc2["dictionary"];
 
@@ -184,24 +185,7 @@ int calculateSimilarity(json gc1, json gc2, float *results) {
     int edge_type = 0;
     for (int i = 0; i < gc1Dictionary.size(); i++) {
         for (int j = 0; j < gc1Dictionary.size(); j++) {
-            float *a, *b, *out;
-            float *d_a;
 
-            a = (float*)malloc(sizeof(float) * N);
-
-            // Allocate device memory for a
-            cudaMalloc((void**)&d_a, sizeof(float) * N);
-
-            // Transfer data from host to device memory
-            cudaMemcpy(d_a, a, sizeof(float) * N, cudaMemcpyHostToDevice);
-
-
-            vector_add<<<1,1>>>(out, d_a, b, N);
-
-
-            // Cleanup after kernel execution
-            cudaFree(d_a);
-            free(a);
             if (i != j && matrix1[i][j] != 0) {
                 num_of_non_zero_edges++;
 
@@ -239,6 +223,136 @@ int calculateSimilarity(json gc1, json gc2, float *results) {
 
 }
 
+int calculateSimilarityCuda(json gc1, json gc2, float *results) {
+    json gc1Dictionary = gc1["dictionary"];
+    json gc2Dictionary = gc2["dictionary"];
+
+    std::string gc1Dict[gc1Dictionary.size()];
+
+    int n = 0;
+
+    int sim = 0;
+
+
+
+    int matrix1[gc1Dictionary.size()][gc1Dictionary.size()];
+    int matrix2[gc2Dictionary.size()][gc2Dictionary.size()];
+
+    json jsonMatrix1 = gc1["matrix"];
+    json jsonMatrix2 = gc2["matrix"];
+
+    //std::cout << jsonMatrix1.at(0).at(0) << std::endl;
+
+    for (int i = 0; i < gc1Dictionary.size(); i++) {
+        for (int j = 0; j < gc1Dictionary.size(); j++) {
+
+            matrix1[i][j] = jsonMatrix1.at(i).at(j);
+        }
+    }
+
+    for (int i = 0; i < gc2Dictionary.size(); i++) {
+        for (int j = 0; j < gc2Dictionary.size(); j++) {
+
+            matrix2[i][j] = jsonMatrix2.at(i).at(j);
+        }
+    }
+
+
+    std::vector<std::string> dict2;
+    for (const auto &item2: gc2Dictionary.items()) {
+        dict2.push_back(item2.value().get<std::string>());
+    }
+
+
+    for (const auto &item: gc1Dictionary.items()) {
+        //std::cout << item.value() << "\n";
+        std::string str = item.value().get<std::string>();
+        gc1Dict[n++] = str;
+
+
+        for (const auto &item2: gc2Dictionary.items()) {
+            if (str == item2.value()) {
+                //std::cout << "Match" << std::endl;
+                sim++;
+            }
+        }
+    }
+    int num_of_non_zero_edges = 0;
+    int edge_metric_count = 0;
+    int edge_type = 0;
+    for (int i = 0; i < gc1Dictionary.size(); i++) {
+        for (int j = 0; j < gc1Dictionary.size(); j++) {
+            int a[N], b[N], c[N];
+            int *d_a, *d_b, *d_c;
+            //float *d_a;
+
+            //a = (float*)malloc(sizeof(float) * N);
+
+            // Allocate device memory for a
+            cudaMalloc((void**)&d_a, sizeof(int) * N);
+            cudaMalloc((void**)&d_b, sizeof(int) * N);
+            cudaMalloc((void**)&d_c, sizeof(int) * N);
+
+            for(int i=0; i<N; i++) {
+                a[i] = -i;
+                b[i] = i * i;
+            }
+
+            // Transfer data from host to device memory
+            cudaMemcpy(d_a, a, sizeof(int) * N, cudaMemcpyHostToDevice);
+            cudaMemcpy(d_b, b, sizeof(int) * N, cudaMemcpyHostToDevice);
+            cudaMemcpy(d_c, c, sizeof(int) * N, cudaMemcpyHostToDevice);
+
+
+            vector_add<<<N,1>>>(d_a, d_b, d_c);
+
+            cudaMemcpy(c, d_c, N * sizeof(int), cudaMemcpyDeviceToHost);
+
+
+
+            // Cleanup after kernel execution
+            cudaFree(d_a);
+            cudaFree(d_b);
+            cudaFree(d_c);
+
+            if (i != j && matrix1[i][j] != 0) {
+                num_of_non_zero_edges++;
+
+                int position1 = getPosition(gc1Dict[i], dict2);
+                int position2 = getPosition(gc1Dict[j], dict2);
+                //std::cout << "Pos " << position1 << " " << position2 << std::endl;
+                if (position1 == -1 || position2 == -1) {
+                    continue;
+                }
+
+                int edge = matrix2[position1][position2];
+                if (edge != 0) {
+                    edge_metric_count++;
+                }
+                if (edge == matrix1[i][j]) {
+                    edge_type++;
+                }
+
+            }
+        }
+    }
+
+    float node_metric = (float) sim / (float) gc1Dictionary.size();
+    float edge_metric = 0.0;
+    if (num_of_non_zero_edges > 0)
+        edge_metric = (float) edge_metric_count / (float) num_of_non_zero_edges;
+    float edge_type_metric = 0.0;
+    if (edge_metric_count > 0)
+        edge_type_metric = (float) edge_type / (float) edge_metric_count;
+
+    results[0] = node_metric;
+    results[1] = edge_metric;
+    results[2] = edge_type_metric;
+    return 0;
+
+}
+
+
 int getPosition(std::string string, std::vector<std::string> dictionary) {
     for (int i = 0; i < dictionary.size(); i++) {
         if (dictionary.at(i) == string) {
@@ -254,7 +368,7 @@ void calculateSimilarityV(int index, json *gcQuery, std::vector<json> *compares,
         std::cout << "Idx " << index << " i " << i << " limit(" << end << ")" << std::endl;
 
         float resultMetrics[3];
-        calculateSimilarity(*gcQuery, compares->at(i), resultMetrics);
+        calculateSimilarityThreaded(*gcQuery, compares->at(i), resultMetrics);
 
         // kernel<<<1,1>>>();
 
