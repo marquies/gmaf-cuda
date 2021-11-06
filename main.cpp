@@ -1,3 +1,4 @@
+/*
 #include <nlohmann/json.hpp>
 #include<string.h>
 #include <thread>
@@ -18,7 +19,7 @@ using json = nlohmann::json;
 
 #include <vector>
 
-#include "main.cu"
+#include "src/main.cu"
 
 #ifdef __CUDACC__
 #warning using nvcc
@@ -45,7 +46,7 @@ namespace fs = std::__fs::filesystem;
 
 
 
-#include "graphcode.cpp"
+#include "src/graphcode.cpp"
 
 int getPosition(std::string string, std::vector<std::string> dictionary);
 

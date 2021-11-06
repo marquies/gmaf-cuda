@@ -13,6 +13,28 @@
 
 #include <nlohmann/json.hpp>
 
+
+#ifdef __CUDACC__
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#elif __GNUC__
+  #include <features.h>
+  #if __GNUC_PREREQ(8,0)
+  //      If  gcc_version >= 8.0
+    #include <filesystem>
+    namespace fs = std::filesystem;
+
+  #  else
+  //       Else gcc_version < 8.0
+    #include <experimental/filesystem>
+    namespace fs = std::experimental::filesystem;
+  #endif
+#else
+//    If not gcc
+  #include <filesystem>
+  namespace fs = std::__fs::filesystem;
+#endif
+
 //0. Ein File haben wir (gcQuery), dazu die similarity berehcnen
 //
 //1. Für jedes Element in der Collection:
@@ -73,7 +95,7 @@ void myThreadFun(int i, const std::vector<std::string> &files, std::vector<json>
 
 }
 
-void loadGraphCodes(char *directory, int limit,  std::vector<json> *arr) {
+void gmaf::GraphCode::loadGraphCodes(char *directory, int limit,  std::vector<json> *arr) {
 
 
 
@@ -357,7 +379,9 @@ int getPosition(std::string string, std::vector<std::string> dictionary) {
     return -1;
 }
 
-void calculateSimilarityV(int index, json *gcQuery, std::vector<json> *compares, int start, int end) {
+void gmaf::GraphCode::foo() {}
+
+void gmaf::GraphCode::calculateSimilarityV(int index, json *gcQuery, std::vector<json> *compares, int start, int end) {
     for (int i = start; i < end; i++) {
 
         std::cout << "Idx " << index << " i " << i << " limit(" << end << ")" << std::endl;

@@ -11,36 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
-
-#ifdef __CUDACC__
-
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#elif __GNUC__
-#  include <features.h>
-#  if __GNUC_PREREQ(8,0)
-//      If  gcc_version >= 8.0
-#include <filesystem>
-namespace fs = std::filesystem;
-
-
-#  else
-//       Else
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#  endif
-#else
-//    If not gcc
-#include <filesystem>
-namespace fs = std::__fs::filesystem;
-#endif
-
-
-
-#include "graphcode.cpp"
-
-//int getPosition(std::string string, std::vector<std::string> dictionary);
+#include "graphcode.h"
 
 
 
@@ -86,7 +57,9 @@ int main(int argc, char *argv[]) {
 
 
     //loadGraphCodes((char *) "/Users/breucking/dev/data/GraphCodes/WAPO_CG_Collection", &arr);
-    loadGraphCodes(cvalue, limit, &arr);
+    gmaf::GraphCode gc;
+    gc.loadGraphCodes(cvalue, limit, &arr);
+    //gc.foo();
 
     auto loaded = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = loaded - start;
@@ -110,7 +83,7 @@ int main(int argc, char *argv[]) {
         //std::thread(calculateSimilarityV, i, arr.at(0), arr, (i*x+1), ((i+1)*x));
         int end = i == s - 1 ? arr.size() : (i + 1) * x;
 
-        threads.push_back(std::thread(calculateSimilarityV, i, &arr.at(0), &arr, i * x + 1, end));
+        threads.push_back(std::thread(&gmaf::GraphCode::calculateSimilarityV, gc, i, &arr.at(0), &arr, i * x + 1, end));
 //        threads.push_back(std::thread(myThreadFun, i, sub, &tmp_jsons[i]));
 
     }
