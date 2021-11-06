@@ -20,6 +20,9 @@
 
 
 
+void runThreaded(std::vector<json> &arr, const gmaf::GraphCode &gc, int s);
+void runSequential(std::vector<json> &arr, gmaf::GraphCode gc);
+
 int main(int argc, char *argv[]) {
 
     // Handling the command line arguments
@@ -66,20 +69,8 @@ int main(int argc, char *argv[]) {
               << std::endl;
 
 
-    int s = 4;
-    int x = arr.size() / s;
-    std::vector<std::thread> threads;
-
-    for (int i = 0; i < s; i++) {
-        int end = i == s - 1 ? arr.size() : (i + 1) * x;
-
-        threads.push_back(std::thread(&gmaf::GraphCode::calculateSimilarityV, gc, i, &arr.at(0), &arr, i * x + 1, end));
-
-    }
-
-    for (auto &th: threads) {
-        th.join();
-    }
+    runThreaded(arr, gc, 4);
+    //runSequential(arr, gc);
 
     auto end = std::chrono::system_clock::now();
 
@@ -89,5 +80,24 @@ int main(int argc, char *argv[]) {
     std::cout << "finished computation at " << std::ctime(&end_time)
               << "elapsed time: " << elapsed_seconds.count() << "s\n";
     return 0;
+}
+
+void runSequential(std::vector<json> &arr, gmaf::GraphCode gc) {
+        gc.calculateSimilarityV( 0, &arr.at(0), &arr, 1, arr.size());
+}
+
+
+void runThreaded(std::vector<json> &arr, const gmaf::GraphCode &gc, int s) {
+    int x = arr.size() / s;
+    std::vector<std::thread> threads;
+
+    for (int i = 0; i < s; i++) {
+        int end = i == s - 1 ? arr.size() : (i + 1) * x;
+        threads.push_back(std::thread(&gmaf::GraphCode::calculateSimilarityV, gc, i, &arr.at(0), &arr, i * x + 1, end));
+    }
+
+    for (auto &th: threads) {
+        th.join();
+    }
 }
 

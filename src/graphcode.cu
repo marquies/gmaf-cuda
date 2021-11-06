@@ -144,7 +144,7 @@ void gmaf::GraphCode::loadGraphCodes(char *directory, int limit,  std::vector<js
 }
 
 
-int calculateSimilarityThreaded(json gc1, json gc2, float *results) {
+int calculateSimilaritySequential(json gc1, json gc2, float *results) {
     json gc1Dictionary = gc1["dictionary"];
     json gc2Dictionary = gc2["dictionary"];
 
@@ -368,7 +368,7 @@ void gmaf::GraphCode::calculateSimilarityV(int index, json *gcQuery, std::vector
         std::cout << "Idx " << index << " i " << i << " limit(" << end << ")" << std::endl;
 
         float resultMetrics[3];
-        calculateSimilarityThreaded(*gcQuery, compares->at(i), resultMetrics);
+        calculateSimilaritySequential(*gcQuery, compares->at(i), resultMetrics);
 
         std::cout << "Similarity " << resultMetrics[0] << std::endl;
         std::cout << "Recommendation " << resultMetrics[1] << std::endl;
