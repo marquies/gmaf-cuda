@@ -1,14 +1,17 @@
 //
 // Created by Patrick Steinert on 16.10.21.
-//
+
+#include "graphcode.h"
+
+
 #include <thread>
 #include <chrono>
 #include <ctime>
 
+#include <iostream>
+#include <fstream>
+
 #include <nlohmann/json.hpp>
-
-
-#include "graphcode.h"
 
 //0. Ein File haben wir (gcQuery), dazu die similarity berehcnen
 //
@@ -44,15 +47,8 @@ __global__ void vector_add(int *a, int *b, int *c) {
 
 
 
-__global__ void kernel( void ) {
-
-}
-
-//__global__ void kernel( void ) {}
-
 
 void myThreadFun(int i, const std::vector<std::string> &files, std::vector<json> *arr)
-//void myThreadFun(int i)
 {
 
 
@@ -79,8 +75,7 @@ void myThreadFun(int i, const std::vector<std::string> &files, std::vector<json>
 
 void loadGraphCodes(char *directory, int limit,  std::vector<json> *arr) {
 
-//    int limit = 10000;
-    int i = 0;
+
 
     std::vector<std::string> files;
 
@@ -293,9 +288,9 @@ int calculateSimilarityCuda(json gc1, json gc2, float *results) {
             cudaMalloc((void**)&d_b, sizeof(int) * N);
             cudaMalloc((void**)&d_c, sizeof(int) * N);
 
-            for(int i=0; i<N; i++) {
-                a[i] = -i;
-                b[i] = i * i;
+            for(int z=0; z<N; z++) {
+                a[z] = -z;
+                b[z] = z * z;
             }
 
             // Transfer data from host to device memory

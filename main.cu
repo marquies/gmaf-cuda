@@ -1,6 +1,5 @@
 #include <iostream>
 #include <unistd.h>
-#include <cuda.h>
 
 
 #include<string.h>
@@ -9,22 +8,13 @@
 #include <ctime>
 
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
-// for convenience
-//using json = nlohmann::json;
-
-#include <iostream>
-#include <fstream>
-
-#include <vector>
 
 
 #ifdef __CUDACC__
-#warning using nvcc
+
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
 #elif __GNUC__
@@ -50,7 +40,7 @@ namespace fs = std::__fs::filesystem;
 
 #include "graphcode.cpp"
 
-int getPosition(std::string string, std::vector<std::string> dictionary);
+//int getPosition(std::string string, std::vector<std::string> dictionary);
 
 
 
@@ -63,7 +53,6 @@ int getPosition(std::string string, std::vector<std::string> dictionary);
 
 int main(int argc, char *argv[]) {
 
-    bool isCaseInsensitive = false;
     int opt;
 
     char *cvalue = NULL;
@@ -153,32 +142,4 @@ int main(int argc, char *argv[]) {
               << "elapsed time: " << elapsed_seconds.count() << "s\n";
     return 0;
 }
-/*
-             kernel<<<1,1>>>();
-    std::vector<json> arr;
 
-    thrust::host_vector<int> h_vec(32 << 20);
-    loadGraphCodes((char *) "../graphcodes/", &arr);
-
-
-    std::cout << "loaded " << arr.size() << " graph code files." << std::endl;
-
-//icudaMalloc( (void**)&dev_c, sizeof(int) )
-
-   // while(true) {
-        for (int i = 1; i < arr.size(); i++) {
-
-            float resultMetrics[3];
-            calculateSimilarity(arr.at(0), arr.at(i), resultMetrics);
-
-
-
-            std::cout << "Similarity " << resultMetrics[0] << std::endl;
-            std::cout << "Recommendation " << resultMetrics[1] << std::endl;
-            std::cout << "Inferencing " << resultMetrics[2] << std::endl;
-        }
-   // }
-
-    return 0;
-}
-*/
