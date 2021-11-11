@@ -3,7 +3,6 @@
 
 #include "graphcode.h"
 
-
 #include <thread>
 #include <chrono>
 #include <ctime>
@@ -442,13 +441,17 @@ int getPosition(std::string string, std::vector<std::string> dictionary) {
     return -1;
 }
 
-void gmaf::GraphCode::foo() {}
 
-void gmaf::GraphCode::calculateSimilarityV(int index, json *gcQuery, std::vector<json> *compares, int start, int end) {
+
+std::vector<Metrics>
+gmaf::GraphCode::calculateSimilarityV(int index, json *gcQuery, std::vector<json> *compares, int start, int end) {
     if (compares == NULL) {
         std::cout << "Argument compare is NULL" << std::endl;
         exit(1);
     }
+
+    std::vector<Metrics> metrics;
+
     for (int i = start; i < end; i++) {
 
         std::cout << "Idx " << index << " i " << i << " limit(" << end << ")" << std::endl;
@@ -460,6 +463,16 @@ void gmaf::GraphCode::calculateSimilarityV(int index, json *gcQuery, std::vector
         std::cout << "Similarity " << resultMetrics[0] << std::endl;
         std::cout << "Recommendation " << resultMetrics[1] << std::endl;
         std::cout << "Inferencing " << resultMetrics[2] << std::endl;
+
+        Metrics m;
+        m.similarity = resultMetrics[0];
+        m.recommendation = resultMetrics[1];
+        m.inferencing = resultMetrics[2];
+
+        metrics.push_back(m);
+
     }
+
+    return metrics;
 }
 
