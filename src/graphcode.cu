@@ -3,6 +3,9 @@
 
 #include "graphcode.h"
 
+#include "cudahelper.cuh"
+#include "helper.h"
+
 #include <thread>
 #include <chrono>
 #include <ctime>
@@ -53,26 +56,17 @@ namespace fs = std::experimental::filesystem;
 //1.c Sortieren
 
 
-static void HandleError( cudaError_t err,
-                         const char *file,
-                         int line ) {
-    if (err != cudaSuccess) {
-        printf( "%s in %s at line %d\n", cudaGetErrorString( err ),
-                file, line );
-        exit( EXIT_FAILURE );
-    }
-}
-#define HANDLE_ERROR( err ) (HandleError( err, __FILE__, __LINE__ ))
-
 using json = nlohmann::json;
 
 
 int getPosition(std::string string, std::vector<std::string> dictionary);
 
-void convertDict2Matrix(int size, int *destMatrix, json jsonMatrix);
+//void convertDict2Matrix(int size, int *destMatrix, json jsonMatrix);
 #define N 1000
 
-__global__ void check(int *data, unsigned long matrixSize, int *pInt) {
+
+//copy of other check function
+__global__ void check2(int *data, unsigned long matrixSize, int *pInt) {
     int tid = blockIdx.x;
 
     //if (tid % matrixSize != 0) {
@@ -145,7 +139,7 @@ __global__ void check( cudaArray_t data) {
 
 
 
-void myThreadFun(int i, const std::vector<std::string> &files, std::vector<json> *arr)
+void threadLoader(int i, const std::vector<std::string> &files, std::vector<json> *arr)
 {
 
 
@@ -195,7 +189,7 @@ void gmaf::GraphCode::loadGraphCodes(char *directory, int limit,  std::vector<js
     for (int i = 0; i < s; i++) {
         std::vector<std::string> sub(&files[i * x + 1], &files[(i + 1) * x]);
 
-        threads.push_back(std::thread(myThreadFun, i, sub, &tmp_jsons[i]));
+        threads.push_back(std::thread(threadLoader, i, sub, &tmp_jsons[i]));
     }
 
     for (auto &th: threads) {
@@ -299,15 +293,7 @@ int calculateSimilaritySequential(json gc1, json gc2, float *results) {
 
 }
 
-void convertDict2Matrix(int size, int *destMatrix, json jsonMatrix) {
-    for (int i = 0; i < size; i++) {
-        for (int j = 0; j < size; j++) {
 
-           //destMatrix[i][j] = jsonMatrix.at(i).at(j);
-            *((destMatrix+i*size) + j) = jsonMatrix.at(i).at(j);
-        }
-    }
-}
 
 int calculateSimilarityCuda(json gc1, json gc2, float *results) {
     json gc1Dictionary = gc1["dictionary"];
@@ -398,7 +384,7 @@ int calculateSimilarityCuda(json gc1, json gc2, float *results) {
     */
 
     //vector_add<<<N, 1>>>(d_a, d_b, d_c, gc1Dict, gc1Dictionary.size(), dict2, (int *) matrix1);
-    check<<<items, 1>>>(d_a, gc1Dictionary.size(), founds);
+    check2<<<items, 1>>>(d_a, gc1Dictionary.size(), founds);
 
 
     int f[items];

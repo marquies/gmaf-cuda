@@ -53,7 +53,7 @@ set(CMAKE_CXX_STANDARD 17)
 #link_directories(src)
 
 #add_executable(gcsim ${Foo_SOURCES})
-add_library (GCS ${Foo_SOURCES})
+add_library (GCS ${Foo_SOURCES} src/cudahelper.cu src/cudahelper.cuh src/helper.h src/helper.cpp)
 
 add_executable (gcsim main2.cpp)
 
