@@ -2,16 +2,11 @@
 // Created by breucking on 06.11.21.
 //
 
-
-
 #include <cstdlib>
 
-
 #include "../src/graphcode.h"
-#include<stdio.h>
-#include<cuda.h>
-#include<cuda_runtime.h>
-#include<device_launch_parameters.h>
+#include <stdio.h>
+#include <cuda_runtime.h>
 
 #define BLOCKSIZE_x 16
 #define BLOCKSIZE_y 16
@@ -19,9 +14,6 @@
 #define Nrows 4
 #define Ncols 4
 
-/*****************/
-/* CUDA MEMCHECK */
-/*****************/
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 
 inline void gpuAssert(cudaError_t code, char *file, int line, bool abort = true)
@@ -63,7 +55,7 @@ __global__ void test_kernel_2D(float *devPtr, size_t pitch)
 /********/
 /* MAIN */
 /********/
-int testcuda()
+int testCuda()
 {
     float hostPtr[Nrows][Ncols];
     float *devPtr;
@@ -97,13 +89,9 @@ int testcuda()
 }
 void testBasic()
 {
-    // do some nice calculation; store the results in `foo` and `bar`,
-    // respectively
-
     nlohmann::json gcq;
     gcq["dictionary"] = { "head", "body"};
     gcq["matrix"] = {{1,1}, {0,1}};
-
 
     std::vector<json> others;
     others.push_back(gcq);
@@ -111,21 +99,10 @@ void testBasic()
     gmaf::GraphCode gc;
 
     gc.calculateSimilarityV(0,&gcq,&others,0,1);
-
-    //exit(17);
-    //ALEPH_ASSERT_THROW( foo != bar );
-    //ALEPH_ASSERT_EQUAL( foo, 2.0 );
-    //ALEPH_ASSERT_EQUAL( bar, 1.0 );
-}
-
-void testAdvanced()
-{
-    // a more advanced test
 }
 
 int main(int, char**)
 {
     testBasic();
-    testAdvanced();
-    testcuda();
+    testCuda();
 }
