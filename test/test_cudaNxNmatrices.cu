@@ -25,7 +25,7 @@ int iDivUp(int hostPtr, int b){ return ((hostPtr % b) != 0) ? (hostPtr / b + 1) 
 
 
 
-__global__ void check(int *data, int *comparedata, unsigned long matrixSize, int *pInt) {
+__global__ void check(int *data, int *comparedata, unsigned long matrixSize, int *pInt, int *pInt1) {
     int tid = blockIdx.x;
 
      //int q = sqrt((float)matrixSize);
@@ -38,8 +38,14 @@ __global__ void check(int *data, int *comparedata, unsigned long matrixSize, int
         }
      }
 
-    if (data[tid] != 0) {
-        pInt[tid] = 1;
+    if (data[tid] != 0 ) {
+        if (comparedata[tid] != 0) {
+            pInt1[tid] = 1;
+            if (data[tid] == comparedata[tid]) {
+                pInt[tid] = 1;
+            }
+
+        }
     }
 
 }
@@ -71,8 +77,6 @@ __global__ void test_kernel_2D(float *devPtr, size_t pitch)
 /********/
 int testCudaMatrixMemory()
 {
-
-
     float hostPtr[Nrows][Ncols];
     float *devPtr;
     size_t pitch;
@@ -122,7 +126,8 @@ void testCudaLinearMatrixMemory(){
         }
 
     int *gpu_inputMatrix;
-    int *founds;
+    int *darr_edge_metric_count;
+    int *darr_num_of_non_zero_edges;
     // Allocate device memory for inputMatrix
     //cudaMalloc((void**)&gpu_inputMatrix, sizeof(int) );
 
@@ -130,7 +135,8 @@ void testCudaLinearMatrixMemory(){
 
 
     HANDLE_ERROR(cudaMalloc((void**)&gpu_inputMatrix, sizeof(int) * items) );
-    HANDLE_ERROR(cudaMalloc((void**)&founds, sizeof(int) * items) );
+    HANDLE_ERROR(cudaMalloc((void**)&darr_edge_metric_count, sizeof(int) * items) );
+    HANDLE_ERROR(cudaMalloc((void**)&darr_num_of_non_zero_edges, sizeof(int) * items) );
     /*
     cudaMemcpy2DToArray (dst,
                          0,
@@ -147,15 +153,38 @@ void testCudaLinearMatrixMemory(){
     HANDLE_ERROR(cudaMemcpy(gpu_inputMatrix, inputMatrix, sizeof(int) * gcq.size() * gcq.size(), cudaMemcpyHostToDevice));
 
 
-    check<<<items, items>>>(gpu_inputMatrix, gpu_inputMatrix, gcq.size(), founds);
+    check<<<items, items>>>(gpu_inputMatrix, gpu_inputMatrix, gcq.size(), darr_edge_metric_count,
+                            darr_num_of_non_zero_edges);
 
 
-    int f[items];
-    HANDLE_ERROR(cudaMemcpy(f, founds, sizeof (int)* gcq.size() * gcq.size(), cudaMemcpyDeviceToHost));
+    int arr_edge_metric_count[items];
+    int arr_num_of_non_zero_edges[items];
 
+    HANDLE_ERROR(cudaMemcpy(arr_edge_metric_count, darr_edge_metric_count, sizeof (int) * gcq.size() * gcq.size(), cudaMemcpyDeviceToHost));
+    HANDLE_ERROR(cudaMemcpy(arr_num_of_non_zero_edges, darr_num_of_non_zero_edges, sizeof (int) * gcq.size() * gcq.size(), cudaMemcpyDeviceToHost));
+
+    int num_of_non_zero_edges = 0;
+    int edge_metric_count = 0;
     for(int i = 0; i < items; i++) {
-        std::cout << "pos: " << i << " value: " << f[i] << std::endl;
+        std::cout << "pos: " << i << " value: " << arr_edge_metric_count[i] << std::endl;
+        if (arr_edge_metric_count[i] == 1) {
+            edge_metric_count++;
+        }
+        if (arr_num_of_non_zero_edges[i] == 1) {
+            num_of_non_zero_edges++;
+        }
     }
+    float node_metric = (float) items/2 / (float) gc1Dictionary.size();
+
+    float edge_metric = 0.0;
+    if (num_of_non_zero_edges > 0)
+        edge_metric = (float) edge_metric_count / (float) num_of_non_zero_edges;
+
+
+    std::cout << "Similarity: " << " value: " << node_metric << std::endl;
+    std::cout << "Recommendation: " << " value: " << edge_metric << std::endl;
+
+
 
     HANDLE_ERROR(cudaFree(gpu_inputMatrix));
 }
