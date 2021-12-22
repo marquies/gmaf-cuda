@@ -245,6 +245,7 @@ void testCudaLinearMatrixMemory(){
     HANDLE_ERROR(cudaFree(darr_num_of_non_zero_edges));
 
     free(matrix1);
+    free(inputMatrix);
 
     // Result reduction
     int num_of_non_zero_edges = 0;
