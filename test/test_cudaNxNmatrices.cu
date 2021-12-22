@@ -41,6 +41,10 @@ int findLargestDivisor(int n);
 
 /*******************/
 /* iDivUp FUNCTION */
+Metrics testCudaLinearMatrixMemory(json json);
+
+void convertGc2Cuda(const json &gcq, json &gc1Dictionary, int &numberOfElements, int &items, int *&inputMatrix);
+
 /*******************/
 int iDivUp(int hostPtr, int b){ return ((hostPtr % b) != 0) ? (hostPtr / b + 1) : (hostPtr / b); }
 
@@ -138,39 +142,34 @@ int testCudaMatrixMemory()
     return 0;
 }
 
-void testCudaLinearMatrixMemory(){
-
+void testCudaLinearMatrixMemoryRealTest() {
     // Generate test data
-    json gcq = generateTestData(2040);
+
+    json gcq = generateTestData(3);
+    Metrics m = testCudaLinearMatrixMemory(gcq);
+
+    assert(m.similarity == 1);
+    assert(m.recommendation == 1);
+
+    json gcq2 = generateTestData(2040);
+    testCudaLinearMatrixMemory(gcq2);
+
+    assert(m.similarity == 1);
+    assert(m.recommendation == 1);
 
 
-    // Transform to data structures for calculations
-    json gc1Dictionary = gcq["dictionary"];
-    int numberOfElements = gc1Dictionary.size();
 
-    //int matrix1[gc1Dictionary.size()][gc1Dictionary.size()];
-    int *matrix1;
-    matrix1 = (int*) malloc(sizeof(int)*numberOfElements*numberOfElements);
+}
 
-    convertDict2Matrix(numberOfElements, matrix1, gcq["matrix"]);
+Metrics testCudaLinearMatrixMemory(json gcq) {
 
-    int items = numberOfElements * numberOfElements;
-    std::cout << "Items: " << items << std::endl;
-    //int inputMatrix[items];
-    //int count = 0;
-    //for (int i = 0; i < numberOfElements; i++)
-    //    for (int j = 0; j < numberOfElements; j++) {
-    //        inputMatrix[count++] = matrix1[j*numberOfElements + i]; //matrix1[i][j];
-    //    }
-
+    json gc1Dictionary;
+    int numberOfElements;
+    int items;
     int *inputMatrix;
-    inputMatrix = (int*) malloc(sizeof(int)*numberOfElements*numberOfElements);
 
-    int count = 0;
-    for (int i = 0; i < numberOfElements; i++)
-        for (int j = 0; j < numberOfElements; j++) {
-            inputMatrix[count++] = matrix1[j*numberOfElements + i]; //matrix1[i][j];
-        }
+    convertGc2Cuda(gcq, gc1Dictionary, numberOfElements, items, inputMatrix);
+
 
 
     // Prep for cuda
@@ -246,8 +245,8 @@ void testCudaLinearMatrixMemory(){
 
 
 
-    printf("CUDA error %s\n",cudaGetErrorString(cudaPeekAtLastError()));
-    //HANDLE_ERROR(cudaPeekAtLastError());
+    //printf("CUDA error %s\n",cudaGetErrorString(cudaPeekAtLastError()));
+    HANDLE_ERROR(cudaPeekAtLastError());
     HANDLE_ERROR(cudaDeviceSynchronize());
     auto end = std::chrono::system_clock::now();
 
@@ -273,7 +272,6 @@ void testCudaLinearMatrixMemory(){
     HANDLE_ERROR(cudaFree(darr_edge_metric_count));
     HANDLE_ERROR(cudaFree(darr_num_of_non_zero_edges));
 
-    free(matrix1);
     free(inputMatrix);
 
     // Result reduction
@@ -300,6 +298,38 @@ void testCudaLinearMatrixMemory(){
     std::cout << "Similarity: " << " value: " << node_metric << std::endl;
     std::cout << "Recommendation: " << " value: " << edge_metric << std::endl;
 
+    Metrics m;
+    m.similarity = node_metric;
+    m.recommendation = edge_metric;
+
+    return m;
+
+}
+
+void convertGc2Cuda(const json &gcq, json &gc1Dictionary, int &numberOfElements, int &items, int *&inputMatrix) {
+    gc1Dictionary= gcq["dictionary"];
+    numberOfElements= gc1Dictionary.size();
+    items= numberOfElements * numberOfElements;// Transform to data structures for calculations
+//int matrix1[gc1Dictionary.size()][gc1Dictionary.size()];
+    int *matrix1;
+    matrix1 = (int*) malloc(sizeof(int)*numberOfElements*numberOfElements);
+
+    convertDict2Matrix(numberOfElements, matrix1, gcq["matrix"]);
+    std::cout << "Items: " << items << std::endl;
+    //int inputMatrix[items];
+//int count = 0;
+//for (int i = 0; i < numberOfElements; i++)
+//    for (int j = 0; j < numberOfElements; j++) {
+//        inputMatrix[count++] = matrix1[j*numberOfElements + i]; //matrix1[i][j];
+//    }
+    inputMatrix = (int*) malloc(sizeof(int)*numberOfElements*numberOfElements);
+
+    int count = 0;
+    for (int i = 0; i < numberOfElements; i++)
+        for (int j = 0; j < numberOfElements; j++) {
+            inputMatrix[count++] = matrix1[j*numberOfElements + i]; //matrix1[i][j];
+        }
+    free(matrix1);
 }
 
 
@@ -349,7 +379,8 @@ int main(int, char**)
 {
     testFindLargestDivisor();
     testCudaMatrixMemory();
-    testCudaLinearMatrixMemory();
+    //testCudaLinearMatrixMemory();
+    testCudaLinearMatrixMemoryRealTest();
 }
 
 void testFindLargestDivisor() {
