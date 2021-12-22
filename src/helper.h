@@ -11,5 +11,6 @@
 
 void convertDict2Matrix(int size, int *destMatrix, nlohmann::json jsonMatrix);
 //void convertDict2Matrix(int size, int **destMatrix, nlohmann::json jsonMatrix);
+bool isPrime(int number);
 
 #endif
