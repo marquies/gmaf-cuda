@@ -54,7 +54,7 @@ int iDivUp(int hostPtr, int b){ return ((hostPtr % b) != 0) ? (hostPtr / b + 1) 
  * @param edgeType pointer to array to store the values for the edge type metric comparison
  */
 __global__ void calcMetrices(int *data, int *comparedata, unsigned long matrixSize, int *edgeMetricCount, int *edgeType) {
-
+    return;
     int x = threadIdx.x + blockIdx.x * blockDim.x;
     int y = threadIdx.y + blockIdx.y * blockDim.y;
     int /*offset*/ tid = x + y * blockDim.x * gridDim.x;
@@ -203,21 +203,35 @@ void testCudaLinearMatrixMemory(){
     // Transfer data from host to device memory
     HANDLE_ERROR(cudaMemcpy(gpu_inputMatrix, inputMatrix, sizeof(int) * items, cudaMemcpyHostToDevice));
 
-    //int gridSize = ceil(items / 1024.0);
-    int gridSize = findLargestDivisor(items);
+    int gridSize;
+    int blockSize;
+    dim3 block;
+    dim3 grid;
+    if (items > 1024) {
+        gridSize = ceil(items / 1024.0);
+        blockSize = findLargestDivisor(1024);
+        block = (blockSize, ceil(1024/(float) blockSize));
+        grid = (gridSize);
 
-
-
-    int blockSize = findLargestDivisor(gridSize);
-    if (blockSize == 0) {
-        if (isPrime(gridSize)) {
-            //blockSize= findLargestDivisor(gridSize+1);
-            gridSize += 1;
-            blockSize = findLargestDivisor(gridSize);
+    } else {
+        gridSize = findLargestDivisor(items);
+        blockSize = findLargestDivisor(gridSize);
+        if (blockSize == 0) {
+            if (isPrime(gridSize)) {
+                //blockSize= findLargestDivisor(gridSize+1);
+                gridSize += 1;
+                blockSize = findLargestDivisor(gridSize);
+            }
         }
+        block = (items);
+        //grid = (ceil(items/(float) gridSize));
+        grid = (1);
     }
-    dim3 block(blockSize, ceil(gridSize/(float) blockSize));
-    dim3 grid(ceil(items/(float) gridSize));
+
+
+
+
+
 
     //HANDLE_ERROR(cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, calcMetrices, 0, 0));
 
@@ -225,14 +239,16 @@ void testCudaLinearMatrixMemory(){
     auto loaded = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = loaded - start;
 
-    std::cout << "elapsed time: " << elapsed_seconds.count() << ")"
+    std::cout << "elapsed time: " << elapsed_seconds.count()
               << std::endl;
+
     calcMetrices<<<grid, block>>>(gpu_inputMatrix, gpu_inputMatrix, items, darr_edge_metric_count,
                                    darr_num_of_non_zero_edges);
 
 
 
-    HANDLE_ERROR(cudaPeekAtLastError());
+    printf("CUDA error %s\n",cudaGetErrorString(cudaPeekAtLastError()));
+    //HANDLE_ERROR(cudaPeekAtLastError());
     HANDLE_ERROR(cudaDeviceSynchronize());
     auto end = std::chrono::system_clock::now();
 
@@ -241,6 +257,9 @@ void testCudaLinearMatrixMemory(){
 
     std::cout << "finished computation at " << std::ctime(&end_time)
               << "elapsed time: " << elapsed_seconds.count() << "s\n";
+    elapsed_seconds = end - loaded;
+    std::cout << "Computation time: " << elapsed_seconds.count() << "s\n";
+
     // Retrieve results
     //int arr_edge_metric_count[items];
     int *arr_edge_metric_count = (int *) malloc(sizeof(int) * items);
@@ -332,19 +351,31 @@ int main(int, char**)
     testFindLargestDivisor();
     testCudaMatrixMemory();
     testCudaLinearMatrixMemory();
-
 }
 
 void testFindLargestDivisor() {
     // Note that this loop runs till square root
     int d = findLargestDivisor(513);
-    assert(d == 27);
+    assert(d == 171);
     d = findLargestDivisor(73);
-    assert(d == 0);
+    assert(d == 1);
+    d = findLargestDivisor(4000000);
+    assert(d == 2000000);
 
 }
 
 int findLargestDivisor(int n) {
+
+    int i;
+    for (i = n / 2; i >= 1; --i) {
+        // if i divides n, then i is the largest divisor of n
+        // return i
+        if (n % i == 0)
+            return i;
+    }
+
+    return 0;
+
     for (int i=sqrt(n); i < n; i++)
     {
         if (n%i == 0)
