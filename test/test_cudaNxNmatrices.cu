@@ -138,18 +138,30 @@ void testCudaLinearMatrixMemory(){
     json gc1Dictionary = gcq["dictionary"];
     int numberOfElements = gc1Dictionary.size();
 
-    int matrix1[gc1Dictionary.size()][gc1Dictionary.size()];
-    convertDict2Matrix(gc1Dictionary.size(), (int *) matrix1, gcq["matrix"]);
+    //int matrix1[gc1Dictionary.size()][gc1Dictionary.size()];
+    int *matrix1;
+    matrix1 = (int*) malloc(sizeof(int)*numberOfElements*numberOfElements);
+
+    convertDict2Matrix(numberOfElements, matrix1, gcq["matrix"]);
 
     int items = numberOfElements * numberOfElements;
     std::cout << "Items: " << items << std::endl;
-    int inputMatrix[items];
+    //int inputMatrix[items];
+    //int count = 0;
+    //for (int i = 0; i < numberOfElements; i++)
+    //    for (int j = 0; j < numberOfElements; j++) {
+    //        inputMatrix[count++] = matrix1[j*numberOfElements + i]; //matrix1[i][j];
+    //    }
+
+    int *inputMatrix;
+    inputMatrix = (int*) malloc(sizeof(int)*numberOfElements*numberOfElements);
 
     int count = 0;
     for (int i = 0; i < numberOfElements; i++)
         for (int j = 0; j < numberOfElements; j++) {
-            inputMatrix[count++] = matrix1[i][j];
+            inputMatrix[count++] = matrix1[j*numberOfElements + i]; //matrix1[i][j];
         }
+
 
     // Prep for cuda
 
@@ -231,6 +243,8 @@ void testCudaLinearMatrixMemory(){
     HANDLE_ERROR(cudaFree(gpu_inputMatrix));
     HANDLE_ERROR(cudaFree(darr_edge_metric_count));
     HANDLE_ERROR(cudaFree(darr_num_of_non_zero_edges));
+
+    free(matrix1);
 
     // Result reduction
     int num_of_non_zero_edges = 0;
