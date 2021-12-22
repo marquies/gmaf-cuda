@@ -54,7 +54,6 @@ int iDivUp(int hostPtr, int b){ return ((hostPtr % b) != 0) ? (hostPtr / b + 1) 
  * @param edgeType pointer to array to store the values for the edge type metric comparison
  */
 __global__ void calcMetrices(int *data, int *comparedata, unsigned long matrixSize, int *edgeMetricCount, int *edgeType) {
-    return;
     int x = threadIdx.x + blockIdx.x * blockDim.x;
     int y = threadIdx.y + blockIdx.y * blockDim.y;
     int /*offset*/ tid = x + y * blockDim.x * gridDim.x;

@@ -23,6 +23,12 @@
 void runThreaded(std::vector<json> &arr, const gmaf::GraphCode &gc, int s);
 void runSequential(std::vector<json> &arr, gmaf::GraphCode gc);
 
+/**
+ * Main function of the program.
+ * @param argc
+ * @param argv
+ * @return
+ */
 int main_init(int argc, char *argv[]) {
 
     // Handling the command line arguments
@@ -58,20 +64,22 @@ int main_init(int argc, char *argv[]) {
     std::vector<json> arr;
 
 
+
     // Loading the graph codes
     gmaf::GraphCode gc;
     gc.loadGraphCodes(cvalue, limit, &arr);
-
     auto loaded = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = loaded - start;
 
     std::cout << "loaded " << arr.size() << " graph code files. (" << "elapsed time: " << elapsed_seconds.count() << ")"
               << std::endl;
 
+    // Run the code
 
     //runThreaded(arr, gc, 4);
     runSequential(arr, gc);
 
+    // Time evaluation
     auto end = std::chrono::system_clock::now();
 
     elapsed_seconds = end - start;
