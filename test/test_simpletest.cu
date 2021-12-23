@@ -57,6 +57,6 @@ void testBasic2()
 
 int main(int, char**)
 {
-    testBasic();
+    //testBasic();
     testBasic2();
 }
