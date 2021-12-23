@@ -71,6 +71,10 @@ calcMetrices(int *data, int *comparedata, unsigned long matrixSize,
 
      int q = sqrt((float)matrixSize);
 
+    numOfNonZeroEdges[tid] = 0;
+    edgeMetricCount[tid] = 0;
+    edgeType[tid] = 0;
+
      for (int i = 0; i < q; i++) {
         if (tid == i*q+i) {
             //Can be used to debug
@@ -328,10 +332,10 @@ Metrics testCudaLinearMatrixMemory(json json1, json json2) {
     int edge_metric_count = 0;
     int edgeTypeCount = 0;
     for(int i = 0; i < items1; i++) {
-        //std::cout << "pos: " << i
-        //<< " arr_edge_metric_count: " << arr_edge_metric_count[i]
-        //<< " arr_num_of_non_zero_edges: " << arr_num_of_non_zero_edges[i]
-        //<< std::endl;
+        //  std::cout << "pos: " << i
+        //    << " arr_edge_metric_count: " << arr_edge_metric_count[i]
+        //    << " arr_num_of_non_zero_edges: " << arr_num_of_non_zero_edges[i]
+        //    << std::endl;
         if (arr_edge_metric_count[i] == 1) {
             edge_metric_count++;
         }
