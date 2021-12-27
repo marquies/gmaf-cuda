@@ -33,20 +33,21 @@ void testCpuSeqCalc() {
 
 
     int n = 10000;
-    nlohmann::json gcq;
-    gcq["dictionary"] = { "head", "body", "foot"};
-    gcq["matrix"] = {{1,1,0}, {0,1,0}, {0,1,1}};
+    int l = 3;
+//    nlohmann::json gcq;
+//    gcq["dictionary"] = { "head", "body", "foot"};
+//    gcq["matrix"] = {{1,1,0}, {0,1,0}, {0,1,1}};
+//
+//    nlohmann::json gce;
+//    gce["dictionary"] = { "head", "body", "torso"};
+//    gce["matrix"] = {{1,2,0}, {0,1,0}, {0,0,1}};
 
-    nlohmann::json gce;
-    gce["dictionary"] = { "head", "body", "torso"};
-    gce["matrix"] = {{1,2,0}, {0,1,0}, {0,0,1}};
-
-    const json &gc_sample = generateTestData(3);
+    const json &gc_sample = generateTestData(l);
 
     std::vector<json> others;
 
     for(int i = 0; i < n; i++) {
-        others.push_back(gce);
+        others.push_back(gc_sample);
     }
 
     gmaf::GraphCode gc;
