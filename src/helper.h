@@ -8,6 +8,7 @@
 
 #include <nlohmann/json.hpp>
 
+extern bool G_DEBUG;
 
 void convertDict2Matrix(int size, int *destMatrix, nlohmann::json jsonMatrix);
 //void convertDict2Matrix(int size, int **destMatrix, nlohmann::json jsonMatrix);

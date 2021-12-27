@@ -15,6 +15,7 @@
 #include "../src/helper.h"
 #include "helper.h"
 
+
 /*
  * Define some test data
  */
@@ -189,6 +190,8 @@ void testCudaLinearMatrixMemoryRealTest() {
     assert(AreSame(m2.similarity,(float) 3./3.));
     assert(m2.recommendation == .5);
     assert(m2.inferencing == 0);
+
+
 
 
 }

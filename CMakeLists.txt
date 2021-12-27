@@ -36,7 +36,15 @@ find_package(CUDA 8.1 REQUIRED)
 #find_package(Thrust REQUIRED CONFIG)
 #find_package(Thrust)
 
-SET(GCC_COVERAGE_LINK_FLAGS    "-lstdc++fs")
+SET(GCC_COVERAGE_LINK_FLAGS    "-lstdc++fs -mavx2 -msse4.1 -march=native")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=nehalem")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1 -msse4.2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+
+#SET(GCC_COVERAGE_COMPILE_FLAGS "-mavx2 ")
+#SET(GCC_COVERAGE_LINK_FLAGS    "-lgcov")
 
 add_definitions(${GCC_COVERAGE_COMPILE_FLAGS})
 
@@ -70,6 +78,7 @@ set_property(TARGET gcsim PROPERTY CUDA_STANDARD 17)
 target_link_libraries(GCS PRIVATE nlohmann_json::nlohmann_json)
 
 target_link_libraries(gcsim PRIVATE GCS)
+target_link_libraries(gcsim PRIVATE avx2)
 target_link_libraries(gcsim PRIVATE nlohmann_json::nlohmann_json)
 #target_link_libraries(test PUBLIC std::__fs)
 target_link_libraries(gcsim PUBLIC stdc++fs)

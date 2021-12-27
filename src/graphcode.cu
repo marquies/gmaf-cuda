@@ -349,8 +349,10 @@ int calculateSimilarityCuda(json gc1, json gc2, float *results) {
         }
 
     int items = gc1Dictionary.size() * gc1Dictionary.size();
-    for(int i = 0; i < items; i++) {
-        std::cout << "pos: " << i << " value: " << a[i] << std::endl;
+    if (G_DEBUG) {
+        for(int i = 0; i < items; i++) {
+            std::cout << "pos: " << i << " value: " << a[i] << std::endl;
+        }
     }
 
     //cudaArray_t dst;
@@ -390,8 +392,10 @@ int calculateSimilarityCuda(json gc1, json gc2, float *results) {
     int f[items];
     HANDLE_ERROR(cudaMemcpy(f, founds, sizeof (int)* gc1Dictionary.size() * gc1Dictionary.size(), cudaMemcpyDeviceToHost));
 
-    for(int i = 0; i < items; i++) {
-        std::cout << "pos: " << i << " value: " << f[i] << std::endl;
+    if(G_DEBUG) {
+        for(int i = 0; i < items; i++) {
+            std::cout << "pos: " << i << " value: " << f[i] << std::endl;
+        }
     }
 
     // Cleanup after kernel execution
@@ -440,15 +444,18 @@ gmaf::GraphCode::calculateSimilarityV(int index, json *gcQuery, std::vector<json
 
     for (int i = start; i < end; i++) {
 
-        std::cout << "Idx " << index << " i " << i << " limit(" << end << ")" << std::endl;
+        if (G_DEBUG)
+            std::cout << "Idx " << index << " i " << i << " limit(" << end << ")" << std::endl;
 
         float resultMetrics[3];
         //calculateSimilaritySequential(*gcQuery, compares->at(i), resultMetrics);
         calculateSimilarityCuda(*gcQuery, compares->at(i), resultMetrics);
 
-        std::cout << "Similarity " << resultMetrics[0] << std::endl;
-        std::cout << "Recommendation " << resultMetrics[1] << std::endl;
-        std::cout << "Inferencing " << resultMetrics[2] << std::endl;
+        if (G_DEBUG) {
+            std::cout << "Similarity " << resultMetrics[0] << std::endl;
+            std::cout << "Recommendation " << resultMetrics[1] << std::endl;
+            std::cout << "Inferencing " << resultMetrics[2] << std::endl;
+        }
 
         Metrics m;
         m.similarity = resultMetrics[0];
