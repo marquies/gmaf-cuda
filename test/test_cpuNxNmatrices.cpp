@@ -9,6 +9,8 @@
 
 #include "../src/helper.h"
 
+#include "testhelper.cpp"
+
 void testCpuSeqCalc();
 void testCpuThreadCalc();
 int calculateSimilaritySequentialOrdered(json gc1, json gc2, float *results);
@@ -38,6 +40,8 @@ void testCpuSeqCalc() {
     nlohmann::json gce;
     gce["dictionary"] = { "head", "body", "torso"};
     gce["matrix"] = {{1,2,0}, {0,1,0}, {0,0,1}};
+
+    const json &gc_sample = generateTestData(3);
 
     std::vector<json> others;
 
