@@ -125,13 +125,7 @@ Metrics testCudaLinearMatrixMemory(GraphCode json1, GraphCode json2) {
         grid = (1);
     }
 
-
-
-
-
-
     //HANDLE_ERROR(cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, calcMetrices, 0, 0));
-
 
     // calculation
     auto loaded = std::chrono::system_clock::now();
