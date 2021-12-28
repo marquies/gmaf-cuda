@@ -15,7 +15,7 @@ typedef struct Metrics {
     float similarity;
     float recommendation;
     float inferencing;
-};
+} Metrics;
 
 namespace gmaf {
 

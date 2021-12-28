@@ -5,6 +5,12 @@
 
 #ifndef TESTHELPER_CPP
 #define TESTHELPER_CPP
+
+#include <nlohmann/json.hpp>
+#include <cuda_algorithms.cuh>
+
+using json = nlohmann::json;
+
 /*
  * Define some test data
  */
@@ -18,6 +24,10 @@ double EPSILON = 0.000001;
  * Decleration of methods.
  */
 json generateTestData(int n);
+
+GraphCode generateTestDataGc(int n);
+
+bool AreSame(double a, double b);
 
 /**
  * Helper for to generate test data of size.
@@ -60,6 +70,42 @@ bool AreSame(double a, double b)
 {
     return fabs(a - b) < EPSILON;
 }
+
+GraphCode generateTestDataGc(int n) {
+
+    DICT.insert( DICT.end(), DICT2.begin(), DICT2.end() );
+
+    if (n > DICT.size()) {
+        exit(71);
+    }
+
+    std::vector<std::string> *newVec = new std::vector<std::string>(DICT.begin(), DICT.begin() + n);
+    //extractElements(DICT, subA, n);
+
+    //std::vector<std::vector<int>> data;
+    int *data = (int *) malloc(sizeof(int) * n * n);
+
+    for (int i = 0; i < n; i++) {
+        //std::vector<int> x;
+        //data.push_back(x);
+        for (int j = 0; j < n; j++) {
+
+            if (i == j ) {
+                //data[i][j] = 1;
+                data[i * n + j] = 1;
+            } else {
+                data[i * n + j] = i+j%2;
+            }
+        }
+    }
+
+    GraphCode gc;
+    gc.dict = newVec;
+    gc.matrix = data;
+
+    return gc;
+}
+
 
 
 #endif
