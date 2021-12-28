@@ -3,16 +3,10 @@
 //
 
 #include <cstdlib>
-#include <stdio.h>
-#include <cuda_runtime.h>
 #include <iostream>
-#include <math.h>
-#include <chrono>
-#include <ctime>
-#include "../src/graphcode.h"
-#include "../src/cudahelper.cuh"
-#include "../src/helper.h"
 
+#ifndef TESTHELPER_CPP
+#define TESTHELPER_CPP
 /*
  * Define some test data
  */
@@ -60,3 +54,5 @@ json generateTestData(int n) {
     gcq["matrix"] = data;
     return gcq;
 }
+
+#endif

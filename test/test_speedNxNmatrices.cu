@@ -8,12 +8,18 @@
 #include <ctime>
 
 #include "../src/helper.h"
+#include "../src/cuda_algorithms.cuh"
 
 #include "testhelper.cpp"
+
+#define N 1000
+#define L 100
 
 void testCpuSeqCalc();
 void testCpuThreadCalc();
 int calculateSimilaritySequentialOrdered(json gc1, json gc2, float *results);
+
+void testCudaCalc();
 
 /**
  * MAIN
@@ -22,32 +28,23 @@ int main(int, char**)
 {
 
     testCpuSeqCalc();
-    testCpuThreadCalc();
+//    testCpuThreadCalc();
+    testCudaCalc();
 
 }
 
-void testCpuSeqCalc() {
-
+void testCudaCalc() {
     // 1. Create n gc matrices of size l
     // 2. Calc metrix for each GC
 
 
-    int n = 10000;
-    int l = 3;
-//    nlohmann::json gcq;
-//    gcq["dictionary"] = { "head", "body", "foot"};
-//    gcq["matrix"] = {{1,1,0}, {0,1,0}, {0,1,1}};
-//
-//    nlohmann::json gce;
-//    gce["dictionary"] = { "head", "body", "torso"};
-//    gce["matrix"] = {{1,2,0}, {0,1,0}, {0,0,1}};
 
-    const json &gc_sample = generateTestData(l);
+    const json &gc_sample = generateTestData(L);
 
-    std::vector<json> others;
+    std::vector<json> *others = new std::vector<json>() ;
 
-    for(int i = 0; i < n; i++) {
-        others.push_back(gc_sample);
+    for(int i = 0; i < N; i++) {
+        others->push_back(gc_sample);
     }
 
     gmaf::GraphCode gc;
@@ -57,8 +54,9 @@ void testCpuSeqCalc() {
     float results[3];
 
     // Do a plain simple version of the calc
-    for (const auto agc: others) {
-        calculateSimilaritySequentialOrdered(gcq, agc, results);
+    for (const auto agc: *others) {
+//        calculateSimilaritySequentialOrdered(gc_sample, agc, results);
+        testCudaLinearMatrixMemory(gc_sample, agc);
     }
 
     // Do a plain simple version of the calc
@@ -70,7 +68,51 @@ void testCpuSeqCalc() {
     std::chrono::duration<double> elapsed_seconds = end - start;
     std::time_t end_time = std::chrono::system_clock::to_time_t(end);
 
-    std::cout << "finished computation at " << std::ctime(&end_time)
+    std::cout << "finished CUDA computation at " << std::ctime(&end_time)
+              << "elapsed time: " << elapsed_seconds.count() << "s\n";
+
+}
+
+void testCpuSeqCalc() {
+
+    // 1. Create n gc matrices of size l
+    // 2. Calc metrix for each GC
+
+
+
+    const json gc_sample = generateTestData(L);
+//    std::cout << "tc1" << std::endl;
+
+    std::vector<json> *others = new std::vector<json>(N) ;
+//    std::cout << "tc2" << std::endl;
+
+    for(int i = 0; i < N; i++) {
+        others->push_back(gc_sample);
+    }
+//    std::cout << "tc3" << std::endl;
+
+    gmaf::GraphCode gc;
+
+    auto start = std::chrono::system_clock::now();
+
+    float results[3];
+
+    // Do a plain simple version of the calc
+    for (const auto agc: *others) {
+//        std::cout << "tc4" << std::endl;
+        calculateSimilaritySequentialOrdered(gc_sample, agc, results);
+    }
+
+    // Do a plain simple version of the calc
+
+
+
+    auto end = std::chrono::system_clock::now();
+
+    std::chrono::duration<double> elapsed_seconds = end - start;
+    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+
+    std::cout << "finished CPU seq computation at " << std::ctime(&end_time)
               << "elapsed time: " << elapsed_seconds.count() << "s\n";
 
 }
@@ -80,7 +122,6 @@ void testCpuThreadCalc() {
     // 1. Create n gc matrices of size l
     // 2. Calc metrix for each GC
 
-    int n = 10000;
     nlohmann::json gcq;
     gcq["dictionary"] = { "head", "body", "foot"};
     gcq["matrix"] = {{1,1,0}, {0,1,0}, {0,1,1}};
@@ -91,16 +132,15 @@ void testCpuThreadCalc() {
 
     std::vector<json> others;
 
-    for(int i = 0; i < n; i++) {
+
+
+    for(int i = 0; i < N; i++) {
         others.push_back(gce);
     }
 
     gmaf::GraphCode gc;
 
     auto start = std::chrono::system_clock::now();
-
-
-
 
 
     auto end = std::chrono::system_clock::now();
@@ -126,12 +166,12 @@ int calculateSimilaritySequentialOrdered(json gc1, json gc2, float *results) {
     int sim = 0;
 
 
-
     int matrix1[gc1Dictionary.size()][gc1Dictionary.size()];
     convertDict2Matrix(gc1Dictionary.size(), (int *) matrix1, gc1["matrix"]);
 
     int matrix2[gc2Dictionary.size()][gc2Dictionary.size()];
     convertDict2Matrix(gc2Dictionary.size(), (int *) matrix2, gc2["matrix"]);
+
 
 
     std::vector<std::string> dict2;
@@ -142,6 +182,7 @@ int calculateSimilaritySequentialOrdered(json gc1, json gc2, float *results) {
 
     for (const auto &item: gc1Dictionary.items()) {
         //std::cout << item.value() << "\n";
+
         std::string str = item.value().get<std::string>();
         gc1Dict[n++] = str;
 
@@ -152,10 +193,12 @@ int calculateSimilaritySequentialOrdered(json gc1, json gc2, float *results) {
                 sim++;
             }
         }
+
     }
     int num_of_non_zero_edges = 0;
     int edge_metric_count = 0;
     int edge_type = 0;
+
     for (int i = 0; i < gc1Dictionary.size(); i++) {
         for (int j = 0; j < gc1Dictionary.size(); j++) {
 
