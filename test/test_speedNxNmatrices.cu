@@ -32,8 +32,8 @@ int main(int, char **) {
 //    testCpuSeqCalc();
 //    testCpuThreadCalc();
 //    testCudaCalc();
-    testCpuSeqCalcPlain();
-    testCpuSeqCalcPlain();
+   // testCpuSeqCalcPlain();
+    testCudaCalcPlain();
 }
 
 void testCudaCalc() {
@@ -121,7 +121,7 @@ void testCudaCalcPlain() {
     std::chrono::duration<double> elapsed_seconds = end - start;
     std::time_t end_time = std::chrono::system_clock::to_time_t(end);
 
-    std::cout << "finished CPU seq computation at " << std::ctime(&end_time)
+    std::cout << "finished CUDA seq computation at " << std::ctime(&end_time)
               << "elapsed time: " << elapsed_seconds.count() << "s\n";
 
 }

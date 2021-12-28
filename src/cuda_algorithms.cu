@@ -145,7 +145,7 @@ Metrics testCudaLinearMatrixMemory(GraphCode json1, GraphCode json2) {
 
     //printf("CUDA error %s\n",cudaGetErrorString(cudaPeekAtLastError()));
     HANDLE_ERROR(cudaPeekAtLastError());
-    HANDLE_ERROR(cudaDeviceSynchronize());
+    //HANDLE_ERROR(cudaDeviceSynchronize());
     auto end = std::chrono::system_clock::now();
 
     elapsed_seconds = end - start;
