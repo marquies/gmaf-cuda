@@ -2,7 +2,6 @@
 // Created by breucking on 28.12.21.
 //
 
-
 #include "cuda_algorithms.cuh"
 
 #include <cstdlib>
@@ -30,6 +29,7 @@
  * @param edgeMetricCount pointer to array to store the values for the edge metric comparison
  * @param edgeType pointer to array to store the values for the edge type metric comparison
  */
+
 __global__ void
 calcMetrices(int *data, int *comparedata, unsigned long matrixSize,
              int *numOfNonZeroEdges, int *edgeMetricCount, int *edgeType) {
@@ -300,3 +300,98 @@ void convertGc2Cuda(const json &gcq, json &gc1Dictionary, int &numberOfElements,
     free(matrix1);
 }
 
+Metrics calculateSimilaritySequentialOrdered(json gc1, json gc2) {
+    //json gc1Dictionary = gc1["dictionary"];
+    //json gc2Dictionary = gc2["dictionary"];
+
+    //std::string gc1Dict[gc1Dictionary.size()];
+
+
+    int sim = 0;
+
+    json gc1Dictionary ;
+    int numberOfElements1;
+    int items1;
+    int *matrix1;
+    //int matrix1[gc1Dictionary.size()][gc1Dictionary.size()];
+    //convertDict2Matrix(gc1Dictionary.size(), (int *) matrix1, gc1["matrix"]);
+    convertGc2Cuda(gc1, gc1Dictionary, numberOfElements1, items1, matrix1);
+
+    json gc2Dictionary ;
+    int numberOfElements2;
+    int items2;
+    int *matrix2;
+    convertGc2Cuda(gc2, gc2Dictionary, numberOfElements2, items2, matrix2);
+
+
+//    int matrix2[gc2Dictionary.size()][gc2Dictionary.size()];
+//    convertDict2Matrix(gc2Dictionary.size(), (int *) matrix2, gc2["matrix"]);
+
+
+
+    std::vector<std::string> dict2;
+    for (const auto &item2: gc2Dictionary.items()) {
+        dict2.push_back(item2.value().get<std::string>());
+    }
+
+
+    for (const auto &item: gc1Dictionary.items()) {
+        //std::cout << item.value() << "\n";
+
+        std::string str = item.value().get<std::string>();
+        //gc1Dict[n++] = str;
+
+
+        for (const auto &item2: gc2Dictionary.items()) {
+            if (str == item2.value()) {
+                //std::cout << "Match" << std::endl;
+                sim++;
+            }
+        }
+
+    }
+    int num_of_non_zero_edges = 0;
+    int edge_metric_count = 0;
+    int edge_type = 0;
+
+    for (int i = 0; i < gc1Dictionary.size(); i++) {
+        for (int j = 0; j < gc1Dictionary.size(); j++) {
+
+//            if (i != j && matrix1[i][j] != 0) {
+            if (i != j && matrix1[i*gc1Dictionary.size()+j] != 0) {
+                num_of_non_zero_edges++;
+
+                int position1 = i;
+                int position2 = j;
+                //std::cout << "Pos " << position1 << " " << position2 << std::endl;
+                if (position1 == -1 || position2 == -1) {
+                    continue;
+                }
+
+                int edge = matrix2[position1*gc1Dictionary.size()+ position2];//matrix2[position1][position2];
+                if (edge != 0) {
+                    edge_metric_count++;
+                }
+                if (edge == matrix1[i*gc1Dictionary.size()+j]) {
+                    edge_type++;
+                }
+
+            }
+        }
+    }
+
+    float node_metric = (float) sim / (float) gc1Dictionary.size();
+    float edge_metric = 0.0;
+    if (num_of_non_zero_edges > 0)
+        edge_metric = (float) edge_metric_count / (float) num_of_non_zero_edges;
+    float edge_type_metric = 0.0;
+    if (edge_metric_count > 0)
+        edge_type_metric = (float) edge_type / (float) edge_metric_count;
+
+    Metrics metrics;
+    metrics.similarity = node_metric;
+    metrics.recommendation = edge_metric;
+    metrics.inferencing = edge_type_metric;
+    return metrics;
+
+}

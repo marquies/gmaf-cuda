@@ -2,14 +2,17 @@
 // Created by breucking on 28.12.21.
 //
 
-#include "graphcode.h"
 
-#ifndef GCSIM_CUDA_ALGORITHMS_CUH
-#define GCSIM_CUDA_ALGORITHMS_CUH
+#ifndef GCSIM_ALGORITHMS_CUH
+#define GCSIM_ALGORITHMS_CUH
+
+#include "graphcode.h"
 
 void convertGc2Cuda(const json &gcq, json &gc1Dictionary, int &numberOfElements, int &items, int *&inputMatrix);
 
 
 Metrics testCudaLinearMatrixMemory(json json1, json json2);
+Metrics calculateSimilaritySequentialOrdered(json gc1, json gc2);
 
-#endif //GCSIM_CUDA_ALGORITHMS_CUH
+
+#endif //GCSIM_ALGORITHMS_CUH

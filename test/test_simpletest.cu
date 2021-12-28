@@ -26,10 +26,6 @@ void testBasic()
     assert(m.inferencing == 1);
     assert(m.recommendation == 1);
 }
-bool AreSame(double a, double b)
-{
-    return fabs(a - b) < EPSILON;
-}
 
 void testBasic2()
 {

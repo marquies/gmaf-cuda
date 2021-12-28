@@ -2,7 +2,7 @@
 ADD_EXECUTABLE( test_simpletest test_simpletest.cu ${Foo_SOURCES})
 ADD_EXECUTABLE( test_cudaNxNmatrices test_cudaNxNmatrices.cu ${Foo_SOURCES})
 ADD_EXECUTABLE( test_speedNxNmatrices test_speedNxNmatrices.cu ${Foo_SOURCES})
-ADD_EXECUTABLE( test_cpuNxNmatrices test_cpuNxNmatrix.cpp ${Foo_SOURCES})
+ADD_EXECUTABLE( test_cpuNxNmatrices test_cpuNxNmatrix.cu ${Foo_SOURCES})
 
 ADD_TEST(            io_gml test_simpletest    )
 ADD_TEST(            io_gml test_cudaNxNmatrices    )

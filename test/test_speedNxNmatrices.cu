@@ -17,7 +17,6 @@
 
 void testCpuSeqCalc();
 void testCpuThreadCalc();
-int calculateSimilaritySequentialOrdered(json gc1, json gc2, float *results);
 
 void testCudaCalc();
 
@@ -100,7 +99,7 @@ void testCpuSeqCalc() {
     // Do a plain simple version of the calc
     for (const auto agc: *others) {
 //        std::cout << "tc4" << std::endl;
-        calculateSimilaritySequentialOrdered(gc_sample, agc, results);
+        calculateSimilaritySequentialOrdered(gc_sample, agc);
     }
 
     // Do a plain simple version of the calc
@@ -155,86 +154,3 @@ void testCpuThreadCalc() {
 
 
 
-int calculateSimilaritySequentialOrdered(json gc1, json gc2, float *results) {
-    json gc1Dictionary = gc1["dictionary"];
-    json gc2Dictionary = gc2["dictionary"];
-
-    std::string gc1Dict[gc1Dictionary.size()];
-
-    int n = 0;
-
-    int sim = 0;
-
-
-    int matrix1[gc1Dictionary.size()][gc1Dictionary.size()];
-    convertDict2Matrix(gc1Dictionary.size(), (int *) matrix1, gc1["matrix"]);
-
-    int matrix2[gc2Dictionary.size()][gc2Dictionary.size()];
-    convertDict2Matrix(gc2Dictionary.size(), (int *) matrix2, gc2["matrix"]);
-
-
-
-    std::vector<std::string> dict2;
-    for (const auto &item2: gc2Dictionary.items()) {
-        dict2.push_back(item2.value().get<std::string>());
-    }
-
-
-    for (const auto &item: gc1Dictionary.items()) {
-        //std::cout << item.value() << "\n";
-
-        std::string str = item.value().get<std::string>();
-        gc1Dict[n++] = str;
-
-
-        for (const auto &item2: gc2Dictionary.items()) {
-            if (str == item2.value()) {
-                //std::cout << "Match" << std::endl;
-                sim++;
-            }
-        }
-
-    }
-    int num_of_non_zero_edges = 0;
-    int edge_metric_count = 0;
-    int edge_type = 0;
-
-    for (int i = 0; i < gc1Dictionary.size(); i++) {
-        for (int j = 0; j < gc1Dictionary.size(); j++) {
-
-            if (i != j && matrix1[i][j] != 0) {
-                num_of_non_zero_edges++;
-
-                int position1 = i;
-                int position2 = j;
-                //std::cout << "Pos " << position1 << " " << position2 << std::endl;
-                if (position1 == -1 || position2 == -1) {
-                    continue;
-                }
-
-                int edge = matrix2[position1][position2];
-                if (edge != 0) {
-                    edge_metric_count++;
-                }
-                if (edge == matrix1[i][j]) {
-                    edge_type++;
-                }
-
-            }
-        }
-    }
-
-    float node_metric = (float) sim / (float) gc1Dictionary.size();
-    float edge_metric = 0.0;
-    if (num_of_non_zero_edges > 0)
-        edge_metric = (float) edge_metric_count / (float) num_of_non_zero_edges;
-    float edge_type_metric = 0.0;
-    if (edge_metric_count > 0)
-        edge_type_metric = (float) edge_type / (float) edge_metric_count;
-
-    results[0] = node_metric;
-    results[1] = edge_metric;
-    results[2] = edge_type_metric;
-    return 0;
-
-}
