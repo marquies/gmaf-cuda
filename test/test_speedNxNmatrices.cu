@@ -13,7 +13,7 @@
 #include "cudahelper.cuh"
 #include "reduce.cuh"
 
-#define N 1
+#define N 10
 #define L 12500
 
 void testCpuSeqCalc();

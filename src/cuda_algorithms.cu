@@ -226,40 +226,16 @@ Metrics demoCudaLinearMatrixMemoryCudaReduceSum(GraphCode json1, GraphCode json2
     unsigned int gts_edge_metric_count = gpu_sum_reduce(darr_edge_metric_count, items1);
     unsigned int gts_edge_type = gpu_sum_reduce(darr_edge_type, items1);
     unsigned int gts_num_of_non_zero_edges = gpu_sum_reduce(darr_num_of_non_zero_edges, items1);
-    //cudaMemcpy(hostOutput, deviceOutput, numOutputElements * sizeof(int), cudaMemcpyDeviceToHost);
 
-    std::cout << gts_num_of_non_zero_edges << std::endl;
+    if (G_DEBUG) {
+        std::cout << gts_num_of_non_zero_edges << std::endl;
+    }
 
-    //printf("GPU Result: %d\n", gts_num_of_non_zero_edges);
-
-    // Retrieve results
-//    int *arrEdgeTypeMetricCount = (int *) malloc(sizeof(int) * items1);
-//    int *arr_edge_metric_count = (int *) malloc(sizeof(int) * items1);
-//    int *arr_num_of_non_zero_edges = (int *) malloc(sizeof(int) * items1);
     auto mem_end = std::chrono::system_clock::now();
     if (G_DEBUG) {
         elapsed_seconds = mem_end - mem_start;
         std::cout << "Sum Reduce time: " << elapsed_seconds.count() << "s\n";
     }
-//
-//    int *arrEdgeTypeMetricCount;
-//    HANDLE_ERROR(cudaMallocHost((void**)&arrEdgeTypeMetricCount, sizeof(int) * items1));
-//
-//    int *arr_edge_metric_count;
-//    HANDLE_ERROR(cudaMallocHost((void**)&arr_edge_metric_count, sizeof(int) * items1));
-//
-//    int *arr_num_of_non_zero_edges;
-//    HANDLE_ERROR(cudaMallocHost((void**)&arr_num_of_non_zero_edges, sizeof(int) * items1));
-//
-//
-//    HANDLE_ERROR(cudaMemcpy(arr_num_of_non_zero_edges, darr_num_of_non_zero_edges, sizeof(int) * items1,
-//                            cudaMemcpyDeviceToHost));
-//
-//    HANDLE_ERROR(
-//            cudaMemcpy(arr_edge_metric_count, darr_edge_metric_count, sizeof(int) * items1, cudaMemcpyDeviceToHost));
-//
-//    HANDLE_ERROR(cudaMemcpy(arrEdgeTypeMetricCount, darr_edge_type, sizeof(int) * items1, cudaMemcpyDeviceToHost));
-
 
 
     HANDLE_ERROR(cudaFree(gpu_inputMatrix1));
@@ -272,28 +248,12 @@ Metrics demoCudaLinearMatrixMemoryCudaReduceSum(GraphCode json1, GraphCode json2
     int num_of_non_zero_edges = gts_num_of_non_zero_edges;
     int edge_metric_count = gts_edge_metric_count;
     int edgeTypeCount = gts_edge_type;
-//    for (int i = 0; i < items1; i++) {
-//        //  std::cout << "pos: " << i
-//        //    << " arr_edge_metric_count: " << arr_edge_metric_count[i]
-//        //    << " arr_num_of_non_zero_edges: " << arr_num_of_non_zero_edges[i]
-//        //    << std::endl;
-//        if (arr_edge_metric_count[i] == 1) {
-//            edge_metric_count++;
-//        }
-//        if (arr_num_of_non_zero_edges[i] == 1) {
-//            num_of_non_zero_edges++;
-//        }
-//        if (arrEdgeTypeMetricCount[i] == 1) {
-//            edgeTypeCount++;
-//        }
-//    }
 
     std::string gc1Dict[json1.dict->size()];
 
     int sim = 0;
     int n = 0;
     for (const auto &item: *json1.dict) {
-        //std::cout << item.value() << "\n";
         std::string str = item;
         gc1Dict[n++] = str;
 
@@ -307,7 +267,6 @@ Metrics demoCudaLinearMatrixMemoryCudaReduceSum(GraphCode json1, GraphCode json2
     }
 
     // Calculate metrices
-    //float node_metric = (float) numberOfElements1 / (float) gc1Dictionary.size();
     float node_metric = (float) sim / (float) json1.dict->size();
 
 
@@ -336,10 +295,6 @@ Metrics demoCudaLinearMatrixMemoryCudaReduceSum(GraphCode json1, GraphCode json2
     m.recommendation = edge_metric;
     m.inferencing = edge_type_metric;
 
-
-//    cudaFreeHost(arrEdgeTypeMetricCount);
-//    cudaFreeHost(arr_num_of_non_zero_edges);
-//    cudaFreeHost(arr_edge_metric_count);
     cudaProfilerStop();
     return m;
 
@@ -366,17 +321,6 @@ Metrics demoCudaLinearMatrixMemory(GraphCode json1, GraphCode json2) {
     HANDLE_ERROR(cudaMalloc((void **) &darr_num_of_non_zero_edges, sizeof(unsigned int) * items1));
     HANDLE_ERROR(cudaMalloc((void **) &darr_edge_metric_count, sizeof(unsigned int) * items1));
     HANDLE_ERROR(cudaMalloc((void **) &darr_edge_type, sizeof(unsigned int) * items1));
-    /*
-    cudaMemcpy2DToArray (dst,
-                         0,
-                         0,
-                         matrix1,
-                         sizeof(int),
-                         gc1Dictionary.size() * sizeof(int),
-                         gc1Dictionary.size(),
-                         cudaMemcpyHostToDevice );
-
-    */
 
     // Transfer data from host to device memory
     HANDLE_ERROR(cudaMemcpy(gpu_inputMatrix1, json1.matrix, sizeof(unsigned short int) * items1, cudaMemcpyHostToDevice));
@@ -387,8 +331,6 @@ Metrics demoCudaLinearMatrixMemory(GraphCode json1, GraphCode json2) {
 
     calcKernelLaunchConfig(json1.dict->size(), block, grid);
 
-    //HANDLE_ERROR(cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, calcMetrices, 0, 0));
-
     // calculation
     auto loaded = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = loaded - start;
@@ -398,19 +340,13 @@ Metrics demoCudaLinearMatrixMemory(GraphCode json1, GraphCode json2) {
                   << std::endl;
 
 
-    //int q = sqrt((float) items1);
-
     calcMetrices<<<grid, block>>>(gpu_inputMatrix1, gpu_inputMatrix2, items1,
                                   darr_num_of_non_zero_edges,
                                   darr_edge_metric_count,
                                   darr_edge_type
     );
 
-
-
-    //printf("CUDA error %s\n",cudaGetErrorString(cudaPeekAtLastError()));
     HANDLE_ERROR(cudaPeekAtLastError());
-    //HANDLE_ERROR(cudaDeviceSynchronize());
 
     auto end = std::chrono::system_clock::now();
     elapsed_seconds = end - start;
@@ -422,13 +358,6 @@ Metrics demoCudaLinearMatrixMemory(GraphCode json1, GraphCode json2) {
         elapsed_seconds = end - loaded;
         std::cout << "Computation time: " << elapsed_seconds.count() << "s\n";
     }
-
-    // Retrieve results
-//    int *arrEdgeTypeMetricCount = (int *) malloc(sizeof(int) * items1);
-//    int *arr_edge_metric_count = (int *) malloc(sizeof(int) * items1);
-//    int *arr_num_of_non_zero_edges = (int *) malloc(sizeof(int) * items1);
-
-
 
 
     int *arrEdgeTypeMetricCount;
@@ -469,10 +398,6 @@ Metrics demoCudaLinearMatrixMemory(GraphCode json1, GraphCode json2) {
     int edge_metric_count = 0;
     int edgeTypeCount = 0;
     for (int i = 0; i < items1; i++) {
-        //  std::cout << "pos: " << i
-        //    << " arr_edge_metric_count: " << arr_edge_metric_count[i]
-        //    << " arr_num_of_non_zero_edges: " << arr_num_of_non_zero_edges[i]
-        //    << std::endl;
         if (arr_edge_metric_count[i] == 1) {
             edge_metric_count++;
         }
@@ -503,7 +428,6 @@ Metrics demoCudaLinearMatrixMemory(GraphCode json1, GraphCode json2) {
     }
 
     // Calculate metrices
-    //float node_metric = (float) numberOfElements1 / (float) gc1Dictionary.size();
     float node_metric = (float) sim / (float) json1.dict->size();
 
 
@@ -566,8 +490,6 @@ Metrics demoCudaLinearMatrixMemory(json json1, json json2) {
     unsigned int *darr_edge_metric_count;
     unsigned int *darr_num_of_non_zero_edges;
     unsigned int *darr_edge_type;
-    // Allocate device memory for inputMatrix1
-    //cudaMalloc((void**)&gpu_inputMatrix1, sizeof(int) );
 
     auto start = std::chrono::system_clock::now();
 
@@ -576,17 +498,6 @@ Metrics demoCudaLinearMatrixMemory(json json1, json json2) {
     HANDLE_ERROR(cudaMalloc((void **) &darr_num_of_non_zero_edges, sizeof(unsigned int) * items1));
     HANDLE_ERROR(cudaMalloc((void **) &darr_edge_metric_count, sizeof(unsigned int) * items1));
     HANDLE_ERROR(cudaMalloc((void **) &darr_edge_type, sizeof(unsigned  int) * items1));
-    /*
-    cudaMemcpy2DToArray (dst,
-                         0,
-                         0,
-                         matrix1,
-                         sizeof(int),
-                         gc1Dictionary.size() * sizeof(int),
-                         gc1Dictionary.size(),
-                         cudaMemcpyHostToDevice );
-
-    */
 
     // Transfer data from host to device memory
     HANDLE_ERROR(cudaMemcpy(gpu_inputMatrix1, inputMatrix1, sizeof(unsigned short int) * items1, cudaMemcpyHostToDevice));
@@ -600,14 +511,6 @@ Metrics demoCudaLinearMatrixMemory(json json1, json json2) {
 
     calcKernelLaunchConfig(width, block, grid);
 
-
-
-
-
-
-    //HANDLE_ERROR(cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, calcMetrices, 0, 0));
-
-
     // calculation
     auto loaded = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = loaded - start;
@@ -616,7 +519,6 @@ Metrics demoCudaLinearMatrixMemory(json json1, json json2) {
         std::cout << "elapsed time: " << elapsed_seconds.count()
                   << std::endl;
 
-//    int q = sqrt((float) items1);
     calcMetrices<<<grid, block>>>(gpu_inputMatrix1, gpu_inputMatrix2, items1,
                                   darr_num_of_non_zero_edges,
                                   darr_edge_metric_count,
@@ -624,8 +526,6 @@ Metrics demoCudaLinearMatrixMemory(json json1, json json2) {
     );
 
 
-
-    //printf("CUDA error %s\n",cudaGetErrorString(cudaPeekAtLastError()));
     HANDLE_ERROR(cudaPeekAtLastError());
     HANDLE_ERROR(cudaDeviceSynchronize());
     auto end = std::chrono::system_clock::now();
@@ -641,12 +541,8 @@ Metrics demoCudaLinearMatrixMemory(json json1, json json2) {
         std::cout << "Computation time: " << elapsed_seconds.count() << "s\n";
 
     // Retrieve results
-    //int arr_edge_metric_count[items1];
     int *arrEdgeTypeMetricCount = (int *) malloc(sizeof(int) * items1);
-
     int *arr_edge_metric_count = (int *) malloc(sizeof(int) * items1);
-
-    //int arr_num_of_non_zero_edges[items1];
     int *arr_num_of_non_zero_edges = (int *) malloc(sizeof(int) * items1);
 
     HANDLE_ERROR(cudaMemcpy(arr_num_of_non_zero_edges, darr_num_of_non_zero_edges, sizeof(int) * items1,
@@ -670,10 +566,6 @@ Metrics demoCudaLinearMatrixMemory(json json1, json json2) {
     int edge_metric_count = 0;
     int edgeTypeCount = 0;
     for (int i = 0; i < items1; i++) {
-        //  std::cout << "pos: " << i
-        //    << " arr_edge_metric_count: " << arr_edge_metric_count[i]
-        //    << " arr_num_of_non_zero_edges: " << arr_num_of_non_zero_edges[i]
-        //    << std::endl;
         if (arr_edge_metric_count[i] == 1) {
             edge_metric_count++;
         }
@@ -690,21 +582,18 @@ Metrics demoCudaLinearMatrixMemory(json json1, json json2) {
     int sim = 0;
     int n = 0;
     for (const auto &item: gc1Dictionary.items()) {
-        //std::cout << item.value() << "\n";
         std::string str = item.value().get<std::string>();
         gc1Dict[n++] = str;
 
 
         for (const auto &item2: gc2Dictionary.items()) {
             if (str == item2.value()) {
-                //std::cout << "Match" << std::endl;
                 sim++;
             }
         }
     }
 
     // Calculate metrices
-    //float node_metric = (float) numberOfElements1 / (float) gc1Dictionary.size();
     float node_metric = (float) sim / (float) gc1Dictionary.size();
 
 
@@ -753,18 +642,11 @@ void convertGc2Cuda(const json &gcq, json &gc1Dictionary, int &numberOfElements,
     gc1Dictionary = gcq["dictionary"];
     numberOfElements = gc1Dictionary.size();
     items = numberOfElements * numberOfElements;// Transform to data structures for calculations
-//int matrix1[gc1Dictionary.size()][gc1Dictionary.size()];
     int *matrix1;
     matrix1 = (int *) malloc(sizeof(int) * numberOfElements * numberOfElements);
 
     convertDict2Matrix(numberOfElements, matrix1, gcq["matrix"]);
 
-    //int inputMatrix[items];
-//int count = 0;
-//for (int i = 0; i < numberOfElements; i++)
-//    for (int j = 0; j < numberOfElements; j++) {
-//        inputMatrix[count++] = matrix1[j*numberOfElements + i]; //matrix1[i][j];
-//    }
     inputMatrix = (unsigned short int *) malloc(sizeof(unsigned short int) * numberOfElements * numberOfElements);
 
     int count = 0;
@@ -783,16 +665,11 @@ Metrics demoCalculateSimilaritySequentialOrdered(GraphCode gc1, GraphCode gc2) {
     unsigned short *matrix2 = gc2.matrix;
 
     for (const auto &item: *gc1.dict) {
-        //gc1Dict[n++] = str;
-
-
         for (const auto &item2: *gc2.dict) {
             if (item == item2) {
-                //std::cout << "Match" << std::endl;
                 sim++;
             }
         }
-
     }
     int num_of_non_zero_edges = 0;
     int edge_metric_count = 0;
@@ -864,12 +741,9 @@ Metrics demoCalculateSimilaritySequentialOrdered(json gc1, json gc2) {
     for (const auto &item: gc1Dictionary.items()) {
 
         std::string str = item.value().get<std::string>();
-        //gc1Dict[n++] = str;
-
 
         for (const auto &item2: gc2Dictionary.items()) {
             if (str == item2.value()) {
-                //std::cout << "Match" << std::endl;
                 sim++;
             }
         }
@@ -882,13 +756,11 @@ Metrics demoCalculateSimilaritySequentialOrdered(json gc1, json gc2) {
     for (int i = 0; i < gc1Dictionary.size(); i++) {
         for (int j = 0; j < gc1Dictionary.size(); j++) {
 
-//            if (i != j && matrix1[i][j] != 0) {
             if (i != j && matrix1[i * gc1Dictionary.size() + j] != 0) {
                 num_of_non_zero_edges++;
 
                 int position1 = i;
                 int position2 = j;
-                //std::cout << "Pos " << position1 << " " << position2 << std::endl;
                 if (position1 == -1 || position2 == -1) {
                     continue;
                 }
