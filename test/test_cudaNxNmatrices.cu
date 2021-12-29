@@ -18,7 +18,6 @@ void testDemoCudaLinearMatrixMemoryCudaReduceSum();
 
 void testCalcKernelLaunchConfig();
 
-
 void testCudaLinearMatrixMemoryRealTest() {
     // Generate test data
 
@@ -59,9 +58,9 @@ void testCudaLinearMatrixMemoryRealTest() {
 }
 
 
-/********/
-/* MAIN */
-/********/
+/**
+ * MAIN
+ */
 int main(int, char **) {
     testFindLargestDivisor();
     testConvertGc4Cuda();
@@ -128,9 +127,10 @@ void testDemoCudaLinearMatrixMemoryCudaReduceSum() {
     gcq3.matrix = mat;
 
     GraphCode gcq4;
+    std::vector<std::string> *vect2 = new std::vector<std::string>{"head", "body", "foot"};
     unsigned short mat2[] = {1, 2, 0, 0, 1, 0, 0, 0, 1};
     unsigned short* mata = mat2;
-    gcq4.dict = vect;
+    gcq4.dict = vect2;
     gcq4.matrix = mata;
 
     Metrics m2 = demoCudaLinearMatrixMemoryCudaReduceSum(gcq3, gcq4);

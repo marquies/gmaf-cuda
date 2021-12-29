@@ -34,6 +34,8 @@
  */
 
 
+void checkNxNConstraint(const GraphCode &gc1, const GraphCode &gc2);
+
 __global__ void
 calcMetrices(unsigned short int *data, unsigned short int *comparedata, unsigned long noItems,
              unsigned int *numOfNonZeroEdges, unsigned int *edgeMetricCount, unsigned int *edgeType) {
@@ -49,15 +51,6 @@ calcMetrices(unsigned short int *data, unsigned short int *comparedata, unsigned
         return;
     }
 
-    /*
-    for (int i = 0; i < sqrtOfMatrix; i++) {
-        if (tid == i * sqrtOfMatrix + i) {
-            //Can be used to debug
-            //edgeMetricCount[tid] = -1;
-            return;
-        }
-    }*/
-
     if (x != y && data[tid] != 0) {
         numOfNonZeroEdges[tid] = 1;
         if (comparedata[tid] != 0) {
@@ -72,43 +65,6 @@ calcMetrices(unsigned short int *data, unsigned short int *comparedata, unsigned
 }
 
 
-//
-//template <unsigned int blockSize>
-//__device__ void warpReduce(volatile int *sdata, unsigned int tid) {
-//    if (blockSize >= 64) sdata[tid] += sdata[tid + 32];
-//    if (blockSize >= 32) sdata[tid] += sdata[tid + 16];
-//    if (blockSize >= 16) sdata[tid] += sdata[tid + 8];
-//    if (blockSize >= 8) sdata[tid] += sdata[tid + 4];
-//    if (blockSize >= 4) sdata[tid] += sdata[tid + 2];
-//    if (blockSize >= 2) sdata[tid] += sdata[tid + 1];
-//}
-//template <unsigned int blockSize>
-//__global__ void reduce6(int *g_idata, int *g_odata, unsigned int n) {
-//    extern __shared__ int sdata[];
-//    unsigned int tid = threadIdx.x;
-//    unsigned int i = blockIdx.x * (blockSize * 2) + tid;
-//    unsigned int gridSize = blockSize * 2 * gridDim.x;
-//    sdata[tid] = 0;
-//    while (i < n) {
-//        sdata[tid] += g_idata[i] + g_idata[i + blockSize];
-//        i += gridSize;
-//    }
-//    __syncthreads();
-//    if (blockSize >= 512) {
-//        if (tid < 256) { sdata[tid] += sdata[tid + 256]; }
-//        __syncthreads();
-//    }
-//    if (blockSize >= 256) {
-//        if (tid < 128) { sdata[tid] += sdata[tid + 128]; }
-//        __syncthreads();
-//    }
-//    if (blockSize >= 128) {
-//        if (tid < 64) { sdata[tid] += sdata[tid + 64]; }
-//        __syncthreads();
-//    }
-//    if (tid < 32) warpReduce<1024>(sdata, tid);
-//    if (tid == 0) g_odata[blockIdx.x] = sdata[0];
-//}
 
 void print_d_array(unsigned int* d_array, int len)
 {
@@ -124,6 +80,7 @@ void print_d_array(unsigned int* d_array, int len)
 }
 
 Metrics demoCudaLinearMatrixMemoryCudaReduceSum(GraphCode json1, GraphCode json2) {
+    checkNxNConstraint(json1, json2);
     cudaProfilerStart();
     int items1 = pow(json1.dict->size(), 2);
 
@@ -143,17 +100,6 @@ Metrics demoCudaLinearMatrixMemoryCudaReduceSum(GraphCode json1, GraphCode json2
     HANDLE_ERROR(cudaMalloc((void **) &darr_num_of_non_zero_edges, sizeof(unsigned int) * items1));
     HANDLE_ERROR(cudaMalloc((void **) &darr_edge_metric_count, sizeof(unsigned int) * items1));
     HANDLE_ERROR(cudaMalloc((void **) &darr_edge_type, sizeof(unsigned int) * items1));
-    /*
-    cudaMemcpy2DToArray (dst,
-                         0,
-                         0,
-                         matrix1,
-                         sizeof(int),
-                         gc1Dictionary.size() * sizeof(int),
-                         gc1Dictionary.size(),
-                         cudaMemcpyHostToDevice );
-
-    */
 
     // Transfer data from host to device memory
     HANDLE_ERROR(cudaMemcpy(gpu_inputMatrix1, json1.matrix, sizeof(unsigned short int) * items1, cudaMemcpyHostToDevice));
@@ -199,29 +145,6 @@ Metrics demoCudaLinearMatrixMemoryCudaReduceSum(GraphCode json1, GraphCode json2
         std::cout << "Computation time: " << elapsed_seconds.count() << "s\n";
     }
     auto mem_start = std::chrono::system_clock::now();
-
-
-//    int numThreadsPerBlock = 1024;
-//    int numOutputElements; // number of elements in the output list, initialised below
-//
-//    numOutputElements = items1 / (numThreadsPerBlock / 2);
-//    if (items1 % (numThreadsPerBlock / 2)) {
-//        numOutputElements++;
-//    }
-//    int *hostInput;
-//    int *deviceInput;
-//    int *deviceOutput;
-//
-//    const dim3 rblockSize(numThreadsPerBlock, 1, 1);
-//    const dim3 rgridSize(numOutputElements, 1, 1);
-//
-//    int *hostOutput = (int *)malloc(numOutputElements * sizeof(int));
-//    cudaMalloc((void **)&deviceOutput, numOutputElements * sizeof(int));
-//    reduce6<1024><<<rgridSize, rblockSize>>>(darr_num_of_non_zero_edges, deviceOutput, (unsigned int) items1);
-
-
-//    print_d_array(darr_num_of_non_zero_edges, items1);
-
 
     unsigned int gts_edge_metric_count = gpu_sum_reduce(darr_edge_metric_count, items1);
     unsigned int gts_edge_type = gpu_sum_reduce(darr_edge_type, items1);
@@ -300,8 +223,23 @@ Metrics demoCudaLinearMatrixMemoryCudaReduceSum(GraphCode json1, GraphCode json2
 
 }
 
+void checkNxNConstraint(const GraphCode &gc1, const GraphCode &gc2) {
+
+    if(gc1.dict->size() != gc2.dict->size()) {
+        std::cout << "Graph Codes need to have same size" << std::endl;
+        exit(71);
+    }
+    bool result = std::equal(gc1.dict->begin(), gc1.dict->end(), gc2.dict->begin());
+
+    if(!result) {
+        std::cout << "Graph Codes need to have same dict elements" << std::endl;
+        exit(71);
+    }
+}
+
 
 Metrics demoCudaLinearMatrixMemory(GraphCode json1, GraphCode json2) {
+    checkNxNConstraint(json1, json2);
 
     int items1 = pow(json1.dict->size(), 2);
 
@@ -467,6 +405,7 @@ Metrics demoCudaLinearMatrixMemory(GraphCode json1, GraphCode json2) {
 
 
 Metrics demoCudaLinearMatrixMemory(json json1, json json2) {
+    //checkNxNConstraint(json1, json2);
 
     json gc1Dictionary;
     int numberOfElements1;
