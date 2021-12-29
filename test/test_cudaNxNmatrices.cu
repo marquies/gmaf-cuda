@@ -6,32 +6,17 @@
 
 
 #include "../src/graphcode.h"
-#include "../src/cudahelper.cuh"
 #include "../src/cuda_algorithms.cuh"
 
 #include "testhelper.cpp"
 
-
-#define BLOCKSIZE_x 16
-#define BLOCKSIZE_y 16
-
-#define Nrows 4
-#define Ncols 4
-
-
 void testFindLargestDivisor();
-
 
 void testConvertGc4Cuda();
 
 void testDemoCudaLinearMatrixMemoryCudaReduceSum();
 
 void testCalcKernelLaunchConfig();
-
-/**
- * iDivUp FUNCTION
- */
-int iDivUp(int hostPtr, int b) { return ((hostPtr % b) != 0) ? (hostPtr / b + 1) : (hostPtr / b); }
 
 
 void testCudaLinearMatrixMemoryRealTest() {
