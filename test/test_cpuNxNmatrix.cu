@@ -20,13 +20,13 @@ void testCudaLinearMatrixMemoryRealTest() {
     Metrics m;
 
     json gcq = generateTestData(9);
-    m = calculateSimilaritySequentialOrdered(gcq, gcq);
+    m = demoCalculateSimilaritySequentialOrdered(gcq, gcq);
 
     assert(m.similarity == 1);
     assert(m.recommendation == 1);
 
     json gcq2 = generateTestData(2040);
-    m = calculateSimilaritySequentialOrdered(gcq2, gcq2);
+    m = demoCalculateSimilaritySequentialOrdered(gcq2, gcq2);
 
     assert(m.similarity == 1);
     assert(m.recommendation == 1);
@@ -40,7 +40,7 @@ void testCudaLinearMatrixMemoryRealTest() {
     gcq4["dictionary"] = { "head", "body", "foot"};
     gcq4["matrix"] = {{1,2,0}, {0,1,0}, {0,0,1}};
 
-    Metrics m2 = calculateSimilaritySequentialOrdered(gcq3, gcq4);
+    Metrics m2 = demoCalculateSimilaritySequentialOrdered(gcq3, gcq4);
 
     assert(AreSame(m2.similarity,(float) 3./3.));
     assert(m2.recommendation == .5);

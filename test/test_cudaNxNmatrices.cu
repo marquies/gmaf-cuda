@@ -1,19 +1,13 @@
 // Ttt
-#include <cstdlib>
 
 #include <stdio.h>
 #include <cuda_runtime.h>
+#include <helper.h>
 
-#include <iostream>
-
-#include <math.h>
-#include <chrono>
-#include <ctime>
 
 #include "../src/graphcode.h"
 #include "../src/cudahelper.cuh"
-#include "../src/cuda_algorithms.cu"
-#include "../src/helper.h"
+#include "../src/cuda_algorithms.cuh"
 
 #include "testhelper.cpp"
 
@@ -25,16 +19,19 @@
 #define Ncols 4
 
 
-
 void testFindLargestDivisor();
 
 
-
 void testConvertGc4Cuda();
+
+void testDemoCudaLinearMatrixMemoryCudaReduceSum();
+
+void testCalcKernelLaunchConfig();
+
 /**
  * iDivUp FUNCTION
  */
-int iDivUp(int hostPtr, int b){ return ((hostPtr % b) != 0) ? (hostPtr / b + 1) : (hostPtr / b); }
+int iDivUp(int hostPtr, int b) { return ((hostPtr % b) != 0) ? (hostPtr / b + 1) : (hostPtr / b); }
 
 //
 ///**
@@ -86,14 +83,12 @@ int iDivUp(int hostPtr, int b){ return ((hostPtr % b) != 0) ? (hostPtr / b + 1) 
 /* TEST KERNEL 2D */
 /******************/
 
-__global__ void test_kernel_2D(float *devPtr, size_t pitch)
-{
-    int    tidx = blockIdx.x*blockDim.x + threadIdx.x;
-    int    tidy = blockIdx.y*blockDim.y + threadIdx.y;
+__global__ void test_kernel_2D(float *devPtr, size_t pitch) {
+    int tidx = blockIdx.x * blockDim.x + threadIdx.x;
+    int tidy = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if ((tidx < Ncols) && (tidy < Nrows))
-    {
-        float *row_a = (float *)((char*)devPtr + tidy * pitch);
+    if ((tidx < Ncols) && (tidy < Nrows)) {
+        float *row_a = (float *) ((char *) devPtr + tidy * pitch);
         if (tidx == tidy) {
             row_a[tidx] = 0.0;
         } else {
@@ -104,9 +99,7 @@ __global__ void test_kernel_2D(float *devPtr, size_t pitch)
 }
 
 
-
-int testCudaMatrixMemory()
-{
+int testCudaMatrixMemory() {
     float hostPtr[Nrows][Ncols];
     float *devPtr;
     size_t pitch;
@@ -119,7 +112,8 @@ int testCudaMatrixMemory()
 
     // --- 2D pitched allocation and host->device memcopy
     HANDLE_ERROR(cudaMallocPitch(&devPtr, &pitch, Ncols * sizeof(float), Nrows));
-    HANDLE_ERROR(cudaMemcpy2D(devPtr, pitch, hostPtr, Ncols*sizeof(float), Ncols*sizeof(float), Nrows, cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy2D(devPtr, pitch, hostPtr, Ncols * sizeof(float), Ncols * sizeof(float), Nrows,
+                              cudaMemcpyHostToDevice));
 
     dim3 gridSize(iDivUp(Ncols, BLOCKSIZE_x), iDivUp(Nrows, BLOCKSIZE_y));
     dim3 blockSize(BLOCKSIZE_y, BLOCKSIZE_x);
@@ -129,7 +123,8 @@ int testCudaMatrixMemory()
     HANDLE_ERROR(cudaPeekAtLastError());
     HANDLE_ERROR(cudaDeviceSynchronize());
 
-    HANDLE_ERROR(cudaMemcpy2D(hostPtr, Ncols * sizeof(float), devPtr, pitch, Ncols * sizeof(float), Nrows, cudaMemcpyDeviceToHost));
+    HANDLE_ERROR(cudaMemcpy2D(hostPtr, Ncols * sizeof(float), devPtr, pitch, Ncols * sizeof(float), Nrows,
+                              cudaMemcpyDeviceToHost));
 
     for (int i = 0; i < Nrows; i++)
         for (int j = 0; j < Ncols; j++)
@@ -144,39 +139,41 @@ void testCudaLinearMatrixMemoryRealTest() {
     Metrics m;
 
     json gcq = generateTestData(9);
-    m = calculateSimilaritySequentialOrdered(gcq, gcq);
+    m = demoCudaLinearMatrixMemory(gcq, gcq);
 
     assert(m.similarity == 1);
     assert(m.recommendation == 1);
 
     json gcq2 = generateTestData(2040);
-    m = calculateSimilaritySequentialOrdered(gcq2, gcq2);
+    m = demoCudaLinearMatrixMemory(gcq2, gcq2);
 
     assert(m.similarity == 1);
     assert(m.recommendation == 1);
 
 
     nlohmann::json gcq3;
-    gcq3["dictionary"] = { "head", "body", "foot"};
-    gcq3["matrix"] = {{1,1,0}, {0,1,0}, {0,1,1}};
+    gcq3["dictionary"] = {"head", "body", "foot"};
+    gcq3["matrix"] = {{1, 1, 0},
+                      {0, 1, 0},
+                      {0, 1, 1}};
 
     nlohmann::json gcq4;
-    gcq4["dictionary"] = { "head", "body", "foot"};
-    gcq4["matrix"] = {{1,2,0}, {0,1,0}, {0,0,1}};
+    gcq4["dictionary"] = {"head", "body", "foot"};
+    gcq4["matrix"] = {{1, 2, 0},
+                      {0, 1, 0},
+                      {0, 0, 1}};
 
-    Metrics m2 = calculateSimilaritySequentialOrdered(gcq3, gcq4);
+    Metrics m2 = demoCudaLinearMatrixMemory(gcq3, gcq4);
 
-    assert(AreSame(m2.similarity,(float) 3./3.));
+    assert(AreSame(m2.similarity, (float) 3. / 3.));
     assert(m2.recommendation == .5);
     assert(m2.inferencing == 0);
-
-
 
 
 }
 
 //
-//Metrics testCudaLinearMatrixMemory(json json1, json json2) {
+//Metrics demoCudaLinearMatrixMemory(json json1, json json2) {
 //
 //    json gc1Dictionary;
 //    int numberOfElements1;
@@ -380,26 +377,110 @@ void testCudaLinearMatrixMemoryRealTest() {
 /********/
 /* MAIN */
 /********/
-int main(int, char**)
-{
+int main(int, char **) {
     testFindLargestDivisor();
     testCudaMatrixMemory();
     testConvertGc4Cuda();
-    //testCudaLinearMatrixMemory();
     testCudaLinearMatrixMemoryRealTest();
+
+    testDemoCudaLinearMatrixMemoryCudaReduceSum();
+
+    testCalcKernelLaunchConfig();
+
+}
+
+void testCalcKernelLaunchConfig() {
+    dim3 grid, block;
+
+    calcKernelLaunchConfig(1, block, grid);
+    assert(block.x == 1);
+    assert(block.y == 1);
+    assert(grid.x == 1);
+    assert(grid.y == 1);
+
+    calcKernelLaunchConfig(2, block, grid);
+    assert(block.x == 2);
+    assert(block.y == 2);
+    assert(grid.x == 1);
+    assert(grid.y == 1);
+
+    calcKernelLaunchConfig(32, block, grid);
+    assert(block.x == 32);
+    assert(block.y == 32);
+    assert(grid.x == 1);
+    assert(grid.y == 1);
+
+    calcKernelLaunchConfig(33, block, grid);
+    assert(block.x == 32);
+    assert(block.y == 32);
+    assert(grid.x == 2);
+    assert(grid.y == 2);
+
+}
+
+void testDemoCudaLinearMatrixMemoryCudaReduceSum() {
+
+    // Generate test data
+
+    Metrics m;
+
+    const GraphCode &gcq = generateTestDataGc(9);
+    m = demoCudaLinearMatrixMemoryCudaReduceSum(gcq, gcq);
+
+    assert(m.similarity == 1);
+    assert(m.recommendation == 1);
+
+    const GraphCode &gcq2 = generateTestDataGc(2040);
+    m = demoCudaLinearMatrixMemoryCudaReduceSum(gcq2, gcq2);
+
+    assert(m.similarity == 1);
+    assert(m.recommendation == 1);
+
+    GraphCode gcq3;
+    std::vector<std::string> *vect = new std::vector<std::string>{"head", "body", "foot"};
+    unsigned short mat1[] = {1, 1, 0, 0, 1, 0, 0, 1, 1};
+    unsigned short* mat = mat1;
+    gcq3.dict = vect;
+    gcq3.matrix = mat;
+
+
+//    nlohmann::json gcq3;
+//    gcq3["dictionary"] = {"head", "body", "foot"};
+//    gcq3["matrix"] = {{1, 1, 0},
+//                      {0, 1, 0},
+//                      {0, 1, 1}};
+    GraphCode gcq4;
+    unsigned short mat2[] = {1, 2, 0, 0, 1, 0, 0, 0, 1};
+    unsigned short* mata = mat2;
+    gcq4.dict = vect;
+    gcq4.matrix = mata;
+//    nlohmann::json gcq4;
+//    gcq4["dictionary"] = {"head", "body", "foot"};
+//    gcq4["matrix"] = {{1, 2, 0},
+//                      {0, 1, 0},
+//                      {0, 0, 1}};
+
+    Metrics m2 = demoCudaLinearMatrixMemoryCudaReduceSum(gcq3, gcq4);
+
+    assert(AreSame(m2.similarity, (float) 3. / 3.));
+    assert(m2.recommendation == .5);
+    assert(m2.inferencing == 0);
+
 
 }
 
 void testConvertGc4Cuda() {
 
     nlohmann::json gcq3;
-    gcq3["dictionary"] = { "head", "body", "foot"};
-    gcq3["matrix"] = {{1,1,0}, {0,1,0}, {0,1,1}};
+    gcq3["dictionary"] = {"head", "body", "foot"};
+    gcq3["matrix"] = {{1, 1, 0},
+                      {0, 1, 0},
+                      {0, 1, 1}};
 
     json dict;
     int numberOfElements1;
-    int items1;
-    int *inputMatrix1;
+    long items1;
+    unsigned short *inputMatrix1;
     convertGc2Cuda(gcq3, dict, numberOfElements1, items1, inputMatrix1);
 
     assert(inputMatrix1[0] == 1);
