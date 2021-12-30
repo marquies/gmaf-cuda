@@ -98,9 +98,9 @@ __device__ int cuda_uuid_compare(const uuid_t uu1, const uuid_t uu2) {
 
 __global__ void compare2(unsigned short *gcMatrixData,
                          unsigned int *gcDictData,
-                         unsigned int gcMatrixOffsets[2],
-                         unsigned int gcMatrixSizes[2],
-                         unsigned int gcDictOffsets[2],
+                         unsigned int *gcMatrixOffsets,
+                         unsigned int *gcMatrixSizes,
+                         unsigned int *gcDictOffsets,
                          Metrics *metrics) {
     int sim = 0;
     int elements = sqrtf((float) gcMatrixSizes[0]);
@@ -129,7 +129,6 @@ __global__ void compare2(unsigned short *gcMatrixData,
                 if (position1 == -1 || position2 == -1) {
                     continue;
                 }
-
                 int edge = gcMatrixData[gcMatrixOffsets[1] + position1 * elements +
                                         position2];
                 if (edge != 0) {
@@ -149,9 +148,9 @@ __global__ void compare2(unsigned short *gcMatrixData,
     if (num_of_non_zero_edges > 0) {
         /*edge_metric*/ metrics->recommendation = (float) edge_metric_count / (float) num_of_non_zero_edges;
     }
-    if (edge_metric_count > 0) {
-        /*edge_type_metric*/ metrics->inferencing = (float) edge_type / (float) edge_metric_count;
-    }
+//    if (edge_metric_count > 0) {
+//        /*edge_type_metric*/ metrics->inferencing = (float) edge_type / (float) edge_metric_count;
+//    }
 }
 
 
@@ -246,22 +245,10 @@ int main() {
 
 void testGcSimilarityKernelWith3x3() {
 
-    int dictSize = 3;
+    int NUMBER_OF_GCS = 2;
 
-    GraphCode gcq3;
     std::vector<std::string> *vect = new std::vector<std::string>{"head", "body", "foot"};
     unsigned short mat1[] = {1, 1, 0, 0, 1, 0, 0, 1, 1};
-    unsigned short *mat = mat1;
-    gcq3.dict = vect;
-    gcq3.matrix = mat;
-
-
-    GraphCode gcq4;
-    std::vector<std::string> *vect2 = new std::vector<std::string>{"head", "body", "foot"};
-    unsigned short mat2[] = {1, 2, 0, 0, 1, 0, 0, 0, 1};
-    unsigned short *mata = mat2;
-    gcq4.dict = vect2;
-    gcq4.matrix = mata;
 
 
     unsigned short *gcMatrixData = (unsigned short *) malloc(0);
@@ -270,39 +257,50 @@ void testGcSimilarityKernelWith3x3() {
     //unsigned int *gcMatrixOffsets = (unsigned int *) malloc(0);
     //unsigned int *gcMatrixSizes = (unsigned int *) malloc(0);
 
-    unsigned int gcMatrixOffsets[2];
-    unsigned int gcDictOffsets[2];
-    unsigned int gcMatrixSizes[2];
+    unsigned int *gcMatrixOffsets = (unsigned int *) malloc(sizeof(unsigned int) * NUMBER_OF_GCS);
+    unsigned int *gcDictOffsets = (unsigned int *) malloc(sizeof(unsigned int) * NUMBER_OF_GCS);
+    unsigned int *gcMatrixSizes = (unsigned int *) malloc(sizeof(unsigned int) * NUMBER_OF_GCS);
 
-
+    unsigned int lastDictOffset = 0;
     unsigned int dictCounter = 0;
+
     std::map<std::string, unsigned int> dict_map;
+
+    int lastOffset = 0;
+    int lastPosition = 0;
+
+
+    int dc1 = 0;
+    // Create dict map for first vector
     for (std::string str: *vect) {
-        dict_map[str] = dict_map.size();
+        if (dict_map.find(str) == dict_map.end()) {
+            dict_map[str] = dict_map.size();
+        }
+        dc1++;
     }
 
-    int aS = dictSize;
-    gcDictOffsets[0] = 0;
-    gcDictOffsets[1] = aS;
-    unsigned int *gcDictData_n = (unsigned int *) realloc(gcDictData, aS * sizeof(unsigned int));
+    // Expand global dict array
+    unsigned int *gcDictData_n = (unsigned int *) realloc(gcDictData, dc1 * sizeof(unsigned int));
     if (gcDictData_n) {
         gcDictData = gcDictData_n;
     } else {
         // deal with realloc failing because memory could not be allocated.
         exit(99);
     }
+
+    // Add dict to the global dict data array
     for (std::string str: *vect) {
         gcDictData[dictCounter++] = dict_map[str];
     }
 
+    gcDictOffsets[0] = lastDictOffset;
+    lastDictOffset = dictCounter;
 
-    int lastOffset = 0;
-    int lastPosition = 0;
 
+
+
+    // Expand global matrix array
     int matSize = sizeof(mat1) / sizeof(unsigned short);
-
-//    size_t currentSize = sizeof(gcMatrixData);
-//    std::cout << currentSize << std::endl;
 
     unsigned int newS = 0;
     for (int i = 0; i <= lastPosition; i++) {
@@ -317,8 +315,11 @@ void testGcSimilarityKernelWith3x3() {
         exit(99);
     }
 
+    // Add matrix to the global matrix array
     appendMatrix(mat1, matSize, gcMatrixData, gcDictData, gcMatrixOffsets, gcMatrixSizes, &lastOffset,
                  lastPosition);
+
+    lastPosition++;
 
     assert(gcMatrixData[0] == 1);
     assert(gcMatrixData[1] == 1);
@@ -334,10 +335,21 @@ void testGcSimilarityKernelWith3x3() {
     assert(gcDictData[1] == 1);
     assert(gcDictData[2] == 2);
 
-    lastPosition++;
+    std::vector<std::string> *vect2 = new std::vector<std::string>{"head", "body", "foot"};
+    unsigned short mat2[] = {1, 2, 0, 0, 1, 0, 0, 0, 1};
 
-    newS = dictSize + dictCounter;
+    dc1 = 0;
+    // Create dict map for first vector
+    for (std::string str: *vect) {
+        if (dict_map.find(str) == dict_map.end()) {
+            dict_map[str] = dict_map.size();
+        }
+        dc1++;
+    }
 
+
+    // Expand the global dict array
+    newS = dc1 + dictCounter;
     unsigned int *gcDictData_n2 = (unsigned int *) realloc(gcDictData, newS * sizeof(unsigned int));
     if (gcDictData_n2) {
         gcDictData = gcDictData_n2;
@@ -345,9 +357,17 @@ void testGcSimilarityKernelWith3x3() {
         // deal with realloc failing because memory could not be allocated.
         exit(99);
     }
+
+    // Add dict to global dict array
     for (std::string str: *vect) {
         gcDictData[dictCounter++] = dict_map[str];
     }
+
+    gcDictOffsets[lastPosition] = lastDictOffset;
+    lastDictOffset = dictCounter;
+
+
+    // Expand global matrix
     matSize = sizeof(mat2) / sizeof(unsigned short);
 
     for (int i = 0; i <= lastPosition; i++) {
@@ -362,8 +382,11 @@ void testGcSimilarityKernelWith3x3() {
         exit(99);
     }
 
+    // Add to global dict
     appendMatrix(mat2, matSize, gcMatrixData, gcDictData, gcMatrixOffsets, gcMatrixSizes, &lastOffset,
                  lastPosition);
+
+    lastPosition++;
 
     assert(gcMatrixData[0] == 1);
     assert(gcMatrixData[1] == 1);
@@ -407,24 +430,24 @@ void testGcSimilarityKernelWith3x3() {
     Metrics *d_result;
 
     int md_size = 0;
-    for (int i = 0; i <= lastPosition; i++) {
-        md_size += gcMatrixSizes[lastPosition];
+    for (int i = 0; i < lastPosition; i++) {
+        md_size += gcMatrixSizes[i];
     }// ;
 
     HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixData, md_size * sizeof(unsigned short)));
     HANDLE_ERROR(cudaMalloc((void **) &d_gcDictData, dictCounter * sizeof(unsigned int)));
-    HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixOffsets, 2 * sizeof(unsigned int)));
-    HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixSizes, 2 * sizeof(unsigned int)));
-    HANDLE_ERROR(cudaMalloc((void **) &d_gcDictOffsets, 2 * sizeof(unsigned int)));
+    HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixOffsets, NUMBER_OF_GCS * sizeof(unsigned int)));
+    HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixSizes, NUMBER_OF_GCS * sizeof(unsigned int)));
+    HANDLE_ERROR(cudaMalloc((void **) &d_gcDictOffsets, NUMBER_OF_GCS * sizeof(unsigned int)));
     HANDLE_ERROR(cudaMalloc((void **) &d_result, sizeof(Metrics)));
 
 
     HANDLE_ERROR(
             cudaMemcpy(d_gcMatrixData, gcMatrixData, md_size * sizeof(unsigned short), cudaMemcpyHostToDevice));
     HANDLE_ERROR(cudaMemcpy(d_gcDictData, gcDictData, dictCounter * sizeof(unsigned int), cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_gcMatrixOffsets, gcMatrixOffsets, 2 * sizeof(unsigned int), cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_gcMatrixSizes, gcMatrixSizes, 2 * sizeof(unsigned int), cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_gcDictOffsets, gcDictOffsets, 2 * sizeof(unsigned int), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_gcMatrixOffsets, gcMatrixOffsets, NUMBER_OF_GCS * sizeof(unsigned int), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_gcMatrixSizes, gcMatrixSizes, NUMBER_OF_GCS * sizeof(unsigned int), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_gcDictOffsets, gcDictOffsets, NUMBER_OF_GCS * sizeof(unsigned int), cudaMemcpyHostToDevice));
 
 
     //for(int i = 0; i <= lastPosition; i++) {
@@ -460,7 +483,6 @@ void appendMatrix(const unsigned short *mat1, unsigned short sizeofMat, unsigned
                   int position) {
     gcMatrixOffsets[position] = *lastOffset;
     gcMatrixSizes[position] = sizeofMat; // / sizeof (unsigned short )
-    int newS = 0;
 
     for (int i = 0; i < gcMatrixSizes[position]; i++) {
         std::cout << i << " ; position: " << gcMatrixOffsets[position] + i << std::endl;
