@@ -11,6 +11,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <cudahelper.cuh>
+#include <c++/9/chrono>
+#include "helper.h"
+#include <time.h>
+#include <stdlib.h>
+
 
 
 void testGcSimilarityKernelWith100x100();
@@ -21,6 +26,8 @@ void appendMatrix(const unsigned short *mat1, unsigned short sizeofMat, unsigned
                   unsigned int *gcDictData, unsigned int *gcMatrixOffsets, unsigned int *gcMatrixSizes, int *lastOffset,
                   int position);
 
+
+void testGcSimilarityKernelWithMany3x3();
 
 struct uuid {
     uint32_t time_low;
@@ -96,18 +103,19 @@ __device__ int cuda_uuid_compare(const uuid_t uu1, const uuid_t uu2) {
     return cuda_memcmp(uuid1.node, uuid2.node, 6);
 }
 
-__global__ void compare2(unsigned short *gcMatrixData,
-                         unsigned int *gcDictData,
-                         unsigned int *gcMatrixOffsets,
-                         unsigned int *gcMatrixSizes,
-                         unsigned int *gcDictOffsets,
+__global__ void compare2(unsigned short *gcMatrixData, unsigned int *gcDictData, unsigned int *gcMatrixOffsets,
+                         unsigned int *gcMatrixSizes, unsigned int *gcDictOffsets, int gcToCompare,
                          Metrics *metrics) {
+    int index = blockIdx.x;
+    int gc1 = gcToCompare;
+    int gc2 = index;
+
     int sim = 0;
-    int elements = sqrtf((float) gcMatrixSizes[0]);
+    int elements = sqrtf((float) gcMatrixSizes[gc1]);
 
     for (int i = 0; i < elements; i++) {
         for (int j = 0; j < elements; j++) {
-            if (gcDictData[gcDictOffsets[0] + i] == gcDictData[gcDictOffsets[1] + j]) {
+            if (gcDictData[gcDictOffsets[gc1] + i] == gcDictData[gcDictOffsets[gc2] + j]) {
                 sim++;
             }
         }
@@ -121,7 +129,7 @@ __global__ void compare2(unsigned short *gcMatrixData,
     for (int i = 0; i < elements; i++) {
         for (int j = 0; j < elements; j++) {
 
-            if (i != j && gcMatrixData[gcMatrixOffsets[0] + i * elements + j] != 0) {
+            if (i != j && gcMatrixData[gcMatrixOffsets[gc1] + i * elements + j] != 0) {
                 num_of_non_zero_edges++;
 
                 int position1 = i;
@@ -129,28 +137,28 @@ __global__ void compare2(unsigned short *gcMatrixData,
                 if (position1 == -1 || position2 == -1) {
                     continue;
                 }
-                int edge = gcMatrixData[gcMatrixOffsets[1] + position1 * elements +
+                int edge = gcMatrixData[gcMatrixOffsets[gc2] + position1 * elements +
                                         position2];
                 if (edge != 0) {
                     edge_metric_count++;
                 }
-                if (edge == gcMatrixData[gcMatrixOffsets[0] + i * elements + j]) {
+                if (edge == gcMatrixData[gcMatrixOffsets[gc1] + i * elements + j]) {
                     edge_type++;
                 }
 
             }
         }
     }
-    metrics->similarity = 0.0;
-    metrics->recommendation = 0.0;
-    metrics->inferencing = 0.0;
-    metrics->similarity = (float) sim / (float) elements;
+    metrics[index].similarity = 0.0;
+    metrics[index].recommendation = 0.0;
+    metrics[index].inferencing = 0.0;
+    metrics[index].similarity = (float) sim / (float) elements;
     if (num_of_non_zero_edges > 0) {
-        /*edge_metric*/ metrics->recommendation = (float) edge_metric_count / (float) num_of_non_zero_edges;
+        /*edge_metric*/ metrics[index].recommendation = (float) edge_metric_count / (float) num_of_non_zero_edges;
     }
-//    if (edge_metric_count > 0) {
-//        /*edge_type_metric*/ metrics->inferencing = (float) edge_type / (float) edge_metric_count;
-//    }
+    if (edge_metric_count > 0) {
+        /*edge_type_metric*/ metrics[index].inferencing = (float) edge_type / (float) edge_metric_count;
+    }
 }
 
 
@@ -241,14 +249,13 @@ __global__ void compare(GraphCode2 *gc1, GraphCode2 *gc2, Metrics *metrics) {
 int main() {
     testGcSimilarityKernelWith100x100();
     testGcSimilarityKernelWith3x3();
+    testGcSimilarityKernelWithMany3x3();
 }
 
-void testGcSimilarityKernelWith3x3() {
+void testGcSimilarityKernelWithMany3x3() {
 
-    int NUMBER_OF_GCS = 2;
-
-    std::vector<std::string> *vect = new std::vector<std::string>{"head", "body", "foot"};
-    unsigned short mat1[] = {1, 1, 0, 0, 1, 0, 0, 1, 1};
+    int NUMBER_OF_GCS = 1000000;
+    srand(time(NULL));   // Initialization, should only be called once.
 
 
     unsigned short *gcMatrixData = (unsigned short *) malloc(0);
@@ -268,6 +275,183 @@ void testGcSimilarityKernelWith3x3() {
 
     int lastOffset = 0;
     int lastPosition = 0;
+
+    for (int ii = 0; ii < NUMBER_OF_GCS; ii++) {
+        //------
+        // Adding
+        //------
+
+        //std::vector<std::string> *vect = new std::vector<std::string>{"head", "body", "foot", "head"};
+        //unsigned short mat[] = {1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1};
+
+        GraphCode gc1 = generateTestDataGc(250);
+        std::vector<std::string> *vect = gc1.dict;
+        unsigned short mat[gc1.dict->size()];
+        for (int i = 0; i < vect->size(); i++ ) {
+            mat[i] = gc1.matrix[i];
+            if (i == 2)
+                mat[i] = rand() % 10;
+        }
+
+        int dc1 = 0;
+        // Create dict map for first vector
+        for (std::string str: *vect) {
+            if (dict_map.find(str) == dict_map.end()) {
+                dict_map[str] = dict_map.size();
+            }
+            dc1++;
+        }
+
+        // Expand global dict array
+        int newS = dc1 + dictCounter;
+        unsigned int *gcDictData_n = (unsigned int *) realloc(gcDictData, newS * sizeof(unsigned int));
+        //unsigned int *gcDictData_n = (unsigned int *) realloc(gcDictData, dc1 * sizeof(unsigned int));
+        if (gcDictData_n) {
+            gcDictData = gcDictData_n;
+        } else {
+            // deal with realloc failing because memory could not be allocated.
+            exit(98);
+        }
+
+        // Add dict to the global dict data array
+        for (std::string str: *vect) {
+            gcDictData[dictCounter++] = dict_map[str];
+        }
+
+        gcDictOffsets[ii] = lastDictOffset;
+        lastDictOffset = dictCounter;
+
+        // Expand global matrix array
+        int matSize = sizeof(mat) / sizeof(unsigned short);
+
+        newS = lastOffset + matSize;
+        //for (int i = 0; i <= lastPosition; i++) {
+        //    newS += gcMatrixSizes[i];
+        //}// ;
+        size_t newSize = newS * sizeof(unsigned short);
+        unsigned short *gcMatrixData_n = (unsigned short *) realloc(gcMatrixData, newSize);
+        if (gcMatrixData_n) {
+            gcMatrixData = gcMatrixData_n;
+        } else {
+            // deal with realloc failing because memory could not be allocated.
+            exit(99);
+        }
+
+        // Add matrix to the global matrix array
+        appendMatrix(mat, matSize, gcMatrixData, gcDictData, gcMatrixOffsets, gcMatrixSizes, &lastOffset,
+                     lastPosition);
+
+        lastPosition++;
+
+        //delete vect;
+        delete gc1.dict;
+        delete gc1.matrix;
+
+    }
+
+
+    //------------
+    // CUDA prep
+    //------------
+
+
+    unsigned short *d_gcMatrixData;
+    unsigned int *d_gcDictData;
+    unsigned int *d_gcMatrixOffsets;
+    unsigned int *d_gcMatrixSizes;
+    unsigned int *d_gcDictOffsets;
+    Metrics *d_result;
+
+    int md_size = 0;
+    for (int i = 0; i < lastPosition; i++) {
+        md_size += gcMatrixSizes[i];
+    }// ;
+
+    HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixData, md_size * sizeof(unsigned short)));
+    HANDLE_ERROR(cudaMalloc((void **) &d_gcDictData, dictCounter * sizeof(unsigned int)));
+    HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixOffsets, NUMBER_OF_GCS * sizeof(unsigned int)));
+    HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixSizes, NUMBER_OF_GCS * sizeof(unsigned int)));
+    HANDLE_ERROR(cudaMalloc((void **) &d_gcDictOffsets, NUMBER_OF_GCS * sizeof(unsigned int)));
+    HANDLE_ERROR(cudaMalloc((void **) &d_result, NUMBER_OF_GCS * sizeof(Metrics)));
+
+
+    HANDLE_ERROR(
+            cudaMemcpy(d_gcMatrixData, gcMatrixData, md_size * sizeof(unsigned short), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_gcDictData, gcDictData, dictCounter * sizeof(unsigned int), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_gcMatrixOffsets, gcMatrixOffsets, NUMBER_OF_GCS * sizeof(unsigned int),
+                            cudaMemcpyHostToDevice));
+    HANDLE_ERROR(
+            cudaMemcpy(d_gcMatrixSizes, gcMatrixSizes, NUMBER_OF_GCS * sizeof(unsigned int), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(
+            cudaMemcpy(d_gcDictOffsets, gcDictOffsets, NUMBER_OF_GCS * sizeof(unsigned int), cudaMemcpyHostToDevice));
+
+    auto start = std::chrono::system_clock::now();
+
+    compare2<<<NUMBER_OF_GCS, 1>>>(d_gcMatrixData, d_gcDictData, d_gcMatrixOffsets, d_gcMatrixSizes, d_gcDictOffsets, 0,
+                                   d_result);
+    auto end = std::chrono::system_clock::now();
+
+    std::chrono::duration<double> elapsed_seconds = end - start;
+    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+
+    std::cout << "finished CUDA computation at " << std::ctime(&end_time)
+              << "elapsed time: " << elapsed_seconds.count() << "s\n";
+
+    HANDLE_ERROR(cudaPeekAtLastError());
+    HANDLE_ERROR(cudaDeviceSynchronize());
+
+    Metrics result[NUMBER_OF_GCS];
+    HANDLE_ERROR(cudaMemcpy(&result, d_result, NUMBER_OF_GCS * sizeof(Metrics), cudaMemcpyDeviceToHost));
+
+    for (int i = 0; i < NUMBER_OF_GCS; i++) {
+
+
+//        std::cout << "Result (" << i << ") "
+//                  << "Similarity " << result[i].similarity << "; "
+//                  << "Recommendation " << result[i].recommendation << "; "
+//                  << "Inference " << result[i].inferencing << "; "
+//                  << std::endl;
+
+//        assert(result[i].similarity == 1);
+//        assert(result[i].recommendation == 0.5);
+//        assert(result[i].inferencing == 0);
+    }
+    HANDLE_ERROR(cudaFree(d_gcMatrixData));
+    HANDLE_ERROR(cudaFree(d_gcDictData));
+    HANDLE_ERROR(cudaFree(d_gcMatrixOffsets));
+    HANDLE_ERROR(cudaFree(d_gcMatrixSizes));
+    HANDLE_ERROR(cudaFree(d_result));
+}
+
+void testGcSimilarityKernelWith3x3() {
+
+    int NUMBER_OF_GCS = 3;
+
+
+    unsigned short *gcMatrixData = (unsigned short *) malloc(0);
+    unsigned int *gcDictData = (unsigned int *) malloc(0);
+
+    //unsigned int *gcMatrixOffsets = (unsigned int *) malloc(0);
+    //unsigned int *gcMatrixSizes = (unsigned int *) malloc(0);
+
+    unsigned int *gcMatrixOffsets = (unsigned int *) malloc(sizeof(unsigned int) * NUMBER_OF_GCS);
+    unsigned int *gcDictOffsets = (unsigned int *) malloc(sizeof(unsigned int) * NUMBER_OF_GCS);
+    unsigned int *gcMatrixSizes = (unsigned int *) malloc(sizeof(unsigned int) * NUMBER_OF_GCS);
+
+    unsigned int lastDictOffset = 0;
+    unsigned int dictCounter = 0;
+
+    std::map<std::string, unsigned int> dict_map;
+
+    int lastOffset = 0;
+    int lastPosition = 0;
+
+    //------
+    // Adding
+    //------
+
+    std::vector<std::string> *vect = new std::vector<std::string>{"head", "body", "foot"};
+    unsigned short mat1[] = {1, 1, 0, 0, 1, 0, 0, 1, 1};
 
 
     int dc1 = 0;
@@ -296,15 +480,12 @@ void testGcSimilarityKernelWith3x3() {
     gcDictOffsets[0] = lastDictOffset;
     lastDictOffset = dictCounter;
 
-
-
-
     // Expand global matrix array
     int matSize = sizeof(mat1) / sizeof(unsigned short);
 
     unsigned int newS = 0;
     for (int i = 0; i <= lastPosition; i++) {
-        newS += gcMatrixSizes[lastPosition];
+        newS += gcMatrixSizes[i];
     }// ;
     size_t newSize = newS * sizeof(unsigned short);
     unsigned short *gcMatrixData_n = (unsigned short *) realloc(gcMatrixData, newSize);
@@ -335,12 +516,17 @@ void testGcSimilarityKernelWith3x3() {
     assert(gcDictData[1] == 1);
     assert(gcDictData[2] == 2);
 
+    //------
+    // Adding
+    //------
+
+
     std::vector<std::string> *vect2 = new std::vector<std::string>{"head", "body", "foot"};
     unsigned short mat2[] = {1, 2, 0, 0, 1, 0, 0, 0, 1};
 
     dc1 = 0;
     // Create dict map for first vector
-    for (std::string str: *vect) {
+    for (std::string str: *vect2) {
         if (dict_map.find(str) == dict_map.end()) {
             dict_map[str] = dict_map.size();
         }
@@ -359,7 +545,7 @@ void testGcSimilarityKernelWith3x3() {
     }
 
     // Add dict to global dict array
-    for (std::string str: *vect) {
+    for (std::string str: *vect2) {
         gcDictData[dictCounter++] = dict_map[str];
     }
 
@@ -422,6 +608,70 @@ void testGcSimilarityKernelWith3x3() {
     assert(gcDictOffsets[1] == 3);
 
 
+    //------
+    // Adding
+    //------
+
+    std::vector<std::string> *vect3 = new std::vector<std::string>{"head", "body", "foot"};
+    unsigned short mat3[] = {1, 2, 0, 0, 1, 1, 1, 1, 1};
+//                     mat2 {1, 2, 0, 0, 1, 0, 0, 0, 1}
+
+    dc1 = 0;
+    // Create dict map for first vector
+    for (std::string str: *vect3) {
+        if (dict_map.find(str) == dict_map.end()) {
+            dict_map[str] = dict_map.size();
+        }
+        dc1++;
+    }
+
+
+    // Expand the global dict array
+    newS = dc1 + dictCounter;
+    gcDictData_n2 = (unsigned int *) realloc(gcDictData, newS * sizeof(unsigned int));
+    if (gcDictData_n2) {
+        gcDictData = gcDictData_n2;
+    } else {
+        // deal with realloc failing because memory could not be allocated.
+        exit(99);
+    }
+
+    // Add dict to global dict array
+    for (std::string str: *vect3) {
+        gcDictData[dictCounter++] = dict_map[str];
+    }
+
+    gcDictOffsets[lastPosition] = lastDictOffset;
+    lastDictOffset = dictCounter;
+
+
+    // Expand global matrix
+    matSize = sizeof(mat3) / sizeof(unsigned short);
+
+    for (int i = 0; i <= lastPosition; i++) {
+        newS += gcMatrixSizes[lastPosition];
+    }// ;
+    newSize = newS * sizeof(unsigned short);
+    gcMatrixData_n = (unsigned short *) realloc(gcMatrixData, newSize);
+    if (gcMatrixData_n) {
+        gcMatrixData = gcMatrixData_n;
+    } else {
+        // deal with realloc failing because memory could not be allocated.
+        exit(99);
+    }
+
+    // Add to global dict
+    appendMatrix(mat3, matSize, gcMatrixData, gcDictData, gcMatrixOffsets, gcMatrixSizes, &lastOffset,
+                 lastPosition);
+
+    lastPosition++;
+
+
+    //------------
+    // CUDA prep
+    //------------
+
+
     unsigned short *d_gcMatrixData;
     unsigned int *d_gcDictData;
     unsigned int *d_gcMatrixOffsets;
@@ -439,34 +689,43 @@ void testGcSimilarityKernelWith3x3() {
     HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixOffsets, NUMBER_OF_GCS * sizeof(unsigned int)));
     HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixSizes, NUMBER_OF_GCS * sizeof(unsigned int)));
     HANDLE_ERROR(cudaMalloc((void **) &d_gcDictOffsets, NUMBER_OF_GCS * sizeof(unsigned int)));
-    HANDLE_ERROR(cudaMalloc((void **) &d_result, sizeof(Metrics)));
+    HANDLE_ERROR(cudaMalloc((void **) &d_result, NUMBER_OF_GCS * sizeof(Metrics)));
 
 
     HANDLE_ERROR(
             cudaMemcpy(d_gcMatrixData, gcMatrixData, md_size * sizeof(unsigned short), cudaMemcpyHostToDevice));
     HANDLE_ERROR(cudaMemcpy(d_gcDictData, gcDictData, dictCounter * sizeof(unsigned int), cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_gcMatrixOffsets, gcMatrixOffsets, NUMBER_OF_GCS * sizeof(unsigned int), cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_gcMatrixSizes, gcMatrixSizes, NUMBER_OF_GCS * sizeof(unsigned int), cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_gcDictOffsets, gcDictOffsets, NUMBER_OF_GCS * sizeof(unsigned int), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_gcMatrixOffsets, gcMatrixOffsets, NUMBER_OF_GCS * sizeof(unsigned int),
+                            cudaMemcpyHostToDevice));
+    HANDLE_ERROR(
+            cudaMemcpy(d_gcMatrixSizes, gcMatrixSizes, NUMBER_OF_GCS * sizeof(unsigned int), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(
+            cudaMemcpy(d_gcDictOffsets, gcDictOffsets, NUMBER_OF_GCS * sizeof(unsigned int), cudaMemcpyHostToDevice));
 
 
-    //for(int i = 0; i <= lastPosition; i++) {
-    compare2<<<1, 1>>>(d_gcMatrixData, d_gcDictData, d_gcMatrixOffsets, d_gcMatrixSizes, d_gcDictOffsets, d_result);
-    // }
+    compare2<<<NUMBER_OF_GCS, 1>>>(d_gcMatrixData, d_gcDictData, d_gcMatrixOffsets, d_gcMatrixSizes, d_gcDictOffsets, 0,
+                                   d_result);
+
     HANDLE_ERROR(cudaPeekAtLastError());
     HANDLE_ERROR(cudaDeviceSynchronize());
 
-    Metrics result;
-    HANDLE_ERROR(cudaMemcpy(&result, d_result, sizeof(Metrics), cudaMemcpyDeviceToHost));
-    std::cout << "Result"
-              << "Similarity " << result.similarity << "; "
-              << "Recommendation " << result.recommendation << "; "
-              << "Inference " << result.inferencing << "; "
-              << std::endl;
+    Metrics result[NUMBER_OF_GCS];
+    HANDLE_ERROR(cudaMemcpy(&result, d_result, NUMBER_OF_GCS * sizeof(Metrics), cudaMemcpyDeviceToHost));
 
-    assert(result.similarity == 1);
-    assert(result.recommendation == 0.5);
-    assert(result.inferencing == 0);
+    for (int i = 0; i < NUMBER_OF_GCS; i++) {
+
+
+        std::cout << "Result (" << i << ") "
+                  << "Similarity " << result[i].similarity << "; "
+                  << "Recommendation " << result[i].recommendation << "; "
+                  << "Inference " << result[i].inferencing << "; "
+                  << std::endl;
+
+    }
+
+    assert(result[1].similarity == 1);
+    assert(result[1].recommendation == 0.5);
+    assert(result[1].inferencing == 0);
 
     HANDLE_ERROR(cudaFree(d_gcMatrixData));
     HANDLE_ERROR(cudaFree(d_gcDictData));
@@ -485,7 +744,8 @@ void appendMatrix(const unsigned short *mat1, unsigned short sizeofMat, unsigned
     gcMatrixSizes[position] = sizeofMat; // / sizeof (unsigned short )
 
     for (int i = 0; i < gcMatrixSizes[position]; i++) {
-        std::cout << i << " ; position: " << gcMatrixOffsets[position] + i << std::endl;
+        if(G_DEBUG)
+            std::cout << i << " ; position: " << gcMatrixOffsets[position] + i << std::endl;
         gcMatrixData[gcMatrixOffsets[position] + i] = mat1[i];
     }
     *lastOffset += sizeofMat;
