@@ -1,11 +1,12 @@
 cmake_minimum_required(VERSION 3.20)
 enable_language(CUDA)
 
+include(FindPkgConfig)
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules")
 
 
 project(gcsim)
-
 
 
 file (GLOB_RECURSE Foo_SOURCES CONFIGURE_DEPENDS "src/*.cu")
@@ -31,6 +32,13 @@ if(NOT json_POPULATED)
     add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
+find_package(PkgConfig REQUIRED)
+
+pkg_search_module(UUID REQUIRED uuid)
+
+#find_path(LIBUUID_INCLUDE_DIR uuid.h PATH_SUFFIXES uuid)
+#find_library(LIBUUID_LIBRARY libuuid.a)
+#include_directories(${LIBUUID_INCLUDE_DIR})
 
 find_package(CUDA 8.1 REQUIRED)
 #find_package(Thrust REQUIRED CONFIG)
@@ -70,10 +78,12 @@ add_library (GCS ${Foo_SOURCES} src/cudahelper.cu src/cudahelper.cuh src/helper.
 
 add_executable (gcsim main2.cpp)
 
-target_include_directories(gcsim PUBLIC ${Foo_INCLUDE_DIRS})
+target_include_directories(gcsim PUBLIC ${Foo_INCLUDE_DIRS} ${UUID_INCLUDE_DIRS})
+
 target_sources(gcsim PRIVATE ${GMAF_SRC})
 
 ENABLE_TESTING()
+
 ADD_SUBDIRECTORY( test )
 
 
@@ -89,6 +99,7 @@ target_link_libraries(gcsim PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(gcsim PUBLIC stdc++fs)
 #target_link_libraries(test PRIVATE Thrust)
 target_link_libraries(gcsim PUBLIC ${CUDA_LIBRARIES})
+target_link_libraries(gcsim PUBLIC ${UUID_LIBRARIES})
 
 
 #target_link_directories(test PUBLIC src)

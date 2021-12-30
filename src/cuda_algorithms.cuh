@@ -7,11 +7,17 @@
 #define GCSIM_ALGORITHMS_CUH
 
 #include "graphcode.h"
+#include <uuid/uuid.h>
 
 typedef struct GraphCode {
     std::vector<std::string> *dict;
     unsigned short *matrix;
 } GraphCode;
+
+typedef struct GraphCode2 {
+    uuid_t dict [100];
+    unsigned short matrix[100*100];
+} GraphCode2;
 
 void convertGc2Cuda(const json &gcq, json &gc1Dictionary, int &numberOfElements, long &items, unsigned short int *&inputMatrix);
 void calcKernelLaunchConfig(int width, dim3 &block, dim3 &grid);

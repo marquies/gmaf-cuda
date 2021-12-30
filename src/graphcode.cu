@@ -61,7 +61,6 @@ using json = nlohmann::json;
 
 int getPosition(std::string string, std::vector<std::string> dictionary);
 
-//void convertDict2Matrix(int size, int *destMatrix, json jsonMatrix);
 #define N 1000
 
 
