@@ -105,22 +105,13 @@ __global__ void compare2(unsigned short *gcMatrixData,
     int sim = 0;
     int elements = sqrtf((float) gcMatrixSizes[0]);
 
-//    unsigned short *matrix1 = gc1->matrix;
-//    unsigned short *matrix2 = gc2->matrix;
-
-//    for (const auto &item: *gc1->dict) {
     for (int i = 0; i < elements; i++) {
-//        for (const auto &item2: *gc2->dict) {
         for (int j = 0; j < elements; j++) {
-//            if (cuda_uuid_compare(gc1->dict[i], gc2->dict[j]) == 0) {
             if (gcDictData[gcDictOffsets[0] + i] == gcDictData[gcDictOffsets[1] + j]) {
                 sim++;
             }
         }
     }
-
-//    elements = gcMatrixSizes[0];
-
 
     int num_of_non_zero_edges = 0;
     int edge_metric_count = 0;
@@ -140,7 +131,7 @@ __global__ void compare2(unsigned short *gcMatrixData,
                 }
 
                 int edge = gcMatrixData[gcMatrixOffsets[1] + position1 * elements +
-                                        position2];//matrix2[position1][position2];
+                                        position2];
                 if (edge != 0) {
                     edge_metric_count++;
                 }
@@ -154,13 +145,10 @@ __global__ void compare2(unsigned short *gcMatrixData,
     metrics->similarity = 0.0;
     metrics->recommendation = 0.0;
     metrics->inferencing = 0.0;
-    //float node_metric = (float) sim / (float) elements;
     metrics->similarity = (float) sim / (float) elements;
-    //float edge_metric = 0.0;
     if (num_of_non_zero_edges > 0) {
         /*edge_metric*/ metrics->recommendation = (float) edge_metric_count / (float) num_of_non_zero_edges;
     }
-//    float edge_type_metric = 0.0;
     if (edge_metric_count > 0) {
         /*edge_type_metric*/ metrics->inferencing = (float) edge_type / (float) edge_metric_count;
     }
