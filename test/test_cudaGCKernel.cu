@@ -255,6 +255,7 @@ int main() {
 void testGcSimilarityKernelWithMany3x3() {
 
     int NUMBER_OF_GCS = 1000000;
+    //int NUMBER_OF_GCS = 10000;
     srand(time(NULL));   // Initialization, should only be called once.
 
 
@@ -275,6 +276,8 @@ void testGcSimilarityKernelWithMany3x3() {
 
     int lastOffset = 0;
     int lastPosition = 0;
+    GraphCode gc1 = generateTestDataGc(250);
+    std::vector<std::string> *vect = gc1.dict;
 
     for (int ii = 0; ii < NUMBER_OF_GCS; ii++) {
         //------
@@ -284,8 +287,7 @@ void testGcSimilarityKernelWithMany3x3() {
         //std::vector<std::string> *vect = new std::vector<std::string>{"head", "body", "foot", "head"};
         //unsigned short mat[] = {1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1};
 
-        GraphCode gc1 = generateTestDataGc(250);
-        std::vector<std::string> *vect = gc1.dict;
+
         unsigned short mat[gc1.dict->size()];
         for (int i = 0; i < vect->size(); i++ ) {
             mat[i] = gc1.matrix[i];
@@ -343,12 +345,12 @@ void testGcSimilarityKernelWithMany3x3() {
 
         lastPosition++;
 
-        //delete vect;
-        delete gc1.dict;
-        delete gc1.matrix;
+
 
     }
-
+    //delete vect;
+    delete gc1.dict;
+    delete gc1.matrix;
 
     //------------
     // CUDA prep
@@ -389,6 +391,9 @@ void testGcSimilarityKernelWithMany3x3() {
 
     compare2<<<NUMBER_OF_GCS, 1>>>(d_gcMatrixData, d_gcDictData, d_gcMatrixOffsets, d_gcMatrixSizes, d_gcDictOffsets, 0,
                                    d_result);
+
+    HANDLE_ERROR(cudaPeekAtLastError());
+    HANDLE_ERROR(cudaDeviceSynchronize());
     auto end = std::chrono::system_clock::now();
 
     std::chrono::duration<double> elapsed_seconds = end - start;
@@ -397,11 +402,10 @@ void testGcSimilarityKernelWithMany3x3() {
     std::cout << "finished CUDA computation at " << std::ctime(&end_time)
               << "elapsed time: " << elapsed_seconds.count() << "s\n";
 
-    HANDLE_ERROR(cudaPeekAtLastError());
-    HANDLE_ERROR(cudaDeviceSynchronize());
 
-    Metrics result[NUMBER_OF_GCS];
-    HANDLE_ERROR(cudaMemcpy(&result, d_result, NUMBER_OF_GCS * sizeof(Metrics), cudaMemcpyDeviceToHost));
+
+    Metrics *result = (Metrics *) malloc(NUMBER_OF_GCS * sizeof(Metrics));
+    HANDLE_ERROR(cudaMemcpy(result, d_result, NUMBER_OF_GCS * sizeof(Metrics), cudaMemcpyDeviceToHost));
 
     for (int i = 0; i < NUMBER_OF_GCS; i++) {
 
