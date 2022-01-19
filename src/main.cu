@@ -12,6 +12,7 @@
 #include <stdlib.h>
 
 #include "graphcode.h"
+#include "gcloadunit.cuh"
 
 
 
@@ -55,6 +56,8 @@ int main_init(int argc, char *argv[]) {
         fprintf(stderr, "Usage: %s -d dir -c limit_files\n", argv[0]);
         exit(EXIT_FAILURE);
     }
+
+
 
     // Starting the main part
 
