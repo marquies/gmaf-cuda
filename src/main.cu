@@ -13,7 +13,7 @@
 #include <signal.h>
 #include "graphcode.h"
 #include "gcloadunit.cuh"
-#include "queryhandler.h"
+#include "queryhandler.cuh"
 #include "helper.h"
 
 
@@ -87,11 +87,16 @@ int main_init(int argc, char *argv[]) {
         std::cout << "Enter Query";
         if (fgets(buf, sizeof(buf), stdin) != NULL && mainLoop) {
             printf("Got : %s", buf);
-            const std::string str(buf);
-            if (str.compare("quit")) {
+            std::string str(buf);
+            str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
+            if (str.compare("quit") == 0) {
                 mainLoop = false;
             } else {
-                QueryHandler::processQuery(str);
+                if(QueryHandler::validate(str)) {
+                    QueryHandler::processQuery(str, loadUnit);
+                } else {
+                    std::cout << "Query invalid" << std::endl;
+                }
             }
         }
     } while (mainLoop);

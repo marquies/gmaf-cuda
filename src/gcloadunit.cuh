@@ -11,21 +11,34 @@
 //    int size;
 //} GraphCodeBlock;
 
+#include <vector>
+#include <string>
+
 class GcLoadUnit {
 
 public:
     void loadArtificialGcs(int count, int dimension);
 
-    int *getGcPtr();
+    unsigned short *getGcMatrixDataPtr();
 
-    int getSize();
+    int getNumberOfGc();
+
+    bool hasGc(std::string basicString);
+
+    unsigned int *getGcMatrixOffsetsPtr();
+
+    unsigned int *getMatrixSizesPtr();
 
 private:
-    int *gcPtr;
+    unsigned short *gcMatrixDataPtr;
 
     int gcSize;
 
     bool init = false;
+
+    std::vector<std::string> gcNames;
+    unsigned int *gcMatrixSizesPtr;
+    unsigned int *gcMatrixOffsetsPtr;
 };
 
 

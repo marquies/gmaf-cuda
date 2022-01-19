@@ -17,7 +17,6 @@
 #include <stdlib.h>
 
 
-
 void testGcSimilarityKernelWith100x100();
 
 void testGcSimilarityKernelWith3x3();
@@ -263,7 +262,7 @@ void testGcSimilarityKernelWithMany3x3() {
     unsigned int *gcDictData = (unsigned int *) malloc(0);
 
     //unsigned int *gcMatrixOffsets = (unsigned int *) malloc(0);
-    //unsigned int *gcMatrixSizes = (unsigned int *) malloc(0);
+    //unsigned int *gcMatrixSizesPtr = (unsigned int *) malloc(0);
 
     unsigned int *gcMatrixOffsets = (unsigned int *) malloc(sizeof(unsigned int) * NUMBER_OF_GCS);
     unsigned int *gcDictOffsets = (unsigned int *) malloc(sizeof(unsigned int) * NUMBER_OF_GCS);
@@ -289,7 +288,7 @@ void testGcSimilarityKernelWithMany3x3() {
 
 
         unsigned short mat[gc1.dict->size()];
-        for (int i = 0; i < vect->size(); i++ ) {
+        for (int i = 0; i < vect->size(); i++) {
             mat[i] = gc1.matrix[i];
             if (i == 2)
                 mat[i] = rand() % 10;
@@ -328,7 +327,7 @@ void testGcSimilarityKernelWithMany3x3() {
 
         newS = lastOffset + matSize;
         //for (int i = 0; i <= lastPosition; i++) {
-        //    newS += gcMatrixSizes[i];
+        //    newS += gcMatrixSizesPtr[i];
         //}// ;
         size_t newSize = newS * sizeof(unsigned short);
         unsigned short *gcMatrixData_n = (unsigned short *) realloc(gcMatrixData, newSize);
@@ -344,7 +343,6 @@ void testGcSimilarityKernelWithMany3x3() {
                      lastPosition);
 
         lastPosition++;
-
 
 
     }
@@ -389,7 +387,12 @@ void testGcSimilarityKernelWithMany3x3() {
 
     auto start = std::chrono::system_clock::now();
 
-    compare2<<<NUMBER_OF_GCS, 1>>>(d_gcMatrixData, d_gcDictData, d_gcMatrixOffsets, d_gcMatrixSizes, d_gcDictOffsets, 0,
+    compare2<<<NUMBER_OF_GCS, 1>>>(d_gcMatrixData,
+                                   d_gcDictData,
+                                   d_gcMatrixOffsets,
+                                   d_gcMatrixSizes,
+                                   d_gcDictOffsets,
+                                   0,
                                    d_result);
 
     HANDLE_ERROR(cudaPeekAtLastError());
@@ -401,7 +404,6 @@ void testGcSimilarityKernelWithMany3x3() {
 
     std::cout << "finished CUDA computation at " << std::ctime(&end_time)
               << "elapsed time: " << elapsed_seconds.count() << "s\n";
-
 
 
     Metrics *result = (Metrics *) malloc(NUMBER_OF_GCS * sizeof(Metrics));
@@ -436,7 +438,7 @@ void testGcSimilarityKernelWith3x3() {
     unsigned int *gcDictData = (unsigned int *) malloc(0);
 
     //unsigned int *gcMatrixOffsets = (unsigned int *) malloc(0);
-    //unsigned int *gcMatrixSizes = (unsigned int *) malloc(0);
+    //unsigned int *gcMatrixSizesPtr = (unsigned int *) malloc(0);
 
     unsigned int *gcMatrixOffsets = (unsigned int *) malloc(sizeof(unsigned int) * NUMBER_OF_GCS);
     unsigned int *gcDictOffsets = (unsigned int *) malloc(sizeof(unsigned int) * NUMBER_OF_GCS);
@@ -748,7 +750,7 @@ void appendMatrix(const unsigned short *mat1, unsigned short sizeofMat, unsigned
     gcMatrixSizes[position] = sizeofMat; // / sizeof (unsigned short )
 
     for (int i = 0; i < gcMatrixSizes[position]; i++) {
-        if(G_DEBUG)
+        if (G_DEBUG)
             std::cout << i << " ; position: " << gcMatrixOffsets[position] + i << std::endl;
         gcMatrixData[gcMatrixOffsets[position] + i] = mat1[i];
     }

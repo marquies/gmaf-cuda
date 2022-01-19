@@ -4,16 +4,28 @@
 
 
 
-#include <queryhandler.h>
+#include <queryhandler.cuh>
 #include <cassert>
+#include <gcloadunit.cuh>
 
-void testSimpleQuery();
+void testErrorQuery();
 
 void testValidation();
 
+void testSimpleQuery();
+
 int main() {
-    testSimpleQuery();
+    testErrorQuery();
     testValidation();
+    testSimpleQuery();
+
+}
+
+void testSimpleQuery() {
+    GcLoadUnit loadUnit;
+    loadUnit.loadArtificialGcs(10,1);
+    int value = QueryHandler::processQuery("Query by Example: 6.gc", loadUnit);
+    assert(value == 0);
 }
 
 void testValidation() {
@@ -23,11 +35,10 @@ void testValidation() {
     assert(valid);
 }
 
-void testSimpleQuery() {
+void testErrorQuery() {
 
     try {
-        QueryHandler::processQuery("");
-
+        QueryHandler::processQuery("", GcLoadUnit());
         assert(false);
     } catch(std::invalid_argument) {
 

@@ -74,7 +74,7 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -lineinfo")
 #link_directories(src)
 
 #add_executable(gcsim ${Foo_SOURCES})
-add_library (GCS ${Foo_SOURCES} src/cudahelper.cu src/cudahelper.cuh src/helper.h src/helper.cpp src/queryhandler.h src/queryhandler.cpp)
+add_library (GCS ${Foo_SOURCES} src/cudahelper.cu src/cudahelper.cuh src/helper.h src/helper.cpp src/queryhandler.cuh src/queryhandler.cu)
 
 add_executable (gcsim main2.cpp)
 
