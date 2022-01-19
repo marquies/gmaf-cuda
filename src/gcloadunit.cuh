@@ -6,10 +6,26 @@
 #define GCSIM_GCLOADUNIT_CUH
 
 
+//typedef struct GraphCodeBlock {
+//    int *ptr;
+//    int size;
+//} GraphCodeBlock;
+
 class GcLoadUnit {
 
 public:
     void loadArtificialGcs(int count, int dimension);
+
+    int *getGcPtr();
+
+    int getSize();
+
+private:
+    int *gcPtr;
+
+    int gcSize;
+
+    bool init = false;
 };
 
 
