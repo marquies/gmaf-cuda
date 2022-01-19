@@ -10,9 +10,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <signal.h>
 #include "graphcode.h"
 #include "gcloadunit.cuh"
+#include "queryhandler.h"
+#include "helper.h"
 
 
 
@@ -24,6 +26,14 @@
 void runThreaded(std::vector<json> &arr, const gmaf::GraphCode &gc, int s);
 void runSequential(std::vector<json> &arr, gmaf::GraphCode gc);
 
+
+bool mainLoop = true;
+
+void ctrl_c(int sig) {
+    fprintf(stderr, "Ctrl-C caught - Please press enter\n");
+    mainLoop = false;
+    signal(sig, ctrl_c); /* re-installs handler */
+}
 /**
  * Main function of the program.
  * @param argc
@@ -61,35 +71,60 @@ int main_init(int argc, char *argv[]) {
 
     // Starting the main part
 
+    isPrime(17);
 
-    auto start = std::chrono::system_clock::now();
+    GcLoadUnit loadUnit;
+    loadUnit.loadArtificialGcs(limit, 1);
 
-    std::vector<json> arr;
+    std::string queryString;
 
+    char buf[256];
+    void (*old)(int);
 
+    old = signal(SIGINT, ctrl_c); /* installs handler */
 
-    // Loading the graph codes
-    gmaf::GraphCode gc;
-    gc.loadGraphCodes(cvalue, limit, &arr);
-    auto loaded = std::chrono::system_clock::now();
-    std::chrono::duration<double> elapsed_seconds = loaded - start;
+    do  {
+        std::cout << "Enter Query";
+        if (fgets(buf, sizeof(buf), stdin) != NULL && mainLoop) {
+            printf("Got : %s", buf);
+            const std::string str(buf);
+            if (str.compare("quit")) {
+                mainLoop = false;
+            } else {
+                QueryHandler::processQuery(str);
+            }
+        }
+    } while (mainLoop);
+    signal(SIGINT, old); /* restore initial handler */
+    return 0;
 
-    std::cout << "loaded " << arr.size() << " graph code files. (" << "elapsed time: " << elapsed_seconds.count() << ")"
-              << std::endl;
-
-    // Run the code
-
-    //runThreaded(arr, gc, 4);
-    runSequential(arr, gc);
-
-    // Time evaluation
-    auto end = std::chrono::system_clock::now();
-
-    elapsed_seconds = end - start;
-    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
-
-    std::cout << "finished computation at " << std::ctime(&end_time)
-              << "elapsed time: " << elapsed_seconds.count() << "s\n";
+//    auto start = std::chrono::system_clock::now();
+//
+//    std::vector<json> arr;
+//
+//
+//    // Loading the graph codes
+//    gmaf::GraphCode gc;
+//    gc.loadGraphCodes(cvalue, limit, &arr);
+//    auto loaded = std::chrono::system_clock::now();
+//    std::chrono::duration<double> elapsed_seconds = loaded - start;
+//
+//    std::cout << "loaded " << arr.size() << " graph code files. (" << "elapsed time: " << elapsed_seconds.count() << ")"
+//              << std::endl;
+//
+//    // Run the code
+//
+//    //runThreaded(arr, gc, 4);
+//    runSequential(arr, gc);
+//
+//    // Time evaluation
+//    auto end = std::chrono::system_clock::now();
+//
+//    elapsed_seconds = end - start;
+//    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+//
+//    std::cout << "finished computation at " << std::ctime(&end_time)
+//              << "elapsed time: " << elapsed_seconds.count() << "s\n";
     return 0;
 }
 

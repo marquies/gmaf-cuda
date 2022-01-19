@@ -51,8 +51,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=nehalem")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1 -msse4.2")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O1")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O1")
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O1")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O1")
 
 #SET(GCC_COVERAGE_COMPILE_FLAGS "-mavx2 ")
 #SET(GCC_COVERAGE_LINK_FLAGS    "-lgcov")
@@ -74,7 +74,7 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -lineinfo")
 #link_directories(src)
 
 #add_executable(gcsim ${Foo_SOURCES})
-add_library (GCS ${Foo_SOURCES} src/cudahelper.cu src/cudahelper.cuh src/helper.h src/helper.cpp)
+add_library (GCS ${Foo_SOURCES} src/cudahelper.cu src/cudahelper.cuh src/helper.h src/helper.cpp src/queryhandler.h src/queryhandler.cpp)
 
 add_executable (gcsim main2.cpp)
 
@@ -93,7 +93,7 @@ set_property(TARGET gcsim PROPERTY CUDA_STANDARD 17)
 target_link_libraries(GCS PRIVATE nlohmann_json::nlohmann_json)
 
 target_link_libraries(gcsim PRIVATE GCS)
-target_link_libraries(gcsim PRIVATE avx2)
+#target_link_libraries(gcsim PRIVATE avx2)
 target_link_libraries(gcsim PRIVATE nlohmann_json::nlohmann_json)
 #target_link_libraries(test PUBLIC std::__fs)
 target_link_libraries(gcsim PUBLIC stdc++fs)

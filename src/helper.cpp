@@ -2,7 +2,7 @@
 // Created by breucking on 11.11.21.
 //
 
-#include "../src/helper.h"
+#include "helper.h"
 
 bool G_DEBUG = false;
 

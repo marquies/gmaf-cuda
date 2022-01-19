@@ -5,6 +5,7 @@ ADD_EXECUTABLE( test_speedNxNmatrices test_speedNxNmatrices.cu ${Foo_SOURCES})
 ADD_EXECUTABLE( test_cpuNxNmatrices test_cpuNxNmatrix.cu ${Foo_SOURCES})
 ADD_EXECUTABLE( test_cudaGCKernel test_cudaGCKernel.cu ${Foo_SOURCES})
 ADD_EXECUTABLE( test_gcloadstoreunit test_gcloadstoreunit.cu ${Foo_SOURCES})
+ADD_EXECUTABLE( test_queryhandler test_queryhandler.cpp ${Foo_SOURCES})
 
 ADD_TEST( io_gml test_simpletest    )
 ADD_TEST( io_gml test_cudaNxNmatrices    )
@@ -12,6 +13,7 @@ ADD_TEST( io_gml test_speedNxNmatrices    )
 ADD_TEST( io_gml test_cpuNxNmatrices    )
 ADD_TEST( io_gml test_cudaGCKernel    )
 ADD_TEST( io_gml test_gcloadstoreunit    )
+ADD_TEST( io_gml test_queryhandler    )
 
 
 target_include_directories(test_simpletest PUBLIC ${Foo_INCLUDE_DIRS})
@@ -20,6 +22,7 @@ target_include_directories(test_cpuNxNmatrices PUBLIC ${Foo_INCLUDE_DIRS})
 target_include_directories(test_speedNxNmatrices PUBLIC ${Foo_INCLUDE_DIRS})
 target_include_directories(test_cudaGCKernel PUBLIC ${Foo_INCLUDE_DIRS})
 target_include_directories(test_gcloadstoreunit PUBLIC ${Foo_INCLUDE_DIRS})
+target_include_directories(test_queryhandler PUBLIC ${Foo_INCLUDE_DIRS})
 
 
 target_link_libraries(test_simpletest PRIVATE nlohmann_json::nlohmann_json)
@@ -53,3 +56,8 @@ target_link_libraries(test_gcloadstoreunit PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(test_gcloadstoreunit PRIVATE GCS)
 target_link_libraries(test_gcloadstoreunit PUBLIC stdc++fs)
 target_link_libraries(test_gcloadstoreunit PUBLIC ${UUID_LIBRARIES})
+
+target_link_libraries(test_queryhandler PRIVATE nlohmann_json::nlohmann_json)
+target_link_libraries(test_queryhandler PRIVATE GCS)
+target_link_libraries(test_queryhandler PUBLIC stdc++fs)
+target_link_libraries(test_queryhandler PUBLIC ${UUID_LIBRARIES})

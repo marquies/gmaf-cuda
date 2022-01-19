@@ -4,7 +4,6 @@
 
 
 #include <gcloadunit.cuh>
-#include <stdlib.h>
 #include <cassert>
 
 void testLoadSimple();
