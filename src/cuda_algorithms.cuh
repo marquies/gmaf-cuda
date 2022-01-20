@@ -16,11 +16,13 @@ typedef struct GraphCode {
 } GraphCode;
 
 typedef struct GraphCode2 {
-    uuid_t dict [100];
-    unsigned short matrix[100*100];
+    uuid_t dict[100];
+    unsigned short matrix[100 * 100];
 } GraphCode2;
 
-void convertGc2Cuda(const json &gcq, json &gc1Dictionary, int &numberOfElements, long &items, unsigned short int *&inputMatrix);
+void convertGc2Cuda(const json &gcq, json &gc1Dictionary, int &numberOfElements, long &items,
+                    unsigned short int *&inputMatrix);
+
 void calcKernelLaunchConfig(int width, dim3 &block, dim3 &grid);
 
 
@@ -34,5 +36,14 @@ Metrics demoCalculateSimilaritySequentialOrdered(json gc1, json gc2);
 
 Metrics demoCalculateSimilaritySequentialOrdered(GraphCode gc1, GraphCode gc2);
 
+void demoCalculateGCsOnCuda(int NUMBER_OF_GCS, unsigned int dictCounter,
+                            const unsigned short *gcMatrixData,
+                            const unsigned int *gcDictData, const unsigned int *gcMatrixOffsets,
+                            const unsigned int *gcDictOffsets, const unsigned int *gcMatrixSizes,
+                            int gcQueryPosition = 0);
+
+__global__ void compare2(unsigned short *gcMatrixData, unsigned int *gcDictData, unsigned int *gcMatrixOffsets,
+                         unsigned int *gcMatrixSizes, unsigned int *gcDictOffsets, int gcToCompare,
+                         Metrics *metrics);
 
 #endif //GCSIM_ALGORITHMS_CUH

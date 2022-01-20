@@ -284,3 +284,7 @@ GraphCode GcLoadUnit::convertJsonToGraphCode(json jsonGraphCode) {
 
     return gc;
 }
+
+unsigned int GcLoadUnit::getNumberOfDictElements() {
+    return dictCounter;
+}

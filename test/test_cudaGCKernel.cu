@@ -13,6 +13,7 @@
 #include <cudahelper.cuh>
 #include <c++/9/chrono>
 #include "helper.h"
+#include "cuda_algorithms.cuh"
 #include <time.h>
 #include <stdlib.h>
 
@@ -100,64 +101,6 @@ __device__ int cuda_uuid_compare(const uuid_t uu1, const uuid_t uu2) {
     UUCMP(uuid1.time_hi_and_version, uuid2.time_hi_and_version);
     UUCMP(uuid1.clock_seq, uuid2.clock_seq);
     return cuda_memcmp(uuid1.node, uuid2.node, 6);
-}
-
-__global__ void compare2(unsigned short *gcMatrixData, unsigned int *gcDictData, unsigned int *gcMatrixOffsets,
-                         unsigned int *gcMatrixSizes, unsigned int *gcDictOffsets, int gcToCompare,
-                         Metrics *metrics) {
-    int index = blockIdx.x;
-    int gc1 = gcToCompare;
-    int gc2 = index;
-
-    int sim = 0;
-    int elements = sqrtf((float) gcMatrixSizes[gc1]);
-
-    for (int i = 0; i < elements; i++) {
-        for (int j = 0; j < elements; j++) {
-            if (gcDictData[gcDictOffsets[gc1] + i] == gcDictData[gcDictOffsets[gc2] + j]) {
-                sim++;
-            }
-        }
-    }
-
-    int num_of_non_zero_edges = 0;
-    int edge_metric_count = 0;
-    int edge_type = 0;
-
-
-    for (int i = 0; i < elements; i++) {
-        for (int j = 0; j < elements; j++) {
-
-            if (i != j && gcMatrixData[gcMatrixOffsets[gc1] + i * elements + j] != 0) {
-                num_of_non_zero_edges++;
-
-                int position1 = i;
-                int position2 = j;
-                if (position1 == -1 || position2 == -1) {
-                    continue;
-                }
-                int edge = gcMatrixData[gcMatrixOffsets[gc2] + position1 * elements +
-                                        position2];
-                if (edge != 0) {
-                    edge_metric_count++;
-                }
-                if (edge == gcMatrixData[gcMatrixOffsets[gc1] + i * elements + j]) {
-                    edge_type++;
-                }
-
-            }
-        }
-    }
-    metrics[index].similarity = 0.0;
-    metrics[index].recommendation = 0.0;
-    metrics[index].inferencing = 0.0;
-    metrics[index].similarity = (float) sim / (float) elements;
-    if (num_of_non_zero_edges > 0) {
-        /*edge_metric*/ metrics[index].recommendation = (float) edge_metric_count / (float) num_of_non_zero_edges;
-    }
-    if (edge_metric_count > 0) {
-        /*edge_type_metric*/ metrics[index].inferencing = (float) edge_type / (float) edge_metric_count;
-    }
 }
 
 
@@ -360,84 +303,10 @@ void testGcSimilarityKernelWithMany3x3() {
 
     assert(gcDictOffsets[0] == 0);
     assert(gcDictOffsets[1] == 250);
-
-    //------------
-    // CUDA prep
-    //------------
+    demoCalculateGCsOnCuda(NUMBER_OF_GCS, dictCounter, gcMatrixData, gcDictData, gcMatrixOffsets, gcDictOffsets,
+                           gcMatrixSizes);
 
 
-    unsigned short *d_gcMatrixData;
-    unsigned int *d_gcDictData;
-    unsigned int *d_gcMatrixOffsets;
-    unsigned int *d_gcMatrixSizes;
-    unsigned int *d_gcDictOffsets;
-    Metrics *d_result;
-
-    int md_size = 0;
-    for (int i = 0; i < lastPosition; i++) {
-        md_size += gcMatrixSizes[i];
-    }// ;
-
-    HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixData, md_size * sizeof(unsigned short)));
-    HANDLE_ERROR(cudaMalloc((void **) &d_gcDictData, dictCounter * sizeof(unsigned int)));
-    HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixOffsets, NUMBER_OF_GCS * sizeof(unsigned int)));
-    HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixSizes, NUMBER_OF_GCS * sizeof(unsigned int)));
-    HANDLE_ERROR(cudaMalloc((void **) &d_gcDictOffsets, NUMBER_OF_GCS * sizeof(unsigned int)));
-    HANDLE_ERROR(cudaMalloc((void **) &d_result, NUMBER_OF_GCS * sizeof(Metrics)));
-
-
-    HANDLE_ERROR(
-            cudaMemcpy(d_gcMatrixData, gcMatrixData, md_size * sizeof(unsigned short), cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_gcDictData, gcDictData, dictCounter * sizeof(unsigned int), cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_gcMatrixOffsets, gcMatrixOffsets, NUMBER_OF_GCS * sizeof(unsigned int),
-                            cudaMemcpyHostToDevice));
-    HANDLE_ERROR(
-            cudaMemcpy(d_gcMatrixSizes, gcMatrixSizes, NUMBER_OF_GCS * sizeof(unsigned int), cudaMemcpyHostToDevice));
-    HANDLE_ERROR(
-            cudaMemcpy(d_gcDictOffsets, gcDictOffsets, NUMBER_OF_GCS * sizeof(unsigned int), cudaMemcpyHostToDevice));
-
-    auto start = std::chrono::system_clock::now();
-
-    compare2<<<NUMBER_OF_GCS, 1>>>(d_gcMatrixData,
-                                   d_gcDictData,
-                                   d_gcMatrixOffsets,
-                                   d_gcMatrixSizes,
-                                   d_gcDictOffsets,
-                                   0,
-                                   d_result);
-
-    HANDLE_ERROR(cudaPeekAtLastError());
-    HANDLE_ERROR(cudaDeviceSynchronize());
-    auto end = std::chrono::system_clock::now();
-
-    std::chrono::duration<double> elapsed_seconds = end - start;
-    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
-
-    std::cout << "finished CUDA computation at " << std::ctime(&end_time)
-              << "elapsed time: " << elapsed_seconds.count() << "s\n";
-
-
-    Metrics *result = (Metrics *) malloc(NUMBER_OF_GCS * sizeof(Metrics));
-    HANDLE_ERROR(cudaMemcpy(result, d_result, NUMBER_OF_GCS * sizeof(Metrics), cudaMemcpyDeviceToHost));
-
-    for (int i = 0; i < NUMBER_OF_GCS; i++) {
-
-
-//        std::cout << "Result (" << i << ") "
-//                  << "Similarity " << result[i].similarity << "; "
-//                  << "Recommendation " << result[i].recommendation << "; "
-//                  << "Inference " << result[i].inferencing << "; "
-//                  << std::endl;
-
-//        assert(result[i].similarity == 1);
-//        assert(result[i].recommendation == 0.5);
-//        assert(result[i].inferencing == 0);
-    }
-    HANDLE_ERROR(cudaFree(d_gcMatrixData));
-    HANDLE_ERROR(cudaFree(d_gcDictData));
-    HANDLE_ERROR(cudaFree(d_gcMatrixOffsets));
-    HANDLE_ERROR(cudaFree(d_gcMatrixSizes));
-    HANDLE_ERROR(cudaFree(d_result));
 }
 
 void testGcSimilarityKernelWith3x3() {

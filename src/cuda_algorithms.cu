@@ -2,6 +2,14 @@
 // Created by breucking on 28.12.21.
 //
 
+#include <stdlib.h>
+#include <time.h>
+#include <c++/9/chrono>
+#include <string.h>
+#include <stdio.h>
+#include <string>
+#include <uuid/uuid.h>
+#include "../src/cuda_algorithms.cuh"
 #include "cuda_algorithms.cuh"
 
 #include <cstdlib>
@@ -36,6 +44,10 @@
 
 void checkNxNConstraint(const GraphCode &gc1, const GraphCode &gc2);
 
+void demoCalculateGCsOnCuda(int NUMBER_OF_GCS, unsigned int dictCounter, const unsigned short *gcMatrixData,
+                            const unsigned int *gcDictData, const unsigned int *gcMatrixOffsets,
+                            const unsigned int *gcDictOffsets, const unsigned int *gcMatrixSizes);
+
 __global__ void
 calcMetrices(unsigned short int *data, unsigned short int *comparedata, unsigned long noItems,
              unsigned int *numOfNonZeroEdges, unsigned int *edgeMetricCount, unsigned int *edgeType) {
@@ -47,7 +59,7 @@ calcMetrices(unsigned short int *data, unsigned short int *comparedata, unsigned
     edgeMetricCount[tid] = 0;
     edgeType[tid] = 0;
 
-    if(tid > noItems) {
+    if (tid > noItems) {
         return;
     }
 
@@ -65,13 +77,10 @@ calcMetrices(unsigned short int *data, unsigned short int *comparedata, unsigned
 }
 
 
-
-void print_d_array(unsigned int* d_array, int len)
-{
-    int* h_array = new int[len];
+void print_d_array(unsigned int *d_array, int len) {
+    int *h_array = new int[len];
     HANDLE_ERROR(cudaMemcpy(h_array, d_array, sizeof(int) * len, cudaMemcpyDeviceToHost));
-    for (int i = 0; i < len; ++i)
-    {
+    for (int i = 0; i < len; ++i) {
         std::cout << h_array[i] << " ";
     }
     std::cout << std::endl;
@@ -102,8 +111,10 @@ Metrics demoCudaLinearMatrixMemoryCudaReduceSum(GraphCode json1, GraphCode json2
     HANDLE_ERROR(cudaMalloc((void **) &darr_edge_type, sizeof(unsigned int) * items1));
 
     // Transfer data from host to device memory
-    HANDLE_ERROR(cudaMemcpy(gpu_inputMatrix1, json1.matrix, sizeof(unsigned short int) * items1, cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(gpu_inputMatrix2, json2.matrix, sizeof(unsigned short int) * items1, cudaMemcpyHostToDevice));
+    HANDLE_ERROR(
+            cudaMemcpy(gpu_inputMatrix1, json1.matrix, sizeof(unsigned short int) * items1, cudaMemcpyHostToDevice));
+    HANDLE_ERROR(
+            cudaMemcpy(gpu_inputMatrix2, json2.matrix, sizeof(unsigned short int) * items1, cudaMemcpyHostToDevice));
 
     dim3 block;
     dim3 grid;
@@ -225,13 +236,13 @@ Metrics demoCudaLinearMatrixMemoryCudaReduceSum(GraphCode json1, GraphCode json2
 
 void checkNxNConstraint(const GraphCode &gc1, const GraphCode &gc2) {
 
-    if(gc1.dict->size() != gc2.dict->size()) {
+    if (gc1.dict->size() != gc2.dict->size()) {
         std::cout << "Graph Codes need to have same size" << std::endl;
         exit(71);
     }
     bool result = std::equal(gc1.dict->begin(), gc1.dict->end(), gc2.dict->begin());
 
-    if(!result) {
+    if (!result) {
         std::cout << "Graph Codes need to have same dict elements" << std::endl;
         exit(71);
     }
@@ -261,8 +272,10 @@ Metrics demoCudaLinearMatrixMemory(GraphCode json1, GraphCode json2) {
     HANDLE_ERROR(cudaMalloc((void **) &darr_edge_type, sizeof(unsigned int) * items1));
 
     // Transfer data from host to device memory
-    HANDLE_ERROR(cudaMemcpy(gpu_inputMatrix1, json1.matrix, sizeof(unsigned short int) * items1, cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(gpu_inputMatrix2, json2.matrix, sizeof(unsigned short int) * items1, cudaMemcpyHostToDevice));
+    HANDLE_ERROR(
+            cudaMemcpy(gpu_inputMatrix1, json1.matrix, sizeof(unsigned short int) * items1, cudaMemcpyHostToDevice));
+    HANDLE_ERROR(
+            cudaMemcpy(gpu_inputMatrix2, json2.matrix, sizeof(unsigned short int) * items1, cudaMemcpyHostToDevice));
 
     dim3 block;
     dim3 grid;
@@ -299,13 +312,13 @@ Metrics demoCudaLinearMatrixMemory(GraphCode json1, GraphCode json2) {
 
 
     int *arrEdgeTypeMetricCount;
-    HANDLE_ERROR(cudaMallocHost((void**)&arrEdgeTypeMetricCount, sizeof(int) * items1));
+    HANDLE_ERROR(cudaMallocHost((void **) &arrEdgeTypeMetricCount, sizeof(int) * items1));
 
     int *arr_edge_metric_count;
-    HANDLE_ERROR(cudaMallocHost((void**)&arr_edge_metric_count, sizeof(int) * items1));
+    HANDLE_ERROR(cudaMallocHost((void **) &arr_edge_metric_count, sizeof(int) * items1));
 
     int *arr_num_of_non_zero_edges;
-    HANDLE_ERROR(cudaMallocHost((void**)&arr_num_of_non_zero_edges, sizeof(int) * items1));
+    HANDLE_ERROR(cudaMallocHost((void **) &arr_num_of_non_zero_edges, sizeof(int) * items1));
 
 
     HANDLE_ERROR(cudaMemcpy(arr_num_of_non_zero_edges, darr_num_of_non_zero_edges, sizeof(int) * items1,
@@ -322,7 +335,6 @@ Metrics demoCudaLinearMatrixMemory(GraphCode json1, GraphCode json2) {
         elapsed_seconds = mem_end - end;
         std::cout << "Memory Management time: " << elapsed_seconds.count() << "s\n";
     }
-
 
 
     HANDLE_ERROR(cudaFree(gpu_inputMatrix1));
@@ -436,11 +448,13 @@ Metrics demoCudaLinearMatrixMemory(json json1, json json2) {
     HANDLE_ERROR(cudaMalloc((void **) &gpu_inputMatrix2, sizeof(unsigned short int) * items1));
     HANDLE_ERROR(cudaMalloc((void **) &darr_num_of_non_zero_edges, sizeof(unsigned int) * items1));
     HANDLE_ERROR(cudaMalloc((void **) &darr_edge_metric_count, sizeof(unsigned int) * items1));
-    HANDLE_ERROR(cudaMalloc((void **) &darr_edge_type, sizeof(unsigned  int) * items1));
+    HANDLE_ERROR(cudaMalloc((void **) &darr_edge_type, sizeof(unsigned int) * items1));
 
     // Transfer data from host to device memory
-    HANDLE_ERROR(cudaMemcpy(gpu_inputMatrix1, inputMatrix1, sizeof(unsigned short int) * items1, cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(gpu_inputMatrix2, inputMatrix2, sizeof(unsigned short int) * items1, cudaMemcpyHostToDevice));
+    HANDLE_ERROR(
+            cudaMemcpy(gpu_inputMatrix1, inputMatrix1, sizeof(unsigned short int) * items1, cudaMemcpyHostToDevice));
+    HANDLE_ERROR(
+            cudaMemcpy(gpu_inputMatrix2, inputMatrix2, sizeof(unsigned short int) * items1, cudaMemcpyHostToDevice));
 
 
     dim3 block;
@@ -567,8 +581,8 @@ void calcKernelLaunchConfig(int width, dim3 &block, dim3 &grid) {
     if (width > 32) {
         int gridSize = ceil(width / 32.0);
 
-        block = dim3(32,32,1);
-        grid = dim3(gridSize, gridSize,1);
+        block = dim3(32, 32, 1);
+        grid = dim3(gridSize, gridSize, 1);
 
     } else {
 
@@ -577,7 +591,8 @@ void calcKernelLaunchConfig(int width, dim3 &block, dim3 &grid) {
     }
 }
 
-void convertGc2Cuda(const json &gcq, json &gc1Dictionary, int &numberOfElements, long &items, unsigned short int *&inputMatrix) {
+void convertGc2Cuda(const json &gcq, json &gc1Dictionary, int &numberOfElements, long &items,
+                    unsigned short int *&inputMatrix) {
     gc1Dictionary = gcq["dictionary"];
     numberOfElements = gc1Dictionary.size();
     items = numberOfElements * numberOfElements;// Transform to data structures for calculations
@@ -730,4 +745,147 @@ Metrics demoCalculateSimilaritySequentialOrdered(json gc1, json gc2) {
     metrics.inferencing = edge_type_metric;
     return metrics;
 
+}
+
+
+__global__ void compare2(unsigned short *gcMatrixData, unsigned int *gcDictData, unsigned int *gcMatrixOffsets,
+                         unsigned int *gcMatrixSizes, unsigned int *gcDictOffsets, int gcToCompare,
+                         Metrics *metrics) {
+    int index = blockIdx.x;
+    int gc1 = gcToCompare;
+    int gc2 = index;
+
+    int sim = 0;
+    int elements = sqrtf((float) gcMatrixSizes[gc1]);
+
+    for (int i = 0; i < elements; i++) {
+        for (int j = 0; j < elements; j++) {
+            if (gcDictData[gcDictOffsets[gc1] + i] == gcDictData[gcDictOffsets[gc2] + j]) {
+                sim++;
+            }
+        }
+    }
+
+    int num_of_non_zero_edges = 0;
+    int edge_metric_count = 0;
+    int edge_type = 0;
+
+
+    for (int i = 0; i < elements; i++) {
+        for (int j = 0; j < elements; j++) {
+
+            if (i != j && gcMatrixData[gcMatrixOffsets[gc1] + i * elements + j] != 0) {
+                num_of_non_zero_edges++;
+
+                int position1 = i;
+                int position2 = j;
+                if (position1 == -1 || position2 == -1) {
+                    continue;
+                }
+                int edge = gcMatrixData[gcMatrixOffsets[gc2] + position1 * elements +
+                                        position2];
+                if (edge != 0) {
+                    edge_metric_count++;
+                }
+                if (edge == gcMatrixData[gcMatrixOffsets[gc1] + i * elements + j]) {
+                    edge_type++;
+                }
+
+            }
+        }
+    }
+    metrics[index].similarity = 0.0;
+    metrics[index].recommendation = 0.0;
+    metrics[index].inferencing = 0.0;
+    metrics[index].similarity = (float) sim / (float) elements;
+    if (num_of_non_zero_edges > 0) {
+        /*edge_metric*/ metrics[index].recommendation = (float) edge_metric_count / (float) num_of_non_zero_edges;
+    }
+    if (edge_metric_count > 0) {
+        /*edge_type_metric*/ metrics[index].inferencing = (float) edge_type / (float) edge_metric_count;
+    }
+}
+
+void demoCalculateGCsOnCuda(int NUMBER_OF_GCS, unsigned int dictCounter, const unsigned short *gcMatrixData,
+                            const unsigned int *gcDictData, const unsigned int *gcMatrixOffsets,
+                            const unsigned int *gcDictOffsets, const unsigned int *gcMatrixSizes, int gcQueryPosition) {
+    //------------
+    // CUDA prep
+    //------------
+
+
+    unsigned short *d_gcMatrixData;
+    unsigned int *d_gcDictData;
+    unsigned int *d_gcMatrixOffsets;
+    unsigned int *d_gcMatrixSizes;
+    unsigned int *d_gcDictOffsets;
+    Metrics *d_result;
+
+    int md_size = 0;
+    for (int i = 0; i < NUMBER_OF_GCS; i++) {
+        md_size += gcMatrixSizes[i];
+    }// ;
+
+
+
+    HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixData, md_size * sizeof(unsigned short)));
+    HANDLE_ERROR(cudaMalloc((void **) &d_gcDictData, dictCounter * sizeof(unsigned int)));
+    HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixOffsets, NUMBER_OF_GCS * sizeof(unsigned int)));
+    HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixSizes, NUMBER_OF_GCS * sizeof(unsigned int)));
+    HANDLE_ERROR(cudaMalloc((void **) &d_gcDictOffsets, NUMBER_OF_GCS * sizeof(unsigned int)));
+    HANDLE_ERROR(cudaMalloc((void **) &d_result, NUMBER_OF_GCS * sizeof(Metrics)));
+
+
+    HANDLE_ERROR(
+            cudaMemcpy(d_gcMatrixData, gcMatrixData, md_size * sizeof(unsigned short), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_gcDictData, gcDictData, dictCounter * sizeof(unsigned int), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_gcMatrixOffsets, gcMatrixOffsets, NUMBER_OF_GCS * sizeof(unsigned int),
+                            cudaMemcpyHostToDevice));
+    HANDLE_ERROR(
+            cudaMemcpy(d_gcMatrixSizes, gcMatrixSizes, NUMBER_OF_GCS * sizeof(unsigned int), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(
+            cudaMemcpy(d_gcDictOffsets, gcDictOffsets, NUMBER_OF_GCS * sizeof(unsigned int), cudaMemcpyHostToDevice));
+
+    auto start = std::chrono::system_clock::now();
+
+    compare2<<<NUMBER_OF_GCS, 1>>>(d_gcMatrixData,
+                                   d_gcDictData,
+                                   d_gcMatrixOffsets,
+                                   d_gcMatrixSizes,
+                                   d_gcDictOffsets,
+                                   gcQueryPosition,
+                                   d_result);
+
+    HANDLE_ERROR(cudaPeekAtLastError());
+    HANDLE_ERROR(cudaDeviceSynchronize());
+    auto end = std::chrono::system_clock::now();
+
+    std::chrono::duration<double> elapsed_seconds = end - start;
+    time_t end_time = std::chrono::system_clock::to_time_t(end);
+
+    std::cout << "finished CUDA computation at " << ctime(&end_time)
+              << "elapsed time: " << elapsed_seconds.count() << "s\n";
+
+
+    Metrics *result = (Metrics *) malloc(NUMBER_OF_GCS * sizeof(Metrics));
+    HANDLE_ERROR(cudaMemcpy(result, d_result, NUMBER_OF_GCS * sizeof(Metrics), cudaMemcpyDeviceToHost));
+
+    for (int i = 0; i < NUMBER_OF_GCS; i++) {
+
+
+//        std::cout << "Result (" << i << ") "
+//                  << "Similarity " << result[i].similarity << "; "
+//                  << "Recommendation " << result[i].recommendation << "; "
+//                  << "Inference " << result[i].inferencing << "; "
+//                  << std::endl;
+
+//        assert(result[i].similarity == 1);
+//        assert(result[i].recommendation == 0.5);
+//        assert(result[i].inferencing == 0);
+    }
+    HANDLE_ERROR(cudaFree(d_gcMatrixData));
+    HANDLE_ERROR(cudaFree(d_gcDictData));
+    HANDLE_ERROR(cudaFree(d_gcMatrixOffsets));
+    HANDLE_ERROR(cudaFree(d_gcMatrixSizes));
+    HANDLE_ERROR(cudaFree(d_result));
 }

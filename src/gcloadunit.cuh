@@ -43,6 +43,8 @@ public:
     GraphCode static convertJsonToGraphCode(json jsonGraphCode);
 
 
+    unsigned int getNumberOfDictElements();
+
 private:
     unsigned short *gcMatrixDataPtr;
 
