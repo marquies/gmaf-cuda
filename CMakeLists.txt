@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 enable_language(CUDA)
 
+
 include(FindPkgConfig)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules")
@@ -21,7 +22,7 @@ list (REMOVE_DUPLICATES Foo_INCLUDE_DIRS)
 
 
 include(FetchContent)
-
+set(JSON_BuildTests OFF)
 FetchContent_Declare(json
         GIT_REPOSITORY https://github.com/nlohmann/json.git
         GIT_TAG v3.2.0)
@@ -31,6 +32,7 @@ if(NOT json_POPULATED)
     FetchContent_Populate(json)
     add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
+
 
 find_package(PkgConfig REQUIRED)
 
@@ -81,6 +83,7 @@ add_executable (gcsim main2.cpp)
 target_include_directories(gcsim PUBLIC ${Foo_INCLUDE_DIRS} ${UUID_INCLUDE_DIRS})
 
 target_sources(gcsim PRIVATE ${GMAF_SRC})
+
 
 ENABLE_TESTING()
 

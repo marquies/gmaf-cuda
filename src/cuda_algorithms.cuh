@@ -8,6 +8,7 @@
 
 #include "graphcode.h"
 #include <uuid/uuid.h>
+#include <cuda_runtime.h>
 
 typedef struct GraphCode {
     std::vector<std::string> *dict;

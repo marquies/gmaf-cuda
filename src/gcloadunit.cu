@@ -245,6 +245,7 @@ void GcLoadUnit::addGcFromFile(std::string filepath) {
     }
 
 
+    // TODO: this could be replaced by direct conversions
     GraphCode gc = convertJsonToGraphCode(jf);
     reallocPtrBySize(gc.dict->size());
     int numberOfElementsAdded = addVectorToDictMap(gc.dict);
