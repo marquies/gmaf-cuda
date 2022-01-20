@@ -13,6 +13,7 @@
 
 #include <vector>
 #include <string>
+#include "cuda_algorithms.cuh"
 
 class GcLoadUnit {
 
@@ -33,6 +34,8 @@ public:
 
     unsigned int *getDictOffsetPtr();
 
+    void loadMultipleByExample(int count, GraphCode code);
+
 private:
     unsigned short *gcMatrixDataPtr;
 
@@ -45,6 +48,14 @@ private:
     unsigned int *gcMatrixOffsetsPtr;
     unsigned int *gcDictDataPtr;
     unsigned int *gcDictOffsetsPtr;
+
+    void reinit() const;
+
+    void appendMatrix(const unsigned short *mat1, unsigned short sizeofMat, unsigned short *gcMatrixData,
+                      unsigned int *gcDictData, unsigned int *gcMatrixOffsets, unsigned int *gcMatrixSizes,
+                      int *lastOffset,
+                      int position);
+
 };
 
 

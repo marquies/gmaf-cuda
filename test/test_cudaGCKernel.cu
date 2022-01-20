@@ -253,7 +253,7 @@ int main() {
 
 void testGcSimilarityKernelWithMany3x3() {
 
-    int NUMBER_OF_GCS = 1000000;
+    int NUMBER_OF_GCS = 10;
     //int NUMBER_OF_GCS = 10000;
     srand(time(NULL));   // Initialization, should only be called once.
 
@@ -287,7 +287,7 @@ void testGcSimilarityKernelWithMany3x3() {
         //unsigned short mat[] = {1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1};
 
 
-        unsigned short mat[gc1.dict->size()];
+        unsigned short mat[gc1.dict->size() * gc1.dict->size()];
         for (int i = 0; i < vect->size(); i++) {
             mat[i] = gc1.matrix[i];
             if (i == 2)
@@ -349,6 +349,17 @@ void testGcSimilarityKernelWithMany3x3() {
     //delete vect;
     delete gc1.dict;
     delete gc1.matrix;
+
+
+    assert(gcMatrixSizes[0] == 250 * 250);
+    assert(gcMatrixSizes[NUMBER_OF_GCS - 1] == 250 * 250);
+
+    std::cout << gcMatrixOffsets[0] << std::endl;
+    assert(gcMatrixOffsets[0] == 0);
+    assert(gcMatrixOffsets[1] == 250 * 250); //Error I assume
+
+    assert(gcDictOffsets[0] == 0);
+    assert(gcDictOffsets[1] == 250);
 
     //------------
     // CUDA prep
