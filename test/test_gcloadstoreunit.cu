@@ -7,6 +7,7 @@
 #include <cassert>
 #include <cuda_algorithms.cuh>
 #include <helper.h>
+#include <fstream>
 #include "testhelper.cpp"
 
 
@@ -14,9 +15,149 @@ void testLoadSimple();
 
 void testLoadMultipleByExample();
 
+void testLoadTwoRealGcs();
+
+void testConvertJsonToGraphCode();
+
 int main() {
     testLoadSimple();
     testLoadMultipleByExample();
+    testLoadTwoRealGcs();
+    testConvertJsonToGraphCode();
+}
+
+void testConvertJsonToGraphCode() {
+    std::string file = "/home/breucking/CLionProjects/gmaf-cuda/GMAF_TMP_17316548361524909203.png.gc";
+
+    std::ifstream ifs(file);
+    json jf = json::parse(ifs);
+
+    const GraphCode &gc = GcLoadUnit::convertJsonToGraphCode(jf);
+
+    //["root-asset","fish","cat","person","smurf"]
+    assert(gc.dict->at(0).compare("root-asset") == 0);
+    assert(gc.dict->at(1).compare("fish") == 0);
+    assert(gc.dict->at(2).compare("cat") == 0);
+    assert(gc.dict->at(3).compare("person") == 0);
+    assert(gc.dict->at(4).compare("smurf") == 0);
+
+    //[[1,1,1,1,1],[0,2,0,0,0],[0,0,2,0,0],[0,0,0,2,0],[0,0,0,0,2]]
+    assert(gc.matrix[0] == 1);
+    assert(gc.matrix[1] == 1);
+    assert(gc.matrix[2] == 1);
+    assert(gc.matrix[3] == 1);
+    assert(gc.matrix[4] == 1);
+
+    assert(gc.matrix[5] == 0);
+    assert(gc.matrix[6] == 2);
+    assert(gc.matrix[7] == 0);
+    assert(gc.matrix[8] == 0);
+    assert(gc.matrix[9] == 0);
+
+    assert(gc.matrix[10] == 0);
+    assert(gc.matrix[11] == 0);
+    assert(gc.matrix[12] == 2);
+    assert(gc.matrix[13] == 0);
+    assert(gc.matrix[14] == 0);
+
+}
+
+
+void testLoadTwoRealGcs() {
+    GcLoadUnit loadUnit;
+
+    std::string file = "/home/breucking/CLionProjects/gmaf-cuda/GMAF_TMP_17316548361524909203.png.gc";
+    loadUnit.addGcFromFile(file);
+
+    unsigned int *gcDictData = loadUnit.getGcDictDataPtr();
+
+    unsigned short *gcMatrixDataPtr = loadUnit.getGcMatrixDataPtr();
+    unsigned int *gcMatrixOffsets = loadUnit.getGcMatrixOffsetsPtr();
+    unsigned int *gcMatrixSizes = loadUnit.getMatrixSizesPtr();
+
+
+    //["root-asset","fish","cat","person","smurf"]
+    unsigned int word0 = loadUnit.getDictCode("root-asset");
+    unsigned int word1 = loadUnit.getDictCode("fish");
+    unsigned int word2 = loadUnit.getDictCode("cat");
+    unsigned int word3 = loadUnit.getDictCode("person");
+    unsigned int word4 = loadUnit.getDictCode("smurf");
+
+    assert(gcDictData[0] == word0);
+    assert(gcDictData[1] == word1);
+    assert(gcDictData[2] == word2);
+    assert(gcDictData[3] == word3);
+    assert(gcDictData[4] == word4);
+
+    assert(gcMatrixSizes[0] == 25);
+    assert(gcMatrixOffsets[0] == 0);
+
+//    //[[1,1,1,1,1],[0,2,0,0,0],[0,0,2,0,0],[0,0,0,2,0],[0,0,0,0,2]]
+    assert(gcMatrixDataPtr[0] == 1);
+    assert(gcMatrixDataPtr[1] == 1);
+    assert(gcMatrixDataPtr[2] == 1);
+    assert(gcMatrixDataPtr[3] == 1);
+    assert(gcMatrixDataPtr[4] == 1);
+
+    assert(gcMatrixDataPtr[5] == 0);
+    assert(gcMatrixDataPtr[6] == 2);
+    assert(gcMatrixDataPtr[7] == 0);
+    assert(gcMatrixDataPtr[8] == 0);
+    assert(gcMatrixDataPtr[9] == 0);
+
+    assert(gcMatrixDataPtr[10] == 0);
+    assert(gcMatrixDataPtr[11] == 0);
+    assert(gcMatrixDataPtr[12] == 2);
+    assert(gcMatrixDataPtr[13] == 0);
+    assert(gcMatrixDataPtr[14] == 0);
+
+
+    file = "/home/breucking/CLionProjects/gmaf-cuda/example2.gc";
+    loadUnit.addGcFromFile(file);
+
+    gcDictData = loadUnit.getGcDictDataPtr();
+
+    gcMatrixDataPtr = loadUnit.getGcMatrixDataPtr();
+    gcMatrixOffsets = loadUnit.getGcMatrixOffsetsPtr();
+    gcMatrixSizes = loadUnit.getMatrixSizesPtr();
+
+
+    //["root-asset","hammer","drill","schrowetrecker","nail"]
+    unsigned int word5 = loadUnit.getDictCode("root-asset");
+    unsigned int word6 = loadUnit.getDictCode("hammer");
+    unsigned int word7 = loadUnit.getDictCode("drill");
+    unsigned int word8 = loadUnit.getDictCode("schrowetrecker");
+
+    assert(word0 == word5);
+
+    assert(gcDictData[5] == word5);
+    assert(gcDictData[6] == word6);
+    assert(gcDictData[7] == word7);
+    assert(gcDictData[8] == word8);
+
+    assert(gcMatrixSizes[1] == 16);
+    assert(gcMatrixOffsets[1] == 25);
+
+//    [[12,12,12,12],[10,12,10,10],[10,10,12,10],[10,10,10,12]]
+    assert(gcMatrixDataPtr[25] == 12);
+    assert(gcMatrixDataPtr[26] == 12);
+    assert(gcMatrixDataPtr[27] == 12);
+    assert(gcMatrixDataPtr[28] == 12);
+
+    assert(gcMatrixDataPtr[29] == 10);
+    assert(gcMatrixDataPtr[30] == 12);
+    assert(gcMatrixDataPtr[31] == 10);
+    assert(gcMatrixDataPtr[32] == 10);
+
+    assert(gcMatrixDataPtr[33] == 10);
+    assert(gcMatrixDataPtr[34] == 10);
+    assert(gcMatrixDataPtr[35] == 12);
+    assert(gcMatrixDataPtr[36] == 10);
+
+    assert(gcMatrixDataPtr[37] == 10);
+    assert(gcMatrixDataPtr[38] == 10);
+    assert(gcMatrixDataPtr[39] == 10);
+    assert(gcMatrixDataPtr[40] == 12);
 }
 
 void testLoadMultipleByExample() {

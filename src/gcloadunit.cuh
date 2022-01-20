@@ -38,12 +38,20 @@ public:
 
     unsigned int getDictCode(std::string key);
 
+    void addGcFromFile(std::string filepath);
+
+    GraphCode static convertJsonToGraphCode(json jsonGraphCode);
+
+
 private:
     unsigned short *gcMatrixDataPtr;
 
     int gcSize = 0;
-
     bool init = false;
+    int lastOffset = 0;
+    int lastPosition = 0;
+    unsigned int lastDictOffset = 0;
+    unsigned int dictCounter = 0;
 
     std::vector<std::string> gcNames;
     unsigned int *gcMatrixSizesPtr;
@@ -53,13 +61,20 @@ private:
 
     std::map<std::string, unsigned int> dict_map;
 
-    void reinit() const;
+    void reinit() ;
 
     void appendMatrix(const unsigned short *mat1, unsigned short sizeofMat, unsigned short *gcMatrixData,
                       unsigned int *gcDictData, unsigned int *gcMatrixOffsets, unsigned int *gcMatrixSizes,
                       int *lastOffset,
                       int position);
 
+    int addVectorToDictMap(const std::vector<std::string> *vect);
+
+    void appendVectorToDict(const std::vector<std::string> *vect, int elementsAdded);
+
+    void appendGCMatrixToMatrix(const GraphCode &code, int matNumberOfElements);
+
+    void reallocPtrBySize(int count);
 };
 
 
