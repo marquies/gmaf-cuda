@@ -29,6 +29,10 @@ public:
 
     unsigned int *getMatrixSizesPtr();
 
+    unsigned int *getGcDictDataPtr();
+
+    unsigned int *getDictOffsetPtr();
+
 private:
     unsigned short *gcMatrixDataPtr;
 
@@ -39,6 +43,8 @@ private:
     std::vector<std::string> gcNames;
     unsigned int *gcMatrixSizesPtr;
     unsigned int *gcMatrixOffsetsPtr;
+    unsigned int *gcDictDataPtr;
+    unsigned int *gcDictOffsetsPtr;
 };
 
 

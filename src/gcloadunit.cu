@@ -12,15 +12,20 @@ void GcLoadUnit::loadArtificialGcs(int count, int dimension) {
         free(gcMatrixDataPtr);
         free(gcMatrixSizesPtr);
         free(gcMatrixOffsetsPtr);
+        free(gcDictDataPtr);
+        free(gcDictOffsetsPtr);
     }
     int matrixSize = dimension * dimension;
     gcMatrixDataPtr = (unsigned short *) malloc(sizeof(unsigned short) * count * matrixSize);
     gcMatrixSizesPtr = (unsigned int *) malloc(sizeof(unsigned int) * count);
     gcMatrixOffsetsPtr = (unsigned int *) malloc(sizeof(unsigned int) * count);
+    gcDictDataPtr = (unsigned int *) malloc(sizeof(unsigned int) * count * dimension);
+    gcDictOffsetsPtr = (unsigned int *) malloc(sizeof(unsigned int) * count);
 
     init = true;
 
     gcNames.clear();
+
 
     for (int i = 0; i < count; i++) {
         gcNames.push_back(std::to_string(i) + ".gc");
@@ -28,7 +33,11 @@ void GcLoadUnit::loadArtificialGcs(int count, int dimension) {
             gcMatrixDataPtr[i * matrixSize + j] = i;
         }
         gcMatrixSizesPtr[i] = matrixSize;
-        gcMatrixOffsetsPtr[i] = matrixSize*i;
+        gcMatrixOffsetsPtr[i] = matrixSize * i;
+        for (int j = 0; j < dimension; j++) {
+            gcDictDataPtr[i * dimension + j] = j;
+        }
+        gcDictOffsetsPtr[i] = dimension;
     }
     gcSize = count;
 
@@ -52,4 +61,12 @@ unsigned int *GcLoadUnit::getGcMatrixOffsetsPtr() {
 
 unsigned int *GcLoadUnit::getMatrixSizesPtr() {
     return gcMatrixSizesPtr;
+}
+
+unsigned int *GcLoadUnit::getGcDictDataPtr() {
+    return gcDictDataPtr;
+}
+
+unsigned int *GcLoadUnit::getDictOffsetPtr() {
+    return gcDictOffsetsPtr;
 }

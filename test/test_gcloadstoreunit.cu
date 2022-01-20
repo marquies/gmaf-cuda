@@ -19,16 +19,18 @@ void testLoadSimple() {
 
 
 //    gcMatrixData, md_size * sizeof(unsigned short)
-//    gcDictData, dictCounter * sizeof(unsigned int)
 //    gcMatrixOffsets, NUMBER_OF_GCS * sizeof(unsigned int)
 //    gcMatrixSizesPtr, NUMBER_OF_GCS * sizeof(unsigned int)
+//    gcDictData, dictCounter * sizeof(unsigned int)
 //    gcDictOffsets, NUMBER_OF_GCS * sizeof(unsigned int)
 
 
-    unsigned short *ptr = loadUnit.getGcMatrixDataPtr();
     int size = loadUnit.getNumberOfGc();
+    unsigned short *ptr = loadUnit.getGcMatrixDataPtr();
     unsigned int *gcMatrixOffsets = loadUnit.getGcMatrixOffsetsPtr();
     unsigned int *gcMatrixSizes = loadUnit.getMatrixSizesPtr();
+    unsigned int *gcDictData = loadUnit.getGcDictDataPtr();
+    unsigned int *gcDictOffsets = loadUnit.getDictOffsetPtr();
 
     assert(size == 10);
     assert(ptr[0] == 0);
@@ -36,6 +38,9 @@ void testLoadSimple() {
     assert(gcMatrixSizes[5] == dim*dim);
     assert(gcMatrixOffsets[0] == 0);
     assert(gcMatrixOffsets[1] == 9);
+    assert(gcDictData[0] == 0);
+    assert(gcDictData[1] == 1);
+    assert(gcDictOffsets[0] = 3);
 
 
     dim = 2;
