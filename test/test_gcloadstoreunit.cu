@@ -62,6 +62,13 @@ void testLoadMultipleByExample() {
 
     assert(gcMatrixDataPtr[gcMatrixOffsets[1]+gcMatrixSizes[1]-1] == gc1.matrix[dim*dim-1]);
 
+
+    unsigned int intCodedWord = loadUnit.getDictCode(gc1.dict->at(0));
+    assert(gcDictData[0] == intCodedWord);
+
+    intCodedWord = loadUnit.getDictCode(gc1.dict->at(2));
+    assert(gcDictData[2] == intCodedWord);
+
 }
 
 void testLoadSimple() {

@@ -66,7 +66,6 @@ void GcLoadUnit::loadMultipleByExample(int count, GraphCode code) {
     unsigned int lastDictOffset = 0;
     unsigned int dictCounter = 0;
 
-    std::map<std::string, unsigned int> dict_map;
 
     int lastOffset = 0;
     int lastPosition = 0;
@@ -82,7 +81,7 @@ void GcLoadUnit::loadMultipleByExample(int count, GraphCode code) {
 
 
         unsigned short mat[code.dict->size() * code.dict->size()];
-        for (int i = 0; i < vect->size(); i++) {
+        for (int i = 0; i < vect->size() * vect->size(); i++) {
             mat[i] = code.matrix[i];
 //            if (i == 2)
 //                mat[i] = rand() % 10;
@@ -184,4 +183,8 @@ unsigned int *GcLoadUnit::getGcDictDataPtr() {
 
 unsigned int *GcLoadUnit::getDictOffsetPtr() {
     return gcDictOffsetsPtr;
+}
+
+unsigned int GcLoadUnit::getDictCode(std::string key) {
+    return dict_map.at(key);
 }

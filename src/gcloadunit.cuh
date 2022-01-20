@@ -36,10 +36,12 @@ public:
 
     void loadMultipleByExample(int count, GraphCode code);
 
+    unsigned int getDictCode(std::string key);
+
 private:
     unsigned short *gcMatrixDataPtr;
 
-    int gcSize;
+    int gcSize = 0;
 
     bool init = false;
 
@@ -48,6 +50,8 @@ private:
     unsigned int *gcMatrixOffsetsPtr;
     unsigned int *gcDictDataPtr;
     unsigned int *gcDictOffsetsPtr;
+
+    std::map<std::string, unsigned int> dict_map;
 
     void reinit() const;
 
