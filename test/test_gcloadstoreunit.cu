@@ -158,6 +158,9 @@ void testLoadTwoRealGcs() {
     assert(gcMatrixDataPtr[38] == 10);
     assert(gcMatrixDataPtr[39] == 10);
     assert(gcMatrixDataPtr[40] == 12);
+
+    assert(loadUnit.hasGc("example2.gc"));
+    assert(loadUnit.hasGc("GMAF_TMP_17316548361524909203.png.gc"));
 }
 
 void testLoadMultipleByExample() {
@@ -253,6 +256,7 @@ void testLoadSimple() {
 
     assert(size == 11);
     assert(loadUnit.hasGc(std::to_string(12)+".gc") == false);
+    assert(loadUnit.getNumberOfDictElements() == dim);
     for(int i = 0; i < 11; i++) {
         assert(loadUnit.hasGc(std::to_string(i)+".gc"));
         assert(gcMatrixDataPtr[i * dim * dim] == i);

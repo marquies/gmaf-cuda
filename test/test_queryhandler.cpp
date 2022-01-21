@@ -37,6 +37,7 @@ void testValidation() {
 
 void testErrorQuery() {
 
+
     try {
         QueryHandler::processQuery("", GcLoadUnit());
         assert(false);

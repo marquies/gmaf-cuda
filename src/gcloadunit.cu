@@ -10,31 +10,34 @@
 
 void GcLoadUnit::loadArtificialGcs(int count, int dimension) {
     reinit();
-    int matrixSize = dimension * dimension;
+    const int matrixSize = dimension * dimension;
     gcMatrixDataPtr = (unsigned short *) malloc(sizeof(unsigned short) * count * matrixSize);
     gcMatrixSizesPtr = (unsigned int *) malloc(sizeof(unsigned int) * count);
     gcMatrixOffsetsPtr = (unsigned int *) malloc(sizeof(unsigned int) * count);
     gcDictDataPtr = (unsigned int *) malloc(sizeof(unsigned int) * count * dimension);
     gcDictOffsetsPtr = (unsigned int *) malloc(sizeof(unsigned int) * count);
 
+    gcMatrixDataPtr[34359 * matrixSize + 46148] = 1;
+
     init = true;
 
     gcNames.clear();
 
-
     for (int i = 0; i < count; i++) {
         gcNames.push_back(std::to_string(i) + ".gc");
         for (int j = 0; j < matrixSize; j++) {
-            gcMatrixDataPtr[i * matrixSize + j] = i;
+            long idx = (long) i * matrixSize + j;
+            gcMatrixDataPtr[idx] = (unsigned short) 1;
         }
         gcMatrixSizesPtr[i] = dimension;
         gcMatrixOffsetsPtr[i] = matrixSize * i;
         for (int j = 0; j < dimension; j++) {
             gcDictDataPtr[i * dimension + j] = j;
         }
-        gcDictOffsetsPtr[i] = dimension;
+        gcDictOffsetsPtr[i] = i*dimension;
     }
     gcSize = count;
+    dictCounter = dimension;
 
 }
 
@@ -77,6 +80,8 @@ void GcLoadUnit::loadMultipleByExample(int count, GraphCode code) {
         //------
         // Adding
         //------
+        gcNames.push_back(std::to_string(ii) + ".gc");
+
 
         // Copy matrix data form source to own structure
 //        unsigned short mat[code.dict->size() * code.dict->size()];
@@ -96,6 +101,8 @@ void GcLoadUnit::loadMultipleByExample(int count, GraphCode code) {
         // Expand global matrix array
 //        int matSize = sizeof(mat) / sizeof(unsigned short);
         appendGCMatrixToMatrix(code, matNumberOfElements);
+
+
 
         gcSize++;
     }
@@ -244,8 +251,10 @@ void GcLoadUnit::addGcFromFile(std::string filepath) {
         reinit();
     }
 
+    gcNames.push_back(std::string(basename(filepath.c_str())));
 
-    // TODO: this could be replaced by direct conversions
+
+    // TODO: xthis could be replaced by direct conversions
     GraphCode gc = convertJsonToGraphCode(jf);
     reallocPtrBySize(gc.dict->size());
     int numberOfElementsAdded = addVectorToDictMap(gc.dict);

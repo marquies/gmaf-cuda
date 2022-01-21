@@ -760,7 +760,11 @@ __global__ void compare2(unsigned short *gcMatrixData, unsigned int *gcDictData,
 
     for (int i = 0; i < elements; i++) {
         for (int j = 0; j < elements; j++) {
-            if (gcDictData[gcDictOffsets[gc1] + i] == gcDictData[gcDictOffsets[gc2] + j]) {
+            unsigned int off1 = gcDictOffsets[gc1];
+            unsigned int off2 = gcDictOffsets[gc2];
+            unsigned int d1 = gcDictData[off1 + i];
+            unsigned int d2 = gcDictData[off2 + j];
+            if (d1 == d2) {
                 sim++;
             }
         }
@@ -821,7 +825,7 @@ void demoCalculateGCsOnCuda(int NUMBER_OF_GCS, unsigned int dictCounter, const u
     unsigned int *d_gcDictOffsets;
     Metrics *d_result;
 
-    int md_size = 0;
+    long md_size = 0;
     for (int i = 0; i < NUMBER_OF_GCS; i++) {
         md_size += gcMatrixSizes[i];
     }// ;

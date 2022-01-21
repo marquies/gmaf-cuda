@@ -74,7 +74,7 @@ int main_init(int argc, char *argv[]) {
     isPrime(17);
 
     GcLoadUnit loadUnit;
-    loadUnit.loadArtificialGcs(limit, 1);
+    loadUnit.loadArtificialGcs(limit, 200);
 
     std::string queryString;
 
