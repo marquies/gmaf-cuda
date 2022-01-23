@@ -36,18 +36,18 @@ void GcLoadUnit::loadArtificialGcs(int count, int dimension) {
             gcDictDataPtr[i * dimension + j] = j;
             addedDictItems++;
         }
-        gcDictOffsetsPtr[i] = i*dimension;
+        gcDictOffsetsPtr[i] = i * dimension;
     }
     if (G_DEBUG) {
         std::cout << "Added " << count << " GCs with total " << addedElements << " elements" << std::endl;
         std::cout << "Added " << count << " GCs with total " << addedDictItems << " dict elements" << std::endl;
     }
     gcSize = count;
-    dictCounter = count* dimension;
+    dictCounter = count * dimension;
 
 }
 
-void GcLoadUnit::reinit()  {
+void GcLoadUnit::reinit() {
     if (init) {
         if (G_DEBUG) {
             std::cout << "Reinitialize LoadUnit (free allocated space)" << std::endl;
@@ -109,7 +109,6 @@ void GcLoadUnit::loadMultipleByExample(int count, GraphCode code) {
         appendGCMatrixToMatrix(code, matNumberOfElements);
 
 
-
         gcSize++;
     }
 }
@@ -157,7 +156,8 @@ void GcLoadUnit::appendGCMatrixToMatrix(const GraphCode &code, int matNumberOfEl
     }
 
     // Add matrix to the global matrix array
-    appendMatrix(code.matrix, matSize, gcMatrixDataPtr, gcDictDataPtr, gcMatrixOffsetsPtr, gcMatrixSizesPtr, &lastOffset,
+    appendMatrix(code.matrix, matSize, gcMatrixDataPtr, gcDictDataPtr, gcMatrixOffsetsPtr, gcMatrixSizesPtr,
+                 &lastOffset,
                  lastPosition);
 
     lastPosition++;
@@ -252,8 +252,7 @@ void GcLoadUnit::addGcFromFile(std::string filepath) {
     std::ifstream ifs(filepath);
     json jf = json::parse(ifs);
 
-
-    if(!init){
+    if (!init) {
         reinit();
     }
 
@@ -261,12 +260,39 @@ void GcLoadUnit::addGcFromFile(std::string filepath) {
 
 
     // TODO: xthis could be replaced by direct conversions
-    GraphCode gc = convertJsonToGraphCode(jf);
-    reallocPtrBySize(gc.dict->size());
+//    GraphCode gc = GcLoadUnit::convertJsonToGraphCode(jf);
+
+    // TODO: Replace with non-static member
+    json gc1Dictionary = jf["dictionary"];
+    json jsonMatrix = jf["matrix"];
+    std::vector<std::string> *dict = new std::vector<std::string>;
+    int size = gc1Dictionary.size();
+    dict->reserve(size);
+
+    for (const auto &item2: gc1Dictionary.items()) {
+        dict->push_back(item2.value().get<std::string>());
+    }
+
+    unsigned short *matrix = (unsigned short *) malloc(sizeof(unsigned short) * size * size);
+
+
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+
+            matrix[i * size + j] = jsonMatrix.at(i).at(j);
+        }
+    }
+
+    GraphCode gc;
+    gc.matrix = matrix;
+    gc.dict = dict;
+
+    reallocPtrBySize(gcSize + 1);
     int numberOfElementsAdded = addVectorToDictMap(gc.dict);
     appendVectorToDict(gc.dict, numberOfElementsAdded);
 
     appendGCMatrixToMatrix(gc, gc.dict->size() * gc.dict->size());
+
 
     gcSize++;
 
@@ -283,13 +309,13 @@ GraphCode GcLoadUnit::convertJsonToGraphCode(json jsonGraphCode) {
         dict->push_back(item2.value().get<std::string>());
     }
 
-    unsigned short *matrix = (unsigned short*) malloc(sizeof(unsigned short) * size * size);
+    unsigned short *matrix = (unsigned short *) malloc(sizeof(unsigned short) * size * size);
 
 
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
 
-            matrix[i*size+j] = jsonMatrix.at(i).at(j);
+            matrix[i * size + j] = jsonMatrix.at(i).at(j);
         }
     }
 

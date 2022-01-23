@@ -51,7 +51,7 @@ SET(GCC_COVERAGE_LINK_FLAGS    "-lstdc++fs -mavx2 -msse4.1 -march=native")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=nehalem")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1 -msse4.2")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -Wall -Wextra -Wconversion -pedantic ")
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O1")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O1")
@@ -65,7 +65,7 @@ set(CMAKE_CXX_STANDARD 17)
 #set (CUDA_PROPAGATE_HOST_FLAGS ON)
 
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_61,code=sm_61")
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -lineinfo -G -g")
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -lineinfo -G -g ")
 
 
 

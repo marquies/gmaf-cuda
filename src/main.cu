@@ -1,12 +1,15 @@
 #include <iostream>
 #include <unistd.h>
+#include <fstream>
 
+#include <dirent.h>
 
 #include<string.h>
 #include <thread>
-#include <chrono>
-#include <ctime>
 
+#include <experimental/filesystem>
+
+namespace fs = std::experimental::filesystem;
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +17,6 @@
 #include "graphcode.h"
 #include "gcloadunit.cuh"
 #include "queryhandler.cuh"
-#include "helper.h"
 
 
 
@@ -24,6 +26,7 @@
 
 
 void runThreaded(std::vector<json> &arr, const gmaf::GraphCode &gc, int s);
+
 void runSequential(std::vector<json> &arr, gmaf::GraphCode gc);
 
 
@@ -34,6 +37,7 @@ void ctrl_c(int sig) {
     mainLoop = false;
     signal(sig, ctrl_c); /* re-installs handler */
 }
+
 /**
  * Main function of the program.
  * @param argc
@@ -46,9 +50,12 @@ int main_init(int argc, char *argv[]) {
     int opt;
     char *cvalue = NULL;
     int limit = 100;
+    bool simulation = false;
 
-    while ((opt = getopt(argc, argv, "d:c:")) != -1) {
+    while ((opt = getopt(argc, argv, "d:c:s")) != -1) {
         switch (opt) {
+            case 's':
+                simulation = true;
             case 'd':
                 cvalue = optarg;
                 break;
@@ -68,13 +75,28 @@ int main_init(int argc, char *argv[]) {
     }
 
 
-
-    // Starting the main part
-
-    isPrime(17);
-
     GcLoadUnit loadUnit;
-    loadUnit.loadArtificialGcs(limit, 100);
+    if (simulation) {
+        loadUnit.loadArtificialGcs(limit, 100);
+    } else {
+
+        int n = 0;
+
+
+        for (const auto &entry: fs::directory_iterator(cvalue)) {
+//            files.push_back(entry.path().string());
+try {
+            loadUnit.addGcFromFile(entry.path().string());
+        } catch (json::exception &e) {
+            std::cerr << e.what() << '\n';
+        }
+            n++;
+            if (n > limit) {
+                break;
+            }
+        }
+
+    }
 
     std::string queryString;
 
@@ -83,7 +105,7 @@ int main_init(int argc, char *argv[]) {
 
     old = signal(SIGINT, ctrl_c); /* installs handler */
 
-    do  {
+    do {
         std::cout << "Enter Query";
         if (fgets(buf, sizeof(buf), stdin) != NULL && mainLoop) {
             printf("Got : %s", buf);
@@ -92,7 +114,7 @@ int main_init(int argc, char *argv[]) {
             if (str.compare("quit") == 0) {
                 mainLoop = false;
             } else {
-                if(QueryHandler::validate(str)) {
+                if (QueryHandler::validate(str)) {
                     QueryHandler::processQuery(str, loadUnit);
                 } else {
                     std::cout << "Query invalid" << std::endl;
@@ -134,7 +156,7 @@ int main_init(int argc, char *argv[]) {
 }
 
 void runSequential(std::vector<json> &arr, gmaf::GraphCode gc) {
-        gc.calculateSimilarityV( 0, &arr.at(0), &arr, 1, arr.size());
+    gc.calculateSimilarityV(0, &arr.at(0), &arr, 1, arr.size());
 }
 
 
