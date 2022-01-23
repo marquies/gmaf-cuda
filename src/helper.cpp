@@ -4,7 +4,7 @@
 
 #include "helper.h"
 
-bool G_DEBUG = false;
+bool G_DEBUG = true;
 
 void convertDict2Matrix(int size, int *destMatrix, nlohmann::json jsonMatrix) {
     for (int i = 0; i < size; i++) {

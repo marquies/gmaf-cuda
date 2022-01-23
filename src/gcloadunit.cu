@@ -17,27 +17,33 @@ void GcLoadUnit::loadArtificialGcs(int count, int dimension) {
     gcDictDataPtr = (unsigned int *) malloc(sizeof(unsigned int) * count * dimension);
     gcDictOffsetsPtr = (unsigned int *) malloc(sizeof(unsigned int) * count);
 
-    gcMatrixDataPtr[34359 * matrixSize + 46148] = 1;
-
     init = true;
 
     gcNames.clear();
+    long addedElements = 0;
+    long addedDictItems = 0;
 
     for (int i = 0; i < count; i++) {
         gcNames.push_back(std::to_string(i) + ".gc");
         for (int j = 0; j < matrixSize; j++) {
             long idx = (long) i * matrixSize + j;
             gcMatrixDataPtr[idx] = (unsigned short) 1;
+            addedElements++;
         }
-        gcMatrixSizesPtr[i] = dimension;
+        gcMatrixSizesPtr[i] = matrixSize;
         gcMatrixOffsetsPtr[i] = matrixSize * i;
         for (int j = 0; j < dimension; j++) {
             gcDictDataPtr[i * dimension + j] = j;
+            addedDictItems++;
         }
         gcDictOffsetsPtr[i] = i*dimension;
     }
+    if (G_DEBUG) {
+        std::cout << "Added " << count << " GCs with total " << addedElements << " elements" << std::endl;
+        std::cout << "Added " << count << " GCs with total " << addedDictItems << " dict elements" << std::endl;
+    }
     gcSize = count;
-    dictCounter = dimension;
+    dictCounter = count* dimension;
 
 }
 

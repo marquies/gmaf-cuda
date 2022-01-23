@@ -810,9 +810,14 @@ __global__ void compare2(unsigned short *gcMatrixData, unsigned int *gcDictData,
     }
 }
 
-void demoCalculateGCsOnCuda(int NUMBER_OF_GCS, unsigned int dictCounter, const unsigned short *gcMatrixData,
-                            const unsigned int *gcDictData, const unsigned int *gcMatrixOffsets,
-                            const unsigned int *gcDictOffsets, const unsigned int *gcMatrixSizes, int gcQueryPosition) {
+void demoCalculateGCsOnCuda(int NUMBER_OF_GCS,
+                            unsigned int dictCounter,
+                            const unsigned short *gcMatrixData,
+                            const unsigned int *gcDictData,
+                            const unsigned int *gcMatrixOffsets,
+                            const unsigned int *gcDictOffsets,
+                            const unsigned int *gcMatrixSizes,
+                            int gcQueryPosition) {
     //------------
     // CUDA prep
     //------------

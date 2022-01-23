@@ -25,9 +25,12 @@ int QueryHandler::processQuery(std::string query, GcLoadUnit loadUnit) {
             // call algorithm in form of
 
             //result = calculateMetrics(get_position_of_gc_query_from_loadunit, loadUnit.ptr, loadUnit.size, offsets, dictOffsets);
-            demoCalculateGCsOnCuda(loadUnit.getNumberOfGc(), loadUnit.getNumberOfDictElements(),
-                                   loadUnit.getGcMatrixDataPtr(), loadUnit.getGcDictDataPtr(),
-                                   loadUnit.getGcMatrixOffsetsPtr(),loadUnit.getDictOffsetPtr(),
+            demoCalculateGCsOnCuda(loadUnit.getNumberOfGc(),
+                                   loadUnit.getNumberOfDictElements(),
+                                   loadUnit.getGcMatrixDataPtr(),
+                                   loadUnit.getGcDictDataPtr(),
+                                   loadUnit.getGcMatrixOffsetsPtr(),
+                                   loadUnit.getDictOffsetPtr(),
                                    loadUnit.getMatrixSizesPtr()
                                    /* , */
                                    );
