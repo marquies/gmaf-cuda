@@ -802,6 +802,7 @@ __global__ void compare2(unsigned short *gcMatrixData, unsigned int *gcDictData,
     metrics[index].recommendation = 0.0;
     metrics[index].inferencing = 0.0;
     metrics[index].similarity = (float) sim / (float) elements;
+    metrics[index].idx = index;
     if (num_of_non_zero_edges > 0) {
         /*edge_metric*/ metrics[index].recommendation = (float) edge_metric_count / (float) num_of_non_zero_edges;
     }
@@ -810,14 +811,14 @@ __global__ void compare2(unsigned short *gcMatrixData, unsigned int *gcDictData,
     }
 }
 
-void demoCalculateGCsOnCuda(int NUMBER_OF_GCS,
-                            unsigned int dictCounter,
-                            const unsigned short *gcMatrixData,
-                            const unsigned int *gcDictData,
-                            const unsigned int *gcMatrixOffsets,
-                            const unsigned int *gcDictOffsets,
-                            const unsigned int *gcMatrixSizes,
-                            int gcQueryPosition) {
+Metrics * demoCalculateGCsOnCuda(int NUMBER_OF_GCS,
+                                 unsigned int dictCounter,
+                                 const unsigned short *gcMatrixData,
+                                 const unsigned int *gcDictData,
+                                 const unsigned int *gcMatrixOffsets,
+                                 const unsigned int *gcDictOffsets,
+                                 const unsigned int *gcMatrixSizes,
+                                 int gcQueryPosition) {
     //------------
     // CUDA prep
     //------------
@@ -879,7 +880,8 @@ void demoCalculateGCsOnCuda(int NUMBER_OF_GCS,
     Metrics *result = (Metrics *) malloc(NUMBER_OF_GCS * sizeof(Metrics));
     HANDLE_ERROR(cudaMemcpy(result, d_result, NUMBER_OF_GCS * sizeof(Metrics), cudaMemcpyDeviceToHost));
 
-    for (int i = 0; i < NUMBER_OF_GCS; i++) {
+
+//    for (int i = 0; i < NUMBER_OF_GCS; i++) {
 
 
 //        std::cout << "Result (" << i << ") "
@@ -891,10 +893,11 @@ void demoCalculateGCsOnCuda(int NUMBER_OF_GCS,
 //        assert(result[i].similarity == 1);
 //        assert(result[i].recommendation == 0.5);
 //        assert(result[i].inferencing == 0);
-    }
+//    }
     HANDLE_ERROR(cudaFree(d_gcMatrixData));
     HANDLE_ERROR(cudaFree(d_gcDictData));
     HANDLE_ERROR(cudaFree(d_gcMatrixOffsets));
     HANDLE_ERROR(cudaFree(d_gcMatrixSizes));
     HANDLE_ERROR(cudaFree(d_result));
+    return result;
 }

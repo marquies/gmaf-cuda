@@ -14,10 +14,12 @@
 using json = nlohmann::json;
 
 typedef struct Metrics {
+    int idx;
     float similarity;
     float recommendation;
     float inferencing;
 } Metrics;
+
 
 namespace gmaf {
 

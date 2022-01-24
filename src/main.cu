@@ -56,6 +56,7 @@ int main_init(int argc, char *argv[]) {
         switch (opt) {
             case 's':
                 simulation = true;
+                break;
             case 'd':
                 cvalue = optarg;
                 break;
@@ -85,11 +86,11 @@ int main_init(int argc, char *argv[]) {
 
         for (const auto &entry: fs::directory_iterator(cvalue)) {
 //            files.push_back(entry.path().string());
-try {
-            loadUnit.addGcFromFile(entry.path().string());
-        } catch (json::exception &e) {
-            std::cerr << e.what() << '\n';
-        }
+            try {
+                loadUnit.addGcFromFile(entry.path().string());
+            } catch (json::exception &e) {
+                std::cerr << e.what() << '\n';
+            }
             n++;
             if (n > limit) {
                 break;

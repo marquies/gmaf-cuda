@@ -236,9 +236,9 @@ void testLoadSimple() {
     unsigned int *gcDictOffsets = loadUnit.getDictOffsetPtr();
 
     assert(size == 10);
-    assert(gcMatrixDataPtr[0] == 0);
-    assert(gcMatrixSizes[0] == dim);
-    assert(gcMatrixSizes[5] == dim);
+    assert(gcMatrixDataPtr[0] == 1);
+    assert(gcMatrixSizes[0] == dim*dim);
+    assert(gcMatrixSizes[5] == dim*dim);
     assert(gcMatrixOffsets[0] == 0);
     assert(gcMatrixOffsets[1] == 9);
     assert(gcDictData[0] == 0);
@@ -256,12 +256,12 @@ void testLoadSimple() {
 
     assert(size == 11);
     assert(loadUnit.hasGc(std::to_string(12)+".gc") == false);
-    assert(loadUnit.getNumberOfDictElements() == dim);
+    assert(loadUnit.getNumberOfDictElements() == 11*dim);
     for(int i = 0; i < 11; i++) {
         assert(loadUnit.hasGc(std::to_string(i)+".gc"));
-        assert(gcMatrixDataPtr[i * dim * dim] == i);
+        assert(gcMatrixDataPtr[i * dim * dim] == 1);
         unsigned int msize = gcMatrixSizes[i];
-        assert(msize == dim);
+        assert(msize == dim*dim);
 
     }
 

@@ -45,6 +45,8 @@ public:
 
     unsigned int getNumberOfDictElements();
 
+    void matchMetricToGc(Metrics *pMetrics);
+
 private:
     unsigned short *gcMatrixDataPtr;
 
