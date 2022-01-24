@@ -5,6 +5,7 @@
 #include <regex>
 #include "queryhandler.cuh"
 #include "gcloadunit.cuh"
+#include "helper.h"
 #include <algorithm>
 
 
@@ -16,7 +17,7 @@ void swap(Metrics *const x, Metrics *const y) {
     *y = temp;
 }
 
-void selectionSort(Metrics *const array, const int size) {
+void QueryHandler::selectionSort(Metrics *const array, const int size) {
     int smallest; // index of smallest element
 
     for (int i = 0; i < size - 1; i++) {
@@ -31,18 +32,20 @@ void selectionSort(Metrics *const array, const int size) {
             float a = array[index].similarity * 100000.0f + array[index].recommendation * 100.0f +
                       array[index].inferencing;
 
-            std::cout << "a: " << array[index].similarity << ";" << array[index].recommendation << ";"
-                      << array[index].inferencing << std::endl;
-            std::cout << a << std::endl;
 
             float b = array[smallest].similarity * 100000.0f + array[smallest].recommendation * 100.0f +
                       array[smallest].inferencing;
 
-            std::cout << "b: " << array[smallest].similarity << ";" << array[smallest].recommendation << ";"
-                      << array[smallest].inferencing << std::endl;
-            std::cout << b << std::endl;
+            if (G_DEBUG) {
+                std::cout << "a: " << array[index].similarity << ";" << array[index].recommendation << ";"
+                          << array[index].inferencing << std::endl;
+                std::cout << a << std::endl;
+                std::cout << "b: " << array[smallest].similarity << ";" << array[smallest].recommendation << ";"
+                          << array[smallest].inferencing << std::endl;
+                std::cout << b << std::endl;
 
-            std::cout << "b-a" << b-a << std::endl;
+                std::cout << "b-a" << b-a << std::endl;
+            }
 
             if (b - a < 0) {
                 smallest = index;
@@ -95,6 +98,8 @@ int QueryHandler::processQuery(std::string query, GcLoadUnit loadUnit) {
                 std::cout << result[i].recommendation << std::endl;
                 std::cout << result[i].inferencing << std::endl;
             }
+
+            free(result);
 
 
             return 0;

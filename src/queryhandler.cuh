@@ -15,6 +15,8 @@ public:
     static int processQuery(std::string query, GcLoadUnit loadUnit);
 
     static bool validate(std::string query);
+
+    static void selectionSort(Metrics *pMetrics, int i);
 };
 
 
