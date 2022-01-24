@@ -360,10 +360,14 @@ void GcLoadUnit::loadIntoCudaMemory() {
 }
 
 void GcLoadUnit::freeAll() {
-    HANDLE_ERROR(cudaFree(d_gcMatrixData));
-    HANDLE_ERROR(cudaFree(d_gcDictData));
-    HANDLE_ERROR(cudaFree(d_gcMatrixOffsets));
-    HANDLE_ERROR(cudaFree(d_gcMatrixSizes));
+    if (d_gcMatrixData)
+        HANDLE_ERROR(cudaFree(d_gcMatrixData));
+    if (d_gcDictData)
+        HANDLE_ERROR(cudaFree(d_gcDictData));
+    if (d_gcMatrixOffsets)
+        HANDLE_ERROR(cudaFree(d_gcMatrixOffsets));
+    if (d_gcMatrixSizes)
+        HANDLE_ERROR(cudaFree(d_gcMatrixSizes));
 }
 
 unsigned short *GcLoadUnit::getGcMatrixDataCudaPtr() {
