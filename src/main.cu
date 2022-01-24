@@ -17,6 +17,7 @@ namespace fs = std::experimental::filesystem;
 #include "graphcode.h"
 #include "gcloadunit.cuh"
 #include "queryhandler.cuh"
+#include "helper.h"
 
 
 
@@ -36,6 +37,7 @@ void ctrl_c(int sig) {
     fprintf(stderr, "Ctrl-C caught - Please press enter\n");
     mainLoop = false;
     signal(sig, ctrl_c); /* re-installs handler */
+
 }
 
 /**
@@ -52,10 +54,16 @@ int main_init(int argc, char *argv[]) {
     int limit = 100;
     bool simulation = false;
 
-    while ((opt = getopt(argc, argv, "d:c:s")) != -1) {
+    while ((opt = getopt(argc, argv, "vd:c:sb")) != -1) {
         switch (opt) {
             case 's':
                 simulation = true;
+                break;
+            case 'b':
+                G_BENCHMARK = true;
+                break;
+            case 'v':
+                G_DEBUG = true;
                 break;
             case 'd':
                 cvalue = optarg;
@@ -70,7 +78,7 @@ int main_init(int argc, char *argv[]) {
         }
     }
 
-    if (cvalue == NULL) {
+    if (cvalue == NULL && !simulation) {
         fprintf(stderr, "Usage: %s -d dir -c limit_files\n", argv[0]);
         exit(EXIT_FAILURE);
     }
@@ -85,7 +93,6 @@ int main_init(int argc, char *argv[]) {
 
 
         for (const auto &entry: fs::directory_iterator(cvalue)) {
-//            files.push_back(entry.path().string());
             try {
                 loadUnit.addGcFromFile(entry.path().string());
             } catch (json::exception &e) {
@@ -96,7 +103,6 @@ int main_init(int argc, char *argv[]) {
                 break;
             }
         }
-
     }
 
     std::string queryString;
@@ -106,8 +112,14 @@ int main_init(int argc, char *argv[]) {
 
     old = signal(SIGINT, ctrl_c); /* installs handler */
 
+    QueryHandler qh;
+
+
+//    qh.setStrategy( std::unique_ptr<Strategy>(new CudaTask1OnGpuMemory));
+    qh.setStrategy( std::unique_ptr<Strategy>(new CudaTask1MemCopy));
+
     do {
-        std::cout << "Enter Query";
+        std::cout << "Enter Query: ";
         if (fgets(buf, sizeof(buf), stdin) != NULL && mainLoop) {
             printf("Got : %s", buf);
             std::string str(buf);
@@ -115,8 +127,8 @@ int main_init(int argc, char *argv[]) {
             if (str.compare("quit") == 0) {
                 mainLoop = false;
             } else {
-                if (QueryHandler::validate(str)) {
-                    QueryHandler::processQuery(str, loadUnit);
+                if (qh.validate(str)) {
+                    qh.processQuery(str, loadUnit);
                 } else {
                     std::cout << "Query invalid" << std::endl;
                 }
@@ -124,6 +136,9 @@ int main_init(int argc, char *argv[]) {
         }
     } while (mainLoop);
     signal(SIGINT, old); /* restore initial handler */
+
+    loadUnit.freeAll();
+
     return 0;
 
 //    auto start = std::chrono::system_clock::now();

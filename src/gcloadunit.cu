@@ -7,6 +7,7 @@
 
 #include "gcloadunit.cuh"
 #include "helper.h"
+#include "cudahelper.cuh"
 
 void GcLoadUnit::loadArtificialGcs(int count, int dimension) {
     reinit();
@@ -328,4 +329,59 @@ GraphCode GcLoadUnit::convertJsonToGraphCode(json jsonGraphCode) {
 
 unsigned int GcLoadUnit::getNumberOfDictElements() {
     return dictCounter;
+}
+
+void GcLoadUnit::loadIntoCudaMemory() {
+
+    long md_size = 0;
+    for (int i = 0; i < gcSize; i++) {
+        md_size += gcMatrixSizesPtr[i];
+    }// ;
+
+
+
+    HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixData, md_size * sizeof(unsigned short)));
+    HANDLE_ERROR(cudaMalloc((void **) &d_gcDictData, dictCounter * sizeof(unsigned int)));
+    HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixOffsets, gcSize * sizeof(unsigned int)));
+    HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixSizes, gcSize * sizeof(unsigned int)));
+    HANDLE_ERROR(cudaMalloc((void **) &d_gcDictOffsets, gcSize * sizeof(unsigned int)));
+
+
+    HANDLE_ERROR(
+            cudaMemcpy(d_gcMatrixData, gcMatrixDataPtr, md_size * sizeof(unsigned short), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_gcDictData, gcDictDataPtr, dictCounter * sizeof(unsigned int), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_gcMatrixOffsets, gcDictOffsetsPtr, gcSize * sizeof(unsigned int),
+                            cudaMemcpyHostToDevice));
+    HANDLE_ERROR(
+            cudaMemcpy(d_gcMatrixSizes, gcMatrixSizesPtr, gcSize * sizeof(unsigned int), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(
+            cudaMemcpy(d_gcDictOffsets, gcDictOffsetsPtr, gcSize * sizeof(unsigned int), cudaMemcpyHostToDevice));
+
+}
+
+void GcLoadUnit::freeAll() {
+    HANDLE_ERROR(cudaFree(d_gcMatrixData));
+    HANDLE_ERROR(cudaFree(d_gcDictData));
+    HANDLE_ERROR(cudaFree(d_gcMatrixOffsets));
+    HANDLE_ERROR(cudaFree(d_gcMatrixSizes));
+}
+
+unsigned short *GcLoadUnit::getGcMatrixDataCudaPtr() {
+    return d_gcMatrixData;
+}
+
+unsigned int *GcLoadUnit::getGcDictDataCudaPtr() {
+    return d_gcDictData;
+}
+
+unsigned int *GcLoadUnit::getGcMatrixOffsetsCudaPtr() {
+    return d_gcMatrixOffsets;
+}
+
+unsigned int *GcLoadUnit::getDictOffsetCudaPtr() {
+    return d_gcDictOffsets;
+}
+
+unsigned int *GcLoadUnit::getMatrixSizesCudaPtr() {
+    return d_gcMatrixSizes;
 }

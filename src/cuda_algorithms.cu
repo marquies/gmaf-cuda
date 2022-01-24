@@ -811,14 +811,46 @@ __global__ void compare2(unsigned short *gcMatrixData, unsigned int *gcDictData,
     }
 }
 
-Metrics * demoCalculateGCsOnCuda(int NUMBER_OF_GCS,
-                                 unsigned int dictCounter,
-                                 const unsigned short *gcMatrixData,
-                                 const unsigned int *gcDictData,
-                                 const unsigned int *gcMatrixOffsets,
-                                 const unsigned int *gcDictOffsets,
-                                 const unsigned int *gcMatrixSizes,
-                                 int gcQueryPosition) {
+Metrics *demoCalculateGCsOnCuda(int NUMBER_OF_GCS,
+                                unsigned int dictCounter,
+                                unsigned short *d_gcMatrixData,
+                                unsigned int *d_gcDictData,
+                                unsigned int *d_gcMatrixOffsets,
+                                unsigned int *d_gcDictOffsets,
+                                unsigned int *d_gcMatrixSizes,
+                                int gcQueryPosition) {
+    Metrics *d_result;
+
+    HANDLE_ERROR(cudaMalloc((void **) &d_result, NUMBER_OF_GCS * sizeof(Metrics)));
+    compare2<<<NUMBER_OF_GCS, 1>>>(d_gcMatrixData,
+                                   d_gcDictData,
+                                   d_gcMatrixOffsets,
+                                   d_gcMatrixSizes,
+                                   d_gcDictOffsets,
+                                   gcQueryPosition,
+                                   d_result);
+
+    HANDLE_ERROR(cudaPeekAtLastError());
+    HANDLE_ERROR(cudaDeviceSynchronize());
+    auto end = std::chrono::system_clock::now();
+
+
+    Metrics *result = (Metrics *) malloc(NUMBER_OF_GCS * sizeof(Metrics));
+    HANDLE_ERROR(cudaMemcpy(result, d_result, NUMBER_OF_GCS * sizeof(Metrics), cudaMemcpyDeviceToHost));
+    HANDLE_ERROR(cudaFree(d_result));
+
+    return result;
+}
+
+
+Metrics *demoCalculateGCsOnCudaWithCopy(int NUMBER_OF_GCS,
+                                        unsigned int dictCounter,
+                                        const unsigned short *gcMatrixData,
+                                        const unsigned int *gcDictData,
+                                        const unsigned int *gcMatrixOffsets,
+                                        const unsigned int *gcDictOffsets,
+                                        const unsigned int *gcMatrixSizes,
+                                        int gcQueryPosition) {
     //------------
     // CUDA prep
     //------------
@@ -873,8 +905,10 @@ Metrics * demoCalculateGCsOnCuda(int NUMBER_OF_GCS,
     std::chrono::duration<double> elapsed_seconds = end - start;
     time_t end_time = std::chrono::system_clock::to_time_t(end);
 
-    std::cout << "finished CUDA computation at " << ctime(&end_time)
-              << "elapsed time: " << elapsed_seconds.count() << "s\n";
+    if (G_DEBUG) {
+        std::cout << "finished CUDA computation at " << ctime(&end_time)
+                  << "elapsed time: " << elapsed_seconds.count() << "s\n";
+    }
 
 
     Metrics *result = (Metrics *) malloc(NUMBER_OF_GCS * sizeof(Metrics));

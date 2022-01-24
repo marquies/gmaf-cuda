@@ -47,6 +47,20 @@ public:
 
     void matchMetricToGc(Metrics *pMetrics);
 
+    void loadIntoCudaMemory();
+
+    void freeAll();
+
+    unsigned short *getGcMatrixDataCudaPtr();
+
+    unsigned int *getGcDictDataCudaPtr();
+
+    unsigned int *getGcMatrixOffsetsCudaPtr();
+
+    unsigned int *getDictOffsetCudaPtr();
+
+    unsigned int *getMatrixSizesCudaPtr();
+
 private:
     unsigned short *gcMatrixDataPtr;
 
@@ -63,9 +77,18 @@ private:
     unsigned int *gcDictDataPtr;
     unsigned int *gcDictOffsetsPtr;
 
+
+    // CUDA Pointer ------------------------
+    unsigned short *d_gcMatrixData;
+    unsigned int *d_gcDictData;
+    unsigned int *d_gcMatrixOffsets;
+    unsigned int *d_gcMatrixSizes;
+    unsigned int *d_gcDictOffsets;
+    // -------------------------------------
+
     std::map<std::string, unsigned int> dict_map;
 
-    void reinit() ;
+    void reinit();
 
     void appendMatrix(const unsigned short *mat1, unsigned short sizeofMat, unsigned short *gcMatrixData,
                       unsigned int *gcDictData, unsigned int *gcMatrixOffsets, unsigned int *gcMatrixSizes,

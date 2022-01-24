@@ -196,8 +196,9 @@ int main() {
 
 void testGcSimilarityKernelWithMany3x3() {
 
-    int NUMBER_OF_GCS = 10;
-    //int NUMBER_OF_GCS = 10000;
+    G_DEBUG = true;
+//    int NUMBER_OF_GCS = 10;
+    int NUMBER_OF_GCS = 10000;
     srand(time(NULL));   // Initialization, should only be called once.
 
 
@@ -303,8 +304,8 @@ void testGcSimilarityKernelWithMany3x3() {
 
     assert(gcDictOffsets[0] == 0);
     assert(gcDictOffsets[1] == 250);
-    demoCalculateGCsOnCuda(NUMBER_OF_GCS, dictCounter, gcMatrixData, gcDictData, gcMatrixOffsets, gcDictOffsets,
-                           gcMatrixSizes);
+    demoCalculateGCsOnCudaWithCopy(NUMBER_OF_GCS, dictCounter, gcMatrixData, gcDictData, gcMatrixOffsets, gcDictOffsets,
+                                   gcMatrixSizes);
 
 
 }
@@ -630,8 +631,8 @@ void appendMatrix(const unsigned short *mat1, unsigned short sizeofMat, unsigned
     gcMatrixSizes[position] = sizeofMat; // / sizeof (unsigned short )
 
     for (int i = 0; i < gcMatrixSizes[position]; i++) {
-        if (G_DEBUG)
-            std::cout << i << " ; position: " << gcMatrixOffsets[position] + i << std::endl;
+        //if (G_DEBUG)
+        //    std::cout << i << " ; position: " << gcMatrixOffsets[position] + i << std::endl;
         gcMatrixData[gcMatrixOffsets[position] + i] = mat1[i];
     }
     *lastOffset += sizeofMat;

@@ -36,11 +36,20 @@ Metrics demoCalculateSimilaritySequentialOrdered(json gc1, json gc2);
 
 Metrics demoCalculateSimilaritySequentialOrdered(GraphCode gc1, GraphCode gc2);
 
-Metrics * demoCalculateGCsOnCuda(int NUMBER_OF_GCS, unsigned int dictCounter,
-                                 const unsigned short *gcMatrixData,
-                                 const unsigned int *gcDictData, const unsigned int *gcMatrixOffsets,
-                                 const unsigned int *gcDictOffsets, const unsigned int *gcMatrixSizes,
-                                 int gcQueryPosition = 0);
+Metrics * demoCalculateGCsOnCudaWithCopy(int NUMBER_OF_GCS, unsigned int dictCounter,
+                                         const unsigned short *gcMatrixData,
+                                         const unsigned int *gcDictData, const unsigned int *gcMatrixOffsets,
+                                         const unsigned int *gcDictOffsets, const unsigned int *gcMatrixSizes,
+                                         int gcQueryPosition = 0);
+
+Metrics *demoCalculateGCsOnCuda(int NUMBER_OF_GCS,
+                                unsigned int dictCounter,
+                                unsigned short *d_gcMatrixData,
+                                unsigned int *d_gcDictData,
+                                unsigned int *d_gcMatrixOffsets,
+                                unsigned int *d_gcDictOffsets,
+                                unsigned int *d_gcMatrixSizes,
+                                int gcQueryPosition = 0);
 
 __global__ void compare2(unsigned short *gcMatrixData, unsigned int *gcDictData, unsigned int *gcMatrixOffsets,
                          unsigned int *gcMatrixSizes, unsigned int *gcDictOffsets, int gcToCompare,
