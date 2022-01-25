@@ -25,9 +25,9 @@ class QueryHandler {
 public:
     int processQuery(std::string query, GcLoadUnit loadUnit);
 
-    bool validate(std::string query);
+    static bool validate(std::string query);
 
-    void selectionSort(Metrics *pMetrics, int i);
+//    static void selectionSort(Metrics *pMetrics, int i);
 
     Metrics *runQuery(GcLoadUnit &loadUnit);
 

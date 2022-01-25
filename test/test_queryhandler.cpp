@@ -50,7 +50,7 @@ void testOrdering() {
     metrics[1] = m2;
     metrics[2] = m3;
 
-    QueryHandler::selectionSort(metrics, 3);
+    selectionSort(metrics, 3);
 
     assert(metrics[0].idx == 3);
 
@@ -59,9 +59,10 @@ void testOrdering() {
 }
 
 void testSimpleQuery() {
-    GcLoadUnit loadUnit;
+    GcLoadUnit loadUnit = GcLoadUnit(GcLoadUnit::MODE_MEMORY_MAP);
+    QueryHandler queryHandler;
     loadUnit.loadArtificialGcs(10, 1);
-    int value = QueryHandler::processQuery("Query by Example: 6.gc", loadUnit);
+    int value = queryHandler.processQuery("Query by Example: 6.gc", loadUnit);
     assert(value == 0);
 }
 
@@ -76,7 +77,8 @@ void testErrorQuery() {
 
 
     try {
-        QueryHandler::processQuery("", GcLoadUnit());
+        QueryHandler queryHandler;
+        queryHandler.processQuery("", GcLoadUnit(GcLoadUnit::MODE_MEMORY_MAP));
         assert(false);
     } catch (std::invalid_argument) {
 

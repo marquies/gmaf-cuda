@@ -18,7 +18,23 @@
 class GcLoadUnit {
 
 public:
+    enum Modes {
+        MODE_MEMORY_MAP,
+        MODE_VECTOR_MAP
+    };
+//    static  int const MODE_MEMORY_MAP = 0;
+//    static  int const MODE_VECTOR_MAP = 1;
+
+    GcLoadUnit(const Modes opMode);
+
+
     void loadArtificialGcs(int count, int dimension);
+
+    void loadMultipleByExample(int count, GraphCode code);
+
+    void addGcFromFile(std::string filepath);
+
+    void loadGraphCodes(const char *cvalue, int limit);
 
     unsigned short *getGcMatrixDataPtr();
 
@@ -34,14 +50,9 @@ public:
 
     unsigned int *getDictOffsetPtr();
 
-    void loadMultipleByExample(int count, GraphCode code);
-
     unsigned int getDictCode(std::string key);
 
-    void addGcFromFile(std::string filepath);
-
     GraphCode static convertJsonToGraphCode(json jsonGraphCode);
-
 
     unsigned int getNumberOfDictElements();
 
@@ -61,7 +72,13 @@ public:
 
     unsigned int *getMatrixSizesCudaPtr();
 
+
+    void setOperationMode(const Modes mode);
+
 private:
+
+    int opMode;
+
     unsigned short *gcMatrixDataPtr;
 
     int gcSize = 0;
@@ -102,6 +119,12 @@ private:
     void appendGCMatrixToMatrix(const GraphCode &code, int matNumberOfElements);
 
     void reallocPtrBySize(int count);
+
+    void loadMultipleByExampleMemMap(int count, GraphCode &code);
+
+    void loadArtificialGcsMemMap(int count, int dimension);
+
+    void addGcFromFileMemMap(const std::string &filepath);
 };
 
 

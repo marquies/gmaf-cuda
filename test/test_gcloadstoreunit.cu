@@ -64,7 +64,7 @@ void testConvertJsonToGraphCode() {
 
 
 void testLoadTwoRealGcs() {
-    GcLoadUnit loadUnit;
+    GcLoadUnit loadUnit = GcLoadUnit(GcLoadUnit::MODE_MEMORY_MAP);
 
     std::string file = "/home/breucking/CLionProjects/gmaf-cuda/GMAF_TMP_17316548361524909203.png.gc";
     loadUnit.addGcFromFile(file);
@@ -169,7 +169,7 @@ void testLoadMultipleByExample() {
     G_DEBUG = true;
     GraphCode gc1 = generateTestDataGc(dim);
 
-    GcLoadUnit loadUnit;
+    GcLoadUnit loadUnit = GcLoadUnit(GcLoadUnit::MODE_MEMORY_MAP);
     loadUnit.loadMultipleByExample(count, gc1);
 
     int size = loadUnit.getNumberOfGc();
@@ -217,7 +217,7 @@ void testLoadMultipleByExample() {
 
 void testLoadSimple() {
     int dim = 3;
-    GcLoadUnit loadUnit;
+    GcLoadUnit loadUnit = GcLoadUnit(GcLoadUnit::MODE_MEMORY_MAP);
     loadUnit.loadArtificialGcs(10,dim);
 
 

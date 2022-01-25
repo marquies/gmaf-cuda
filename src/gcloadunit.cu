@@ -1,6 +1,16 @@
 //
 // Created by breucking on 19.01.22.
 //
+#include "queryhandler.cuh"
+#include "graphcode.h"
+#include <signal.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <experimental/filesystem>
+#include <thread>
+#include<string.h>
+#include <dirent.h>
+#include <unistd.h>
 #include <iostream>
 #include <algorithm>
 #include <fstream>
@@ -9,8 +19,21 @@
 #include "helper.h"
 #include "cudahelper.cuh"
 
+
+GcLoadUnit::GcLoadUnit(const Modes opMode) {
+    this->opMode = opMode;
+}
+
 void GcLoadUnit::loadArtificialGcs(int count, int dimension) {
     reinit();
+    if (opMode == MODE_MEMORY_MAP) {
+        loadArtificialGcsMemMap(count, dimension);
+    } else {
+
+    }
+}
+
+void GcLoadUnit::loadArtificialGcsMemMap(int count, int dimension) {
     const int matrixSize = dimension * dimension;
     gcMatrixDataPtr = (unsigned short *) malloc(sizeof(unsigned short) * count * matrixSize);
     gcMatrixSizesPtr = (unsigned int *) malloc(sizeof(unsigned int) * count);
@@ -45,7 +68,6 @@ void GcLoadUnit::loadArtificialGcs(int count, int dimension) {
     }
     gcSize = count;
     dictCounter = count * dimension;
-
 }
 
 void GcLoadUnit::reinit() {
@@ -53,33 +75,47 @@ void GcLoadUnit::reinit() {
         if (G_DEBUG) {
             std::cout << "Reinitialize LoadUnit (free allocated space)" << std::endl;
         }
-        free(gcMatrixDataPtr);
-        free(gcMatrixSizesPtr);
-        free(gcMatrixOffsetsPtr);
-        free(gcDictDataPtr);
-        free(gcDictOffsetsPtr);
+        if (gcMatrixDataPtr)
+            free(gcMatrixDataPtr);
+        if (gcMatrixSizesPtr)
+            free(gcMatrixSizesPtr);
+        if (gcMatrixOffsetsPtr)
+            free(gcMatrixOffsetsPtr);
+        if (gcDictDataPtr)
+            free(gcDictDataPtr);
+        if (gcDictOffsetsPtr)
+            free(gcDictOffsetsPtr);
 
 
     }
-    lastOffset = 0;
-    lastPosition = 0;
-    gcSize = 0;
-    lastDictOffset = 0;
-    dictCounter = 0;
-    gcMatrixDataPtr = (unsigned short *) malloc(0);
-    gcDictDataPtr = (unsigned int *) malloc(0);
+    if (opMode == MODE_MEMORY_MAP) {
+        lastOffset = 0;
+        lastPosition = 0;
+        gcSize = 0;
+        lastDictOffset = 0;
+        dictCounter = 0;
+        gcMatrixDataPtr = (unsigned short *) malloc(0);
+        gcDictDataPtr = (unsigned int *) malloc(0);
 
-    gcMatrixOffsetsPtr = (unsigned int *) malloc(0);
-    gcDictOffsetsPtr = (unsigned int *) malloc(0);
-    gcMatrixSizesPtr = (unsigned int *) malloc(0);
-    init = true;
+        gcMatrixOffsetsPtr = (unsigned int *) malloc(0);
+        gcDictOffsetsPtr = (unsigned int *) malloc(0);
+        gcMatrixSizesPtr = (unsigned int *) malloc(0);
+        init = true;
+    }
 }
 
 void GcLoadUnit::loadMultipleByExample(int count, GraphCode code) {
     reinit();
 
-    reallocPtrBySize(count);
+    if (opMode == MODE_MEMORY_MAP) {
+        loadMultipleByExampleMemMap(count, code);
+    } else {
 
+    }
+}
+
+void GcLoadUnit::loadMultipleByExampleMemMap(int count, GraphCode &code) {
+    reallocPtrBySize(count);
 
     std::vector<std::string> *vect = code.dict;
 
@@ -249,7 +285,12 @@ unsigned int GcLoadUnit::getDictCode(std::string key) {
 }
 
 void GcLoadUnit::addGcFromFile(std::string filepath) {
+    if (opMode == MODE_MEMORY_MAP) {
+        addGcFromFileMemMap(filepath);
+    }
+}
 
+void GcLoadUnit::addGcFromFileMemMap(const std::string &filepath) {
     std::ifstream ifs(filepath);
     json jf = json::parse(ifs);
 
@@ -296,7 +337,6 @@ void GcLoadUnit::addGcFromFile(std::string filepath) {
 
 
     gcSize++;
-
 }
 
 GraphCode GcLoadUnit::convertJsonToGraphCode(json jsonGraphCode) {
@@ -388,4 +428,29 @@ unsigned int *GcLoadUnit::getDictOffsetCudaPtr() {
 
 unsigned int *GcLoadUnit::getMatrixSizesCudaPtr() {
     return d_gcMatrixSizes;
+}
+
+void GcLoadUnit::loadGraphCodes(const char *cvalue, int limit) {
+
+    int n = 0;
+
+
+    for (const auto &entry: std::experimental::filesystem::v1::__cxx11::directory_iterator(cvalue)) {
+        try {
+            addGcFromFile(entry.path().string());
+        } catch (json::exception &e) {
+            std::cerr << e.what() << '\n';
+        }
+        n++;
+        if (n > limit) {
+            break;
+        }
+    }
+}
+
+void GcLoadUnit::setOperationMode(const Modes mode) {
+    opMode = mode;
+    if (init) {
+        reinit();
+    }
 }

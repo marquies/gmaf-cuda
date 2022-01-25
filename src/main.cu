@@ -31,13 +31,31 @@ void runThreaded(std::vector<json> &arr, const gmaf::GraphCode &gc, int s);
 void runSequential(std::vector<json> &arr, gmaf::GraphCode gc);
 
 
+void printUsageAndExit(char *const *argv);
+
 bool mainLoop = true;
+
+
+enum Algorithms {
+    Algo_Invalid,
+    Algo_pm,
+    //others...
+};
+
+Algorithms resolveAlgorithm(std::string input);
+
 
 void ctrl_c(int sig) {
     fprintf(stderr, "Ctrl-C caught - Please press enter\n");
     mainLoop = false;
     signal(sig, ctrl_c); /* re-installs handler */
 
+}
+
+Algorithms resolveAlgorithm(std::string input) {
+    if (input == "pm") return Algo_pm;
+    //...
+    return Algo_Invalid;
 }
 
 /**
@@ -51,10 +69,12 @@ int main_init(int argc, char *argv[]) {
     // Handling the command line arguments
     int opt;
     char *cvalue = NULL;
+    char *algorithm = NULL;
     int limit = 100;
     bool simulation = false;
 
-    while ((opt = getopt(argc, argv, "vd:c:sb")) != -1) {
+
+    while ((opt = getopt(argc, argv, "vd:c:sba")) != -1) {
         switch (opt) {
             case 's':
                 simulation = true;
@@ -71,38 +91,49 @@ int main_init(int argc, char *argv[]) {
             case 'c':
                 limit = atoi(optarg);
                 break;
-
+            case 'a':
+                algorithm = optarg;
+                break;
             default:
-                fprintf(stderr, "Usage: %s -d dir -c limit_files\n", argv[0]);
-                exit(EXIT_FAILURE);
+                printUsageAndExit(argv);
         }
     }
+
+    // Setup based on parameters
+
+    QueryHandler qh;
+    GcLoadUnit* loadUnit = NULL;
+
 
     if (cvalue == NULL && !simulation) {
-        fprintf(stderr, "Usage: %s -d dir -c limit_files\n", argv[0]);
-        exit(EXIT_FAILURE);
+        printUsageAndExit(argv);
+    }
+
+    if (algorithm == NULL) {
+        printUsageAndExit(argv);
+    }
+
+    switch (resolveAlgorithm(algorithm)) {
+        case Algo_pm:
+
+            //    qh.setStrategy( std::unique_ptr<Strategy>(new CudaTask1OnGpuMemory));
+            qh.setStrategy(std::unique_ptr<Strategy>(new CudaTask1MemCopy));
+            loadUnit = new GcLoadUnit(GcLoadUnit::Modes::MODE_MEMORY_MAP);
+            break;
+
+        case Algo_Invalid:
+        default:
+            std::cout << "Unknown algorithm: " << algorithm << std::endl;
+            printUsageAndExit(argv);
+            break;
+
     }
 
 
-    GcLoadUnit loadUnit;
     if (simulation) {
-        loadUnit.loadArtificialGcs(limit, 100);
+        loadUnit->loadArtificialGcs(limit, 100);
     } else {
-
-        int n = 0;
-
-
-        for (const auto &entry: fs::directory_iterator(cvalue)) {
-            try {
-                loadUnit.addGcFromFile(entry.path().string());
-            } catch (json::exception &e) {
-                std::cerr << e.what() << '\n';
-            }
-            n++;
-            if (n > limit) {
-                break;
-            }
-        }
+        loadUnit->loadGraphCodes(cvalue, limit);
     }
 
     std::string queryString;
@@ -111,12 +142,6 @@ int main_init(int argc, char *argv[]) {
     void (*old)(int);
 
     old = signal(SIGINT, ctrl_c); /* installs handler */
-
-    QueryHandler qh;
-
-
-//    qh.setStrategy( std::unique_ptr<Strategy>(new CudaTask1OnGpuMemory));
-    qh.setStrategy( std::unique_ptr<Strategy>(new CudaTask1MemCopy));
 
     do {
         std::cout << "Enter Query: ";
@@ -128,7 +153,7 @@ int main_init(int argc, char *argv[]) {
                 mainLoop = false;
             } else {
                 if (qh.validate(str)) {
-                    qh.processQuery(str, loadUnit);
+                    qh.processQuery(str, reinterpret_cast<GcLoadUnit &&>(loadUnit));
                 } else {
                     std::cout << "Query invalid" << std::endl;
                 }
@@ -137,7 +162,7 @@ int main_init(int argc, char *argv[]) {
     } while (mainLoop);
     signal(SIGINT, old); /* restore initial handler */
 
-    loadUnit.freeAll();
+    loadUnit->freeAll();
 
     return 0;
 
@@ -169,6 +194,11 @@ int main_init(int argc, char *argv[]) {
 //    std::cout << "finished computation at " << std::ctime(&end_time)
 //              << "elapsed time: " << elapsed_seconds.count() << "s\n";
     return 0;
+}
+
+void printUsageAndExit(char *const *argv) {
+    fprintf(stderr, "Usage: %s -d dir -c limit_files\n", argv[0]);
+    exit(EXIT_FAILURE);
 }
 
 void runSequential(std::vector<json> &arr, gmaf::GraphCode gc) {
