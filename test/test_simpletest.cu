@@ -8,6 +8,8 @@
 #include "testhelper.cpp"
 
 
+void testAnother();
+
 void testBasic()
 {
     nlohmann::json gcq;
@@ -55,4 +57,31 @@ int main(int, char**)
 {
     //testBasic();
     testBasic2();
+    testAnother();
+}
+
+void testAnother() {
+
+
+    long addedElements = 0;
+    long addedDictItems = 0;
+    int count = 10000;
+    int dimension = 100;
+
+    for (int n = 0; n < count; n++) {
+
+
+        unsigned short *data = (unsigned short *) malloc(sizeof(unsigned short) * dimension * dimension);
+
+        for (int i = 0; i < dimension; i++) {
+            for (int j = 0; j < dimension; j++) {
+                if (i == j) {
+                    //data[i][j] = 1;
+                    data[i * dimension + j] = 1;
+                } else {
+                    data[i * dimension + j] = i + j % 2;
+                }
+            }
+        }
+    }
 }

@@ -30,6 +30,62 @@ void GcLoadUnit::loadArtificialGcs(int count, int dimension) {
         loadArtificialGcsMemMap(count, dimension);
     } else {
 
+        gcCodes.clear();
+        gcCodes.reserve(count);
+
+        init = true;
+
+
+        long addedElements = 0;
+        long addedDictItems = 0;
+
+        for (int n = 0; n < count; n++) {
+
+
+            std::vector<std::string> *newVec = new std::vector<std::string>(dimension);
+
+
+            unsigned short *data = (unsigned short *) malloc(sizeof(unsigned short) * dimension * dimension);
+
+            newVec->push_back(std::to_string(n));
+
+            for (int i = 0; i < dimension; i++) {
+                gcNames.push_back(std::to_string(i).append(".gc"));
+
+                std::vector<int> x;
+                for (int j = 0; j < dimension; j++) {
+                    //long idx = (long) i * matrixSize + j;
+                    //gcMatrixDataPtr[idx] = (unsigned short) 1;
+
+                    addedElements++;
+                    if (i == j) {
+                        //data[i][j] = 1;
+                        data[i * dimension + j] = 1;
+                    } else {
+                        data[i * dimension + j] = i + j % 2;
+                    }
+                }
+//            gcMatrixSizesPtr[i] = matrixSize;
+//            gcMatrixOffsetsPtr[i] = matrixSize * i;
+//            for (int j = 0; j < dimension; j++) {
+//                gcDictDataPtr[i * dimension + j] = j;
+//                addedDictItems++;
+//            }
+//            gcDictOffsetsPtr[i] = i * dimension;
+            }
+            if (G_DEBUG) {
+                std::cout << "Added " << count << " GCs with total " << addedElements << " elements" << std::endl;
+                std::cout << "Added " << count << " GCs with total " << addedDictItems << " dict elements" << std::endl;
+            }
+            GraphCode gc;
+            gc.dict = newVec;
+            gc.matrix = data;
+
+            gcCodes.push_back(gc);
+
+            gcSize = count;
+//            dictCounter = count * dimension;
+        }
     }
 }
 
@@ -88,6 +144,7 @@ void GcLoadUnit::reinit() {
 
 
     }
+    gcNames.clear();
     if (opMode == MODE_MEMORY_MAP) {
         lastOffset = 0;
         lastPosition = 0;
@@ -100,6 +157,7 @@ void GcLoadUnit::reinit() {
         gcMatrixOffsetsPtr = (unsigned int *) malloc(0);
         gcDictOffsetsPtr = (unsigned int *) malloc(0);
         gcMatrixSizesPtr = (unsigned int *) malloc(0);
+
         init = true;
     }
 }
@@ -453,4 +511,9 @@ void GcLoadUnit::setOperationMode(const Modes mode) {
     if (init) {
         reinit();
     }
+}
+
+std::vector<GraphCode> GcLoadUnit::getGcCodes() {
+    return gcCodes;
+
 }

@@ -28,7 +28,6 @@ int QueryHandler::processQuery(std::string query, GcLoadUnit loadUnit) {
             if (strat_)
                 strat_->performQuery(loadUnit);
 
-
             return 0;
         }
     }
@@ -49,6 +48,8 @@ bool QueryHandler::validate(std::string query) {
 
 void CudaTask1OnGpuMemory::performQuery(GcLoadUnit loadUnit) {
 // call algorithm in form of
+    std::cout << "-----------------------------------" << std::endl;
+
     loadUnit.loadIntoCudaMemory();
 
     int times = G_BENCHMARK ? 100 : 1;
@@ -97,7 +98,7 @@ void CudaTask1OnGpuMemory::performQuery(GcLoadUnit loadUnit) {
         if (!G_BENCHMARK) {}
         else {
             std::cout << typeid(this).name() << "\t" << loadUnit.getNumberOfGc() << "\t" << elapsed_secondsCalc.count()
-                      << "\t" << elapsed_secondsTotal.count() << "s\n";
+                      << "\t" << elapsed_secondsTotal.count() << "\n";
         }
         free(result);
     }
@@ -105,6 +106,8 @@ void CudaTask1OnGpuMemory::performQuery(GcLoadUnit loadUnit) {
 
 void CudaTask1MemCopy::performQuery(GcLoadUnit loadUnit) {
 // call algorithm in form of
+    std::cout << "-----------------------------------" << std::endl;
+
     int times = G_BENCHMARK ? 100 : 1;
     for (int i = 0; i < times; i++) {
         auto start = std::chrono::system_clock::now();
@@ -152,13 +155,57 @@ void CudaTask1MemCopy::performQuery(GcLoadUnit loadUnit) {
         if (!G_BENCHMARK) {}
         else {
             std::cout << typeid(this).name() << "\t" << loadUnit.getNumberOfGc() << "\t" << elapsed_secondsCalc.count()
-                      << "\t" << elapsed_secondsTotal.count() << "s\n";
+                      << "\t" << elapsed_secondsTotal.count() << "\n";
         }
         free(result);
     }
 }
 
+bool comp (Metrics e1, Metrics e2) {
+//    Metrics e1 = *((Metrics*)elem1);
+//    Metrics e2 = *((Metrics*)elem2);
+    float a = e1.similarity * 100000.0f + e1.recommendation * 100.0f +
+            e1.inferencing;
+
+
+    float b = e2.similarity * 100000.0f + e2.recommendation * 100.0f +
+            e2.inferencing;
+    return b-a < 0;
+}
 
 void CpuSequentialTask1::performQuery(GcLoadUnit loadUnit) {
+    int times = G_BENCHMARK ? 100 : 1;
+    std::cout << "-----------------------------------" << std::endl;
+
+    for (int i = 0; i < times; i++) {
+        std::vector<GraphCode> codes = loadUnit.getGcCodes();
+        auto start = std::chrono::system_clock::now();
+        std::vector<Metrics> results;
+        for (int j = 1; j < 1; j++) {
+            Metrics res = demoCalculateSimilaritySequentialOrdered(codes.at(0), codes.at(j));
+            results.push_back(res);
+        }
+        auto endOfCalc = std::chrono::system_clock::now();
+
+        std::sort(results.begin(), results.end(), comp);
+
+        auto end = std::chrono::system_clock::now();
+
+
+        std::chrono::duration<double> elapsed_secondsCalc = endOfCalc - start;
+        std::chrono::duration<double> elapsed_secondsTotal = end - start;
+        time_t end_time = std::chrono::system_clock::to_time_t(end);
+
+        if (G_DEBUG) {
+            std::cout << "run " << ctime(&end_time)
+                      << "elapsed time: " << elapsed_secondsTotal.count() << "s\n";
+        }
+
+        if (!G_BENCHMARK) {}
+        else {
+            std::cout << typeid(this).name() << "\t" << loadUnit.getNumberOfGc() << "\t" << elapsed_secondsCalc.count()
+                      << "\t" << elapsed_secondsTotal.count() << "\n";
+        }
+    }
 
 }

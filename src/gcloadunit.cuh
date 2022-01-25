@@ -75,9 +75,13 @@ public:
 
     void setOperationMode(const Modes mode);
 
+    std::vector<GraphCode> getGcCodes();
+
 private:
 
     int opMode;
+
+    std::vector<GraphCode> gcCodes;
 
     unsigned short *gcMatrixDataPtr;
 

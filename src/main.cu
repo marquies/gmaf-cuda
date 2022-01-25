@@ -39,6 +39,7 @@ bool mainLoop = true;
 enum Algorithms {
     Algo_Invalid,
     Algo_pm,
+    Algo_pm_cpu_seq
     //others...
 };
 
@@ -54,9 +55,18 @@ void ctrl_c(int sig) {
 
 Algorithms resolveAlgorithm(std::string input) {
     if (input == "pm") return Algo_pm;
-    //...
+    if (input == "pm_cpu_seq") return Algo_pm_cpu_seq;
     return Algo_Invalid;
 }
+
+void printUsageAndExit(char *const *argv) {
+    fprintf(stderr, "Usage: %s [-v] -a ALGORITHM -d dir -c limit_files\n", argv[0]);
+    std::cout << "    -v verbose in terms of debug" << std::endl;
+    std::cout << "    -c limits the maximum number of GCs" << std::endl;
+
+    exit(EXIT_FAILURE);
+}
+
 
 /**
  * Main function of the program.
@@ -74,7 +84,7 @@ int main_init(int argc, char *argv[]) {
     bool simulation = false;
 
 
-    while ((opt = getopt(argc, argv, "vd:c:sba")) != -1) {
+    while ((opt = getopt(argc, argv, "vd:c:sba:")) != -1) {
         switch (opt) {
             case 's':
                 simulation = true;
@@ -102,7 +112,7 @@ int main_init(int argc, char *argv[]) {
     // Setup based on parameters
 
     QueryHandler qh;
-    GcLoadUnit* loadUnit = NULL;
+    GcLoadUnit *loadUnit = NULL;
 
 
     if (cvalue == NULL && !simulation) {
@@ -120,7 +130,10 @@ int main_init(int argc, char *argv[]) {
             qh.setStrategy(std::unique_ptr<Strategy>(new CudaTask1MemCopy));
             loadUnit = new GcLoadUnit(GcLoadUnit::Modes::MODE_MEMORY_MAP);
             break;
-
+        case Algo_pm_cpu_seq:
+            qh.setStrategy(std::unique_ptr<Strategy>(new CpuSequentialTask1));
+            loadUnit = new GcLoadUnit(GcLoadUnit::Modes::MODE_VECTOR_MAP);
+            break;
         case Algo_Invalid:
         default:
             std::cout << "Unknown algorithm: " << algorithm << std::endl;
@@ -153,7 +166,7 @@ int main_init(int argc, char *argv[]) {
                 mainLoop = false;
             } else {
                 if (qh.validate(str)) {
-                    qh.processQuery(str, reinterpret_cast<GcLoadUnit &&>(loadUnit));
+                    qh.processQuery(str, *loadUnit);
                 } else {
                     std::cout << "Query invalid" << std::endl;
                 }
@@ -196,10 +209,6 @@ int main_init(int argc, char *argv[]) {
     return 0;
 }
 
-void printUsageAndExit(char *const *argv) {
-    fprintf(stderr, "Usage: %s -d dir -c limit_files\n", argv[0]);
-    exit(EXIT_FAILURE);
-}
 
 void runSequential(std::vector<json> &arr, gmaf::GraphCode gc) {
     gc.calculateSimilarityV(0, &arr.at(0), &arr, 1, arr.size());
