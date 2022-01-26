@@ -8,6 +8,7 @@
 
 bool G_DEBUG = false;
 bool G_BENCHMARK = false;
+short G_BENCHMARK_REPEAT = 10;
 
 void convertDict2Matrix(int size, int *destMatrix, nlohmann::json jsonMatrix) {
     for (int i = 0; i < size; i++) {

@@ -108,7 +108,7 @@ void CudaTask1MemCopy::performQuery(GcLoadUnit loadUnit) {
 // call algorithm in form of
     std::cout << "-----------------------------------" << std::endl;
 
-    int times = G_BENCHMARK ? 100 : 1;
+    int times = G_BENCHMARK ? G_BENCHMARK_REPEAT : 1;
     for (int i = 0; i < times; i++) {
         auto start = std::chrono::system_clock::now();
 
@@ -174,14 +174,14 @@ bool comp (Metrics e1, Metrics e2) {
 }
 
 void CpuSequentialTask1::performQuery(GcLoadUnit loadUnit) {
-    int times = G_BENCHMARK ? 100 : 1;
+    int times = G_BENCHMARK ? G_BENCHMARK_REPEAT : 1;
     std::cout << "-----------------------------------" << std::endl;
 
     for (int i = 0; i < times; i++) {
         std::vector<GraphCode> codes = loadUnit.getGcCodes();
         auto start = std::chrono::system_clock::now();
         std::vector<Metrics> results;
-        for (int j = 1; j < 1; j++) {
+        for (int j = 1; j < codes.size(); j++) {
             Metrics res = demoCalculateSimilaritySequentialOrdered(codes.at(0), codes.at(j));
             results.push_back(res);
         }

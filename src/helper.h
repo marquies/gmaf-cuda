@@ -11,6 +11,7 @@
 
 extern bool G_DEBUG;
 extern bool G_BENCHMARK;
+extern short G_BENCHMARK_REPEAT;
 
 void convertDict2Matrix(int size, int *destMatrix, nlohmann::json jsonMatrix);
 //void convertDict2Matrix(int size, int **destMatrix, nlohmann::json jsonMatrix);

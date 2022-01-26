@@ -126,8 +126,8 @@ int main_init(int argc, char *argv[]) {
     switch (resolveAlgorithm(algorithm)) {
         case Algo_pm:
 
-            //    qh.setStrategy( std::unique_ptr<Strategy>(new CudaTask1OnGpuMemory));
-            qh.setStrategy(std::unique_ptr<Strategy>(new CudaTask1MemCopy));
+            qh.setStrategy( std::unique_ptr<Strategy>(new CudaTask1OnGpuMemory));
+            //qh.setStrategy(std::unique_ptr<Strategy>(new CudaTask1MemCopy));
             loadUnit = new GcLoadUnit(GcLoadUnit::Modes::MODE_MEMORY_MAP);
             break;
         case Algo_pm_cpu_seq:
