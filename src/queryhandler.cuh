@@ -51,5 +51,9 @@ class CpuSequentialTask1 : public Strategy {
 public:
     void performQuery(GcLoadUnit loadUnit) override;
 };
+class CpuParallelTask1 : public Strategy {
+public:
+    void performQuery(GcLoadUnit loadUnit) override;
+};
 
 #endif //GCSIM_QUERYHANDLER_CUH

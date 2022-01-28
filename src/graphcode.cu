@@ -430,41 +430,41 @@ int getPosition(std::string string, std::vector<std::string> dictionary) {
     return -1;
 }
 
-
-
-std::vector<Metrics>
-gmaf::GraphCode::calculateSimilarityV(int index, json *gcQuery, std::vector<json> *compares, int start, int end) {
-    if (compares == NULL) {
-        std::cout << "Argument compare is NULL" << std::endl;
-        exit(1);
-    }
-
-    std::vector<Metrics> metrics;
-
-    for (int i = start; i < end; i++) {
-
-        if (G_DEBUG)
-            std::cout << "Idx " << index << " i " << i << " limit(" << end << ")" << std::endl;
-
-        float resultMetrics[3];
-        //calculateSimilaritySequential(*gcQuery, compares->at(i), resultMetrics);
-        calculateSimilarityCuda(*gcQuery, compares->at(i), resultMetrics);
-
-        if (G_DEBUG) {
-            std::cout << "Similarity " << resultMetrics[0] << std::endl;
-            std::cout << "Recommendation " << resultMetrics[1] << std::endl;
-            std::cout << "Inferencing " << resultMetrics[2] << std::endl;
-        }
-
-        Metrics m;
-        m.similarity = resultMetrics[0];
-        m.recommendation = resultMetrics[1];
-        m.inferencing = resultMetrics[2];
-
-        metrics.push_back(m);
-
-    }
-
-    return metrics;
-}
+//
+//
+//std::vector<Metrics>
+//gmaf::GraphCode::calculateSimilarityV(int index, json *gcQuery, std::vector<json> *compares, int start, int end) {
+//    if (compares == NULL) {
+//        std::cout << "Argument compare is NULL" << std::endl;
+//        exit(1);
+//    }
+//
+//    std::vector<Metrics> metrics;
+//
+//    for (int i = start; i < end; i++) {
+//
+//        if (G_DEBUG)
+//            std::cout << "Idx " << index << " i " << i << " limit(" << end << ")" << std::endl;
+//
+//        float resultMetrics[3];
+//        //calculateSimilaritySequential(*gcQuery, compares->at(i), resultMetrics);
+//        calculateSimilarityCuda(*gcQuery, compares->at(i), resultMetrics);
+//
+//        if (G_DEBUG) {
+//            std::cout << "Similarity " << resultMetrics[0] << std::endl;
+//            std::cout << "Recommendation " << resultMetrics[1] << std::endl;
+//            std::cout << "Inferencing " << resultMetrics[2] << std::endl;
+//        }
+//
+//        Metrics m;
+//        m.similarity = resultMetrics[0];
+//        m.recommendation = resultMetrics[1];
+//        m.inferencing = resultMetrics[2];
+//
+//        metrics.push_back(m);
+//
+//    }
+//
+//    return metrics;
+//}
 

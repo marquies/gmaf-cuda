@@ -2,14 +2,9 @@
 // Created by breucking on 28.12.21.
 //
 
-#include <stdlib.h>
 #include <time.h>
 #include <c++/9/chrono>
-#include <string.h>
-#include <stdio.h>
 #include <string>
-#include <uuid/uuid.h>
-#include "../src/cuda_algorithms.cuh"
 #include "cuda_algorithms.cuh"
 
 #include <cstdlib>
@@ -19,8 +14,6 @@
 #include <iostream>
 
 #include <math.h>
-#include <chrono>
-#include <ctime>
 
 #include "graphcode.h"
 #include "cudahelper.cuh"
@@ -609,142 +602,6 @@ void convertGc2Cuda(const json &gcq, json &gc1Dictionary, int &numberOfElements,
             inputMatrix[count++] = matrix1[i * numberOfElements + j]; //matrix1[i][j];
         }
     free(matrix1);
-}
-
-Metrics demoCalculateSimilaritySequentialOrdered(GraphCode gc1, GraphCode gc2) {
-
-    int sim = 0;
-
-    unsigned short *matrix1 = gc1.matrix;
-    unsigned short *matrix2 = gc2.matrix;
-
-    for (const auto &item: *gc1.dict) {
-        for (const auto &item2: *gc2.dict) {
-            if (item == item2) {
-                sim++;
-            }
-        }
-    }
-    int num_of_non_zero_edges = 0;
-    int edge_metric_count = 0;
-    int edge_type = 0;
-
-    for (int i = 0; i < gc1.dict->size(); i++) {
-        for (int j = 0; j < gc1.dict->size(); j++) {
-
-            if (i != j && matrix1[i * gc1.dict->size() + j] != 0) {
-                num_of_non_zero_edges++;
-
-                int position1 = i;
-                int position2 = j;
-                if (position1 == -1 || position2 == -1) {
-                    continue;
-                }
-
-                int edge = matrix2[position1 * gc1.dict->size() + position2];//matrix2[position1][position2];
-                if (edge != 0) {
-                    edge_metric_count++;
-                }
-                if (edge == matrix1[i * gc1.dict->size() + j]) {
-                    edge_type++;
-                }
-
-            }
-        }
-    }
-
-    float node_metric = (float) sim / (float) gc1.dict->size();
-    float edge_metric = 0.0;
-    if (num_of_non_zero_edges > 0)
-        edge_metric = (float) edge_metric_count / (float) num_of_non_zero_edges;
-    float edge_type_metric = 0.0;
-    if (edge_metric_count > 0)
-        edge_type_metric = (float) edge_type / (float) edge_metric_count;
-
-    Metrics metrics;
-    metrics.similarity = node_metric;
-    metrics.recommendation = edge_metric;
-    metrics.inferencing = edge_type_metric;
-    return metrics;
-
-}
-
-
-Metrics demoCalculateSimilaritySequentialOrdered(json gc1, json gc2) {
-    int sim = 0;
-
-    json gc1Dictionary;
-    int numberOfElements1;
-    long items1;
-    unsigned short int *matrix1;
-
-    convertGc2Cuda(gc1, gc1Dictionary, numberOfElements1, items1, matrix1);
-
-    json gc2Dictionary;
-    int numberOfElements2;
-    long items2;
-    unsigned short int *matrix2;
-    convertGc2Cuda(gc2, gc2Dictionary, numberOfElements2, items2, matrix2);
-
-    std::vector<std::string> dict2;
-    for (const auto &item2: gc2Dictionary.items()) {
-        dict2.push_back(item2.value().get<std::string>());
-    }
-
-
-    for (const auto &item: gc1Dictionary.items()) {
-
-        std::string str = item.value().get<std::string>();
-
-        for (const auto &item2: gc2Dictionary.items()) {
-            if (str == item2.value()) {
-                sim++;
-            }
-        }
-
-    }
-    int num_of_non_zero_edges = 0;
-    int edge_metric_count = 0;
-    int edge_type = 0;
-
-    for (int i = 0; i < gc1Dictionary.size(); i++) {
-        for (int j = 0; j < gc1Dictionary.size(); j++) {
-
-            if (i != j && matrix1[i * gc1Dictionary.size() + j] != 0) {
-                num_of_non_zero_edges++;
-
-                int position1 = i;
-                int position2 = j;
-                if (position1 == -1 || position2 == -1) {
-                    continue;
-                }
-
-                int edge = matrix2[position1 * gc1Dictionary.size() + position2];//matrix2[position1][position2];
-                if (edge != 0) {
-                    edge_metric_count++;
-                }
-                if (edge == matrix1[i * gc1Dictionary.size() + j]) {
-                    edge_type++;
-                }
-
-            }
-        }
-    }
-
-    float node_metric = (float) sim / (float) gc1Dictionary.size();
-    float edge_metric = 0.0;
-    if (num_of_non_zero_edges > 0)
-        edge_metric = (float) edge_metric_count / (float) num_of_non_zero_edges;
-    float edge_type_metric = 0.0;
-    if (edge_metric_count > 0)
-        edge_type_metric = (float) edge_type / (float) edge_metric_count;
-
-    Metrics metrics;
-    metrics.similarity = node_metric;
-    metrics.recommendation = edge_metric;
-    metrics.inferencing = edge_type_metric;
-    return metrics;
-
 }
 
 

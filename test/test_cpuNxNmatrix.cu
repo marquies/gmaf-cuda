@@ -7,6 +7,7 @@
 #include "../src/cuda_algorithms.cuh"
 
 #include "testhelper.cpp"
+#include "cpualgorithms.h"
 
 void testCudaLinearMatrixMemoryRealTest();
 

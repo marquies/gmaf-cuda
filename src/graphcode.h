@@ -9,6 +9,10 @@
 #include <vector>
 
 
+typedef struct GraphCode {
+    std::vector<std::string> *dict;
+    unsigned short *matrix;
+} GraphCode;
 
 
 using json = nlohmann::json;
@@ -27,7 +31,6 @@ namespace gmaf {
     public:
         void loadGraphCodes(char *directory, int limit, std::vector<json> *arr);
 
-        std::vector<Metrics> calculateSimilarityV(int index, json *gcQuery, std::vector<json> *compares, int start, int end);
     };
 }
 #endif //GRAPHCODE_H

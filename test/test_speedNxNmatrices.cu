@@ -12,6 +12,7 @@
 #include "testhelper.cpp"
 #include "cudahelper.cuh"
 #include "reduce.cuh"
+#include "cpualgorithms.h"
 
 #define N 10
 #define L 12500
