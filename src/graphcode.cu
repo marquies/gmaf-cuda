@@ -435,7 +435,7 @@ int getPosition(std::string string, std::vector<std::string> dictionary) {
 //std::vector<Metrics>
 //gmaf::GraphCode::calculateSimilarityV(int index, json *gcQuery, std::vector<json> *compares, int start, int end) {
 //    if (compares == NULL) {
-//        std::cout << "Argument compare is NULL" << std::endl;
+//        std::cout << "Argument compareUUID is NULL" << std::endl;
 //        exit(1);
 //    }
 //

@@ -47,11 +47,11 @@ void GcLoadUnit::loadArtificialGcs(int count, int dimension) {
 
             unsigned short *data = (unsigned short *) malloc(sizeof(unsigned short) * dimension * dimension);
 
-            newVec->push_back(std::to_string(n));
+            //newVec->push_back(std::to_string(n));
 
             for (int i = 0; i < dimension; i++) {
                 gcNames.push_back(std::to_string(i).append(".gc"));
-
+                newVec->at(i) = std::to_string(i);
                 std::vector<int> x;
                 for (int j = 0; j < dimension; j++) {
                     //long idx = (long) i * matrixSize + j;

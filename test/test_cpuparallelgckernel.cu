@@ -27,7 +27,7 @@ void testMassTest() {
     }
 
 
-    const std::vector<Metrics> &results = demoCalculateCpuThreaded(arr, arr.at(1), 4);
+    const std::vector<Metrics> &results = demoCalculateCpuThreaded(arr.at(1), arr, 4);
 
     assert(results.size() == arr.size());
 
@@ -58,7 +58,7 @@ void testBasic() {
     arr.push_back(m);
     arr.push_back(m);
 
-    const std::vector<Metrics> &results = demoCalculateCpuThreaded(arr, arr.at(1), 2);
+    const std::vector<Metrics> &results = demoCalculateCpuThreaded(arr.at(1), arr, 2);
 
     assert(results.size() == arr.size());
 

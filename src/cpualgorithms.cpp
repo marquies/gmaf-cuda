@@ -11,16 +11,18 @@
 #include "cpualgorithms.h"
 
 
-std::vector<Metrics> demoCalculateCpuThreaded(std::vector<GraphCode> &arr, GraphCode &gc, int numberOfThreads) {
-    int x = arr.size() / numberOfThreads;
+std::vector<Metrics>
+demoCalculateCpuThreaded(GraphCode &gcQuery, std::vector<GraphCode> &compares, int numberOfThreads) {
+
+    int x = compares.size() / numberOfThreads;
     std::vector<std::thread> threads;
 
-    std::vector<Metrics> metrics = std::vector<Metrics>(arr.size());
+    std::vector<Metrics> metrics = std::vector<Metrics>(compares.size());
 
     for (int i = 0; i < numberOfThreads; i++) {
         int start = i * x;
-        int end = i == numberOfThreads - 1 ? arr.size() - 1 : start + x -1; //(i + 1) * x;
-        threads.push_back(std::thread(calculateSimilarityV, i, &arr.at(0), &arr, start, end, &metrics));
+        int end = i == numberOfThreads - 1 ? compares.size() - 1 : start + x -1; //(i + 1) * x;
+        threads.push_back(std::thread(calculateSimilarityV, &compares.at(0), &compares, start, end, &metrics, i));
     }
 
     for (auto &th: threads) {
@@ -29,13 +31,14 @@ std::vector<Metrics> demoCalculateCpuThreaded(std::vector<GraphCode> &arr, Graph
     return metrics;
 }
 
+
 void
-calculateSimilarityV(int index, GraphCode *gcQuery, std::vector<GraphCode> *compares, int start, int end, std::vector<Metrics> *metrics) {
+calculateSimilarityV(GraphCode *gcQuery, std::vector<GraphCode> *compares, int start, int end,
+                     std::vector<Metrics> *metrics, int index) {
     if (compares == NULL) {
         std::cout << "Argument compare is NULL" << std::endl;
         exit(1);
     }
-
 
 
     for (int i = start; i <= end; i++) {
@@ -62,15 +65,15 @@ calculateSimilarityV(int index, GraphCode *gcQuery, std::vector<GraphCode> *comp
 }
 
 
-Metrics demoCalculateSimilaritySequentialOrdered(GraphCode gc1, GraphCode gc2) {
+Metrics demoCalculateSimilaritySequentialOrdered(GraphCode gcQuery, GraphCode gcCompare) {
 
     int sim = 0;
 
-    unsigned short *matrix1 = gc1.matrix;
-    unsigned short *matrix2 = gc2.matrix;
+    unsigned short *matrix1 = gcQuery.matrix;
+    unsigned short *matrix2 = gcCompare.matrix;
 
-    for (const auto &item: *gc1.dict) {
-        for (const auto &item2: *gc2.dict) {
+    for (const auto &item: *gcQuery.dict) {
+        for (const auto &item2: *gcCompare.dict) {
             if (item == item2) {
                 sim++;
             }
@@ -80,10 +83,10 @@ Metrics demoCalculateSimilaritySequentialOrdered(GraphCode gc1, GraphCode gc2) {
     int edge_metric_count = 0;
     int edge_type = 0;
 
-    for (int i = 0; i < gc1.dict->size(); i++) {
-        for (int j = 0; j < gc1.dict->size(); j++) {
+    for (int i = 0; i < gcQuery.dict->size(); i++) {
+        for (int j = 0; j < gcQuery.dict->size(); j++) {
 
-            if (i != j && matrix1[i * gc1.dict->size() + j] != 0) {
+            if (i != j && matrix1[i * gcQuery.dict->size() + j] != 0) {
                 num_of_non_zero_edges++;
 
                 int position1 = i;
@@ -92,11 +95,11 @@ Metrics demoCalculateSimilaritySequentialOrdered(GraphCode gc1, GraphCode gc2) {
                     continue;
                 }
 
-                int edge = matrix2[position1 * gc1.dict->size() + position2];//matrix2[position1][position2];
+                int edge = matrix2[position1 * gcQuery.dict->size() + position2];//matrix2[position1][position2];
                 if (edge != 0) {
                     edge_metric_count++;
                 }
-                if (edge == matrix1[i * gc1.dict->size() + j]) {
+                if (edge == matrix1[i * gcQuery.dict->size() + j]) {
                     edge_type++;
                 }
 
@@ -104,7 +107,7 @@ Metrics demoCalculateSimilaritySequentialOrdered(GraphCode gc1, GraphCode gc2) {
         }
     }
 
-    float node_metric = (float) sim / (float) gc1.dict->size();
+    float node_metric = (float) sim / (float) gcQuery.dict->size();
     float edge_metric = 0.0;
     if (num_of_non_zero_edges > 0)
         edge_metric = (float) edge_metric_count / (float) num_of_non_zero_edges;

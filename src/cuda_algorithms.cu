@@ -24,15 +24,6 @@
 #include <cuda_profiler_api.h>
 
 
-/**
- * Calc Metrices is a simple example to compare two NxN matrices
- * @param data pinter to vectorized matrix
- * @param comparedata pointer to vectorized matrix
- * @param matrixSize dimension of the NxN matrix
- * @param numOfNonZeroEdges pointer to array to store the values for the non zero edges comparison
- * @param edgeMetricCount pointer to array to store the values for the edge metric comparison
- * @param edgeType pointer to array to store the values for the edge type metric comparison
- */
 
 
 void checkNxNConstraint(const GraphCode &gc1, const GraphCode &gc2);
@@ -40,6 +31,7 @@ void checkNxNConstraint(const GraphCode &gc1, const GraphCode &gc2);
 void demoCalculateGCsOnCuda(int NUMBER_OF_GCS, unsigned int dictCounter, const unsigned short *gcMatrixData,
                             const unsigned int *gcDictData, const unsigned int *gcMatrixOffsets,
                             const unsigned int *gcDictOffsets, const unsigned int *gcMatrixSizes);
+
 
 __global__ void
 calcMetrices(unsigned short int *data, unsigned short int *comparedata, unsigned long noItems,
@@ -242,10 +234,10 @@ void checkNxNConstraint(const GraphCode &gc1, const GraphCode &gc2) {
 }
 
 
-Metrics demoCudaLinearMatrixMemory(GraphCode json1, GraphCode json2) {
-    checkNxNConstraint(json1, json2);
+Metrics demoCudaLinearMatrixMemoryWithCopy(GraphCode gc1, GraphCode gc2) {
+    checkNxNConstraint(gc1, gc2);
 
-    int items1 = pow(json1.dict->size(), 2);
+    int items1 = pow(gc1.dict->size(), 2);
 
     // Prep for cuda
 
@@ -266,14 +258,14 @@ Metrics demoCudaLinearMatrixMemory(GraphCode json1, GraphCode json2) {
 
     // Transfer data from host to device memory
     HANDLE_ERROR(
-            cudaMemcpy(gpu_inputMatrix1, json1.matrix, sizeof(unsigned short int) * items1, cudaMemcpyHostToDevice));
+            cudaMemcpy(gpu_inputMatrix1, gc1.matrix, sizeof(unsigned short int) * items1, cudaMemcpyHostToDevice));
     HANDLE_ERROR(
-            cudaMemcpy(gpu_inputMatrix2, json2.matrix, sizeof(unsigned short int) * items1, cudaMemcpyHostToDevice));
+            cudaMemcpy(gpu_inputMatrix2, gc2.matrix, sizeof(unsigned short int) * items1, cudaMemcpyHostToDevice));
 
     dim3 block;
     dim3 grid;
 
-    calcKernelLaunchConfig(json1.dict->size(), block, grid);
+    calcKernelLaunchConfig(gc1.dict->size(), block, grid);
 
     // calculation
     auto loaded = std::chrono::system_clock::now();
@@ -283,8 +275,9 @@ Metrics demoCudaLinearMatrixMemory(GraphCode json1, GraphCode json2) {
         std::cout << "elapsed time: " << elapsed_seconds.count()
                   << std::endl;
 
-
-    calcMetrices<<<grid, block>>>(gpu_inputMatrix1, gpu_inputMatrix2, items1,
+    calcMetrices<<<grid, block>>>(gpu_inputMatrix1,
+                                  gpu_inputMatrix2,
+                                  items1,
                                   darr_num_of_non_zero_edges,
                                   darr_edge_metric_count,
                                   darr_edge_type
@@ -352,17 +345,17 @@ Metrics demoCudaLinearMatrixMemory(GraphCode json1, GraphCode json2) {
         }
     }
 
-    std::string gc1Dict[json1.dict->size()];
+    std::string gc1Dict[gc1.dict->size()];
 
     int sim = 0;
     int n = 0;
-    for (const auto &item: *json1.dict) {
+    for (const auto &item: *gc1.dict) {
         //std::cout << item.value() << "\n";
         std::string str = item;
         gc1Dict[n++] = str;
 
 
-        for (const auto &item2: *json2.dict) {
+        for (const auto &item2: *gc2.dict) {
             if (str == item2) {
                 //std::cout << "Match" << std::endl;
                 sim++;
@@ -371,7 +364,7 @@ Metrics demoCudaLinearMatrixMemory(GraphCode json1, GraphCode json2) {
     }
 
     // Calculate metrices
-    float node_metric = (float) sim / (float) json1.dict->size();
+    float node_metric = (float) sim / (float) gc1.dict->size();
 
 
     float edge_metric = 0.0;
@@ -606,10 +599,10 @@ void convertGc2Cuda(const json &gcq, json &gc1Dictionary, int &numberOfElements,
 
 
 __global__ void compare2(unsigned short *gcMatrixData, unsigned int *gcDictData, unsigned int *gcMatrixOffsets,
-                         unsigned int *gcMatrixSizes, unsigned int *gcDictOffsets, int gcToCompare,
+                         unsigned int *gcMatrixSizes, unsigned int *gcDictOffsets, int gcQuery,
                          Metrics *metrics) {
     int index = blockIdx.x;
-    int gc1 = gcToCompare;
+    int gc1 = gcQuery;
     int gc2 = index;
 
     int sim = 0;
@@ -668,7 +661,7 @@ __global__ void compare2(unsigned short *gcMatrixData, unsigned int *gcDictData,
     }
 }
 
-Metrics *demoCalculateGCsOnCuda(int NUMBER_OF_GCS,
+Metrics *demoCalculateGCsOnCuda(int numberOfGcs,
                                 unsigned int dictCounter,
                                 unsigned short *d_gcMatrixData,
                                 unsigned int *d_gcDictData,
@@ -678,29 +671,32 @@ Metrics *demoCalculateGCsOnCuda(int NUMBER_OF_GCS,
                                 int gcQueryPosition) {
     Metrics *d_result;
 
-    HANDLE_ERROR(cudaMalloc((void **) &d_result, NUMBER_OF_GCS * sizeof(Metrics)));
-    compare2<<<NUMBER_OF_GCS, 1>>>(d_gcMatrixData,
-                                   d_gcDictData,
-                                   d_gcMatrixOffsets,
-                                   d_gcMatrixSizes,
-                                   d_gcDictOffsets,
-                                   gcQueryPosition,
-                                   d_result);
+    HANDLE_ERROR(cudaMalloc((void **) &d_result, numberOfGcs * sizeof(Metrics)));
+
+
+//    compare2<<<numberOfGcs/1024, 1024>>>(d_gcMatrixData,
+    compare2<<<numberOfGcs, 1>>>(d_gcMatrixData,
+                                 d_gcDictData,
+                                 d_gcMatrixOffsets,
+                                 d_gcMatrixSizes,
+                                 d_gcDictOffsets,
+                                 gcQueryPosition,
+                                 d_result);
 
     HANDLE_ERROR(cudaPeekAtLastError());
     HANDLE_ERROR(cudaDeviceSynchronize());
     auto end = std::chrono::system_clock::now();
 
 
-    Metrics *result = (Metrics *) malloc(NUMBER_OF_GCS * sizeof(Metrics));
-    HANDLE_ERROR(cudaMemcpy(result, d_result, NUMBER_OF_GCS * sizeof(Metrics), cudaMemcpyDeviceToHost));
+    Metrics *result = (Metrics *) malloc(numberOfGcs * sizeof(Metrics));
+    HANDLE_ERROR(cudaMemcpy(result, d_result, numberOfGcs * sizeof(Metrics), cudaMemcpyDeviceToHost));
     HANDLE_ERROR(cudaFree(d_result));
 
     return result;
 }
 
 
-Metrics *demoCalculateGCsOnCudaWithCopy(int NUMBER_OF_GCS,
+Metrics *demoCalculateGCsOnCudaWithCopy(int numberOfGcs,
                                         unsigned int dictCounter,
                                         const unsigned short *gcMatrixData,
                                         const unsigned int *gcDictData,
@@ -721,7 +717,7 @@ Metrics *demoCalculateGCsOnCudaWithCopy(int NUMBER_OF_GCS,
     Metrics *d_result;
 
     long md_size = 0;
-    for (int i = 0; i < NUMBER_OF_GCS; i++) {
+    for (int i = 0; i < numberOfGcs; i++) {
         md_size += gcMatrixSizes[i];
     }// ;
 
@@ -729,31 +725,31 @@ Metrics *demoCalculateGCsOnCudaWithCopy(int NUMBER_OF_GCS,
 
     HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixData, md_size * sizeof(unsigned short)));
     HANDLE_ERROR(cudaMalloc((void **) &d_gcDictData, dictCounter * sizeof(unsigned int)));
-    HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixOffsets, NUMBER_OF_GCS * sizeof(unsigned int)));
-    HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixSizes, NUMBER_OF_GCS * sizeof(unsigned int)));
-    HANDLE_ERROR(cudaMalloc((void **) &d_gcDictOffsets, NUMBER_OF_GCS * sizeof(unsigned int)));
-    HANDLE_ERROR(cudaMalloc((void **) &d_result, NUMBER_OF_GCS * sizeof(Metrics)));
+    HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixOffsets, numberOfGcs * sizeof(unsigned int)));
+    HANDLE_ERROR(cudaMalloc((void **) &d_gcMatrixSizes, numberOfGcs * sizeof(unsigned int)));
+    HANDLE_ERROR(cudaMalloc((void **) &d_gcDictOffsets, numberOfGcs * sizeof(unsigned int)));
+    HANDLE_ERROR(cudaMalloc((void **) &d_result, numberOfGcs * sizeof(Metrics)));
 
 
     HANDLE_ERROR(
             cudaMemcpy(d_gcMatrixData, gcMatrixData, md_size * sizeof(unsigned short), cudaMemcpyHostToDevice));
     HANDLE_ERROR(cudaMemcpy(d_gcDictData, gcDictData, dictCounter * sizeof(unsigned int), cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_gcMatrixOffsets, gcMatrixOffsets, NUMBER_OF_GCS * sizeof(unsigned int),
+    HANDLE_ERROR(cudaMemcpy(d_gcMatrixOffsets, gcMatrixOffsets, numberOfGcs * sizeof(unsigned int),
                             cudaMemcpyHostToDevice));
     HANDLE_ERROR(
-            cudaMemcpy(d_gcMatrixSizes, gcMatrixSizes, NUMBER_OF_GCS * sizeof(unsigned int), cudaMemcpyHostToDevice));
+            cudaMemcpy(d_gcMatrixSizes, gcMatrixSizes, numberOfGcs * sizeof(unsigned int), cudaMemcpyHostToDevice));
     HANDLE_ERROR(
-            cudaMemcpy(d_gcDictOffsets, gcDictOffsets, NUMBER_OF_GCS * sizeof(unsigned int), cudaMemcpyHostToDevice));
+            cudaMemcpy(d_gcDictOffsets, gcDictOffsets, numberOfGcs * sizeof(unsigned int), cudaMemcpyHostToDevice));
 
     auto start = std::chrono::system_clock::now();
 
-    compare2<<<NUMBER_OF_GCS, 1>>>(d_gcMatrixData,
-                                   d_gcDictData,
-                                   d_gcMatrixOffsets,
-                                   d_gcMatrixSizes,
-                                   d_gcDictOffsets,
-                                   gcQueryPosition,
-                                   d_result);
+    compare2<<<numberOfGcs, 1>>>(d_gcMatrixData,
+                                 d_gcDictData,
+                                 d_gcMatrixOffsets,
+                                 d_gcMatrixSizes,
+                                 d_gcDictOffsets,
+                                 gcQueryPosition,
+                                 d_result);
 
     HANDLE_ERROR(cudaPeekAtLastError());
     HANDLE_ERROR(cudaDeviceSynchronize());
@@ -768,11 +764,11 @@ Metrics *demoCalculateGCsOnCudaWithCopy(int NUMBER_OF_GCS,
     }
 
 
-    Metrics *result = (Metrics *) malloc(NUMBER_OF_GCS * sizeof(Metrics));
-    HANDLE_ERROR(cudaMemcpy(result, d_result, NUMBER_OF_GCS * sizeof(Metrics), cudaMemcpyDeviceToHost));
+    Metrics *result = (Metrics *) malloc(numberOfGcs * sizeof(Metrics));
+    HANDLE_ERROR(cudaMemcpy(result, d_result, numberOfGcs * sizeof(Metrics), cudaMemcpyDeviceToHost));
 
 
-//    for (int i = 0; i < NUMBER_OF_GCS; i++) {
+//    for (int i = 0; i < numberOfGcs; i++) {
 
 
 //        std::cout << "Result (" << i << ") "

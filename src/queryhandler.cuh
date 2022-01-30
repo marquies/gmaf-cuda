@@ -56,4 +56,13 @@ public:
     void performQuery(GcLoadUnit loadUnit) override;
 };
 
+class CudaTask2a : public Strategy {
+public:
+    void performQuery(GcLoadUnit loadUnit) override;
+};
+class CudaTask2ab : public Strategy {
+public:
+    void performQuery(GcLoadUnit loadUnit) override;
+};
+
 #endif //GCSIM_QUERYHANDLER_CUH

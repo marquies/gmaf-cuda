@@ -104,7 +104,7 @@ __device__ int cuda_uuid_compare(const uuid_t uu1, const uuid_t uu2) {
 }
 
 
-__global__ void compare(GraphCode2 *gc1, GraphCode2 *gc2, Metrics *metrics) {
+__global__ void compareUUID(GraphCode2 *gc1, GraphCode2 *gc2, Metrics *metrics) {
 //
 //    uuid_t word1; //= gc1->dict[0];
 //    uuid_t word2;// = gc2->dict[0];
@@ -193,6 +193,7 @@ int main() {
     testGcSimilarityKernelWith3x3();
     testGcSimilarityKernelWithMany3x3();
 }
+
 
 void testGcSimilarityKernelWithMany3x3() {
 
@@ -670,7 +671,7 @@ void testGcSimilarityKernelWith100x100() {
     HANDLE_ERROR(cudaMemcpy(dGC2, &newGc, sizeof(newGc), cudaMemcpyHostToDevice));
 
 
-    compare<<<1, 1>>>(dGC1, dGC2, dResult);
+    compareUUID<<<1, 1>>>(dGC1, dGC2, dResult);
     HANDLE_ERROR(cudaPeekAtLastError());
     HANDLE_ERROR(cudaDeviceSynchronize());
 

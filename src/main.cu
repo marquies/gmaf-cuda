@@ -37,9 +37,11 @@ bool mainLoop = true;
 
 enum Algorithms {
     Algo_Invalid,
-    Algo_pm,
-    Algo_pm_cpu_seq,
-    Algo_pm_cpu_par
+    Algo_pc_cuda,
+    Algo_pc_cpu_seq,
+    Algo_pc_cpu_par,
+    Algo_pm_cuda,
+    Algo_pmr_cuda
     //others...
 };
 
@@ -54,9 +56,11 @@ void ctrl_c(int sig) {
 }
 
 Algorithms resolveAlgorithm(std::string input) {
-    if (input == "pm") return Algo_pm;
-    if (input == "pm_cpu_seq") return Algo_pm_cpu_seq;
-    if (input == "pm_cpu_par") return Algo_pm_cpu_par;
+    if (input == "pc_cuda") return Algo_pc_cuda;
+    if (input == "pc_cpu_seq") return Algo_pc_cpu_seq;
+    if (input == "pc_cpu_par") return Algo_pc_cpu_par;
+    if (input == "pm_cuda") return Algo_pm_cuda;
+    if (input == "pmr_cuda") return Algo_pmr_cuda;
     return Algo_Invalid;
 }
 
@@ -65,9 +69,10 @@ void printUsageAndExit(char *const *argv) {
     std::cout << "    -v verbose in terms of debug" << std::endl;
     std::cout << "    -c limits the maximum number of GCs" << std::endl;
     std::cout << "Algorithms available" << std::endl;
-    std::cout << "    pm" << std::endl;
-    std::cout << "    pm_cpu_seq" << std::endl;
-    std::cout << "    pm_cpu_par" << std::endl;
+    std::cout << "    pc" << std::endl;
+    std::cout << "    pc_cpu_seq" << std::endl;
+    std::cout << "    pc_cpu_par" << std::endl;
+    std::cout << "    pm_cuda" << std::endl;
 
 
     exit(EXIT_FAILURE);
@@ -130,20 +135,29 @@ int main_init(int argc, char *argv[]) {
     }
 
     switch (resolveAlgorithm(algorithm)) {
-        case Algo_pm:
+        case Algo_pc_cuda:
 
-            qh.setStrategy( std::unique_ptr<Strategy>(new CudaTask1OnGpuMemory));
+            qh.setStrategy(std::unique_ptr<Strategy>(new CudaTask1OnGpuMemory));
             //qh.setStrategy(std::unique_ptr<Strategy>(new CudaTask1MemCopy));
             loadUnit = new GcLoadUnit(GcLoadUnit::Modes::MODE_MEMORY_MAP);
             break;
-        case Algo_pm_cpu_seq:
+        case Algo_pc_cpu_seq:
             qh.setStrategy(std::unique_ptr<Strategy>(new CpuSequentialTask1));
             loadUnit = new GcLoadUnit(GcLoadUnit::Modes::MODE_VECTOR_MAP);
             break;
-        case Algo_pm_cpu_par:
+        case Algo_pc_cpu_par:
             qh.setStrategy(std::unique_ptr<Strategy>(new CpuParallelTask1));
             loadUnit = new GcLoadUnit(GcLoadUnit::Modes::MODE_VECTOR_MAP);
             break;
+        case Algo_pm_cuda:
+            qh.setStrategy(std::unique_ptr<Strategy>(new CudaTask2a));
+            loadUnit = new GcLoadUnit(GcLoadUnit::Modes::MODE_VECTOR_MAP);
+            break;
+        case Algo_pmr_cuda:
+            qh.setStrategy(std::unique_ptr<Strategy>(new CudaTask2ab));
+            loadUnit = new GcLoadUnit(GcLoadUnit::Modes::MODE_VECTOR_MAP);
+            break;
+
         case Algo_Invalid:
         default:
             std::cout << "Unknown algorithm: " << algorithm << std::endl;
@@ -166,6 +180,8 @@ int main_init(int argc, char *argv[]) {
 
     old = signal(SIGINT, ctrl_c); /* installs handler */
 
+    // Enable to work without query
+    //qh.processQuery("Query by Example: 1.gc", *loadUnit);
     do {
         std::cout << "Enter Query: ";
         if (fgets(buf, sizeof(buf), stdin) != NULL && mainLoop) {
@@ -189,39 +205,6 @@ int main_init(int argc, char *argv[]) {
 
     return 0;
 
-//    auto start = std::chrono::system_clock::now();
-//
-//    std::vector<json> arr;
-//
-//
-//    // Loading the graph codes
-//    gmaf::GraphCode gc;
-//    gc.loadGraphCodes(cvalue, limit, &arr);
-//    auto loaded = std::chrono::system_clock::now();
-//    std::chrono::duration<double> elapsed_seconds = loaded - start;
-//
-//    std::cout << "loaded " << arr.size() << " graph code files. (" << "elapsed time: " << elapsed_seconds.count() << ")"
-//              << std::endl;
-//
-//    // Run the code
-//
-//    //demoCalculateCpuThreaded(arr, gc, 4);
-//    runSequential(arr, gc);
-//
-//    // Time evaluation
-//    auto end = std::chrono::system_clock::now();
-//
-//    elapsed_seconds = end - start;
-//    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
-//
-//    std::cout << "finished computation at " << std::ctime(&end_time)
-//              << "elapsed time: " << elapsed_seconds.count() << "s\n";
-    return 0;
 }
-
-//
-//void runSequential(std::vector<json> &arr, gmaf::GraphCode gc) {
-//    gc.calculateSimilarityV(0, &arr.at(0), &arr, 1, arr.size());
-//}
 
 

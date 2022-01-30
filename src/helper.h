@@ -21,6 +21,10 @@ int findLargestDivisor(int n);
 
 void selectionSort(Metrics *array, const int size);
 
+void Introsort(Metrics* array, int begin, int end);
 
+void HeapSort(Metrics *data, int size);
+
+float compare(Metrics *positionA, Metrics *positionB);
 
 #endif

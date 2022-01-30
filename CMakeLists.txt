@@ -62,7 +62,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -Wall -Wextra -Wconversion
 add_definitions(${GCC_COVERAGE_COMPILE_FLAGS})
 
 set(CMAKE_CXX_STANDARD 17)
-#set (CUDA_PROPAGATE_HOST_FLAGS ON)
+set (CUDA_PROPAGATE_HOST_FLAGS ON)
 
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_61,code=sm_61")
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -lineinfo -G -g ")

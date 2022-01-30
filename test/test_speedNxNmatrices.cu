@@ -115,7 +115,7 @@ void testCudaCalc() {
 
     // Do a plain simple version of the calc
     for (const auto agc: *others) {
-        demoCudaLinearMatrixMemory(gc_sample, agc);
+        demoCudaLinearMatrixMemoryWithCopy(gc_sample, agc);
     }
 
     auto end = std::chrono::system_clock::now();

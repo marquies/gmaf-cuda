@@ -70,7 +70,9 @@ void CudaTask1OnGpuMemory::performQuery(GcLoadUnit loadUnit) {
         auto endOfCalc = std::chrono::system_clock::now();
 
 
-        selectionSort(result, loadUnit.getNumberOfGc());
+//        selectionSort(result, loadUnit.getNumberOfGc());
+        Introsort(result, 0, loadUnit.getNumberOfGc());
+
         if (G_DEBUG) {
 
 
@@ -127,7 +129,8 @@ void CudaTask1MemCopy::performQuery(GcLoadUnit loadUnit) {
         auto endOfCalc = std::chrono::system_clock::now();
 
 
-        selectionSort(result, loadUnit.getNumberOfGc());
+        //selectionSort(result, loadUnit.getNumberOfGc());
+        Introsort(result, 0, loadUnit.getNumberOfGc());
         if (G_DEBUG) {
 
 
@@ -221,7 +224,7 @@ void CpuParallelTask1::performQuery(GcLoadUnit loadUnit) {
         auto start = std::chrono::system_clock::now();
         std::vector<Metrics> results;
 
-        results = demoCalculateCpuThreaded(codes, codes.at(0), 8);
+        results = demoCalculateCpuThreaded(codes.at(0), codes, 8);
 
         auto endOfCalc = std::chrono::system_clock::now();
 
@@ -246,4 +249,77 @@ void CpuParallelTask1::performQuery(GcLoadUnit loadUnit) {
         }
     }
 
+}
+
+void CudaTask2a::performQuery(GcLoadUnit loadUnit) {
+    int times = G_BENCHMARK ? G_BENCHMARK_REPEAT : 1;
+    std::cout << "-----------------------------------" << std::endl;
+
+    for (int i = 0; i < times; i++) {
+        std::vector<GraphCode> codes = loadUnit.getGcCodes();
+        auto start = std::chrono::system_clock::now();
+        std::vector<Metrics> results;
+        for (int j = 1; j < codes.size(); j++) {
+            Metrics res = demoCudaLinearMatrixMemoryWithCopy(codes.at(0), codes.at(j));
+            results.push_back(res);
+        }
+        auto endOfCalc = std::chrono::system_clock::now();
+
+        std::sort(results.begin(), results.end(), comp);
+
+        auto end = std::chrono::system_clock::now();
+
+
+        std::chrono::duration<double> elapsed_secondsCalc = endOfCalc - start;
+        std::chrono::duration<double> elapsed_secondsTotal = end - start;
+        time_t end_time = std::chrono::system_clock::to_time_t(end);
+
+        if (G_DEBUG) {
+            std::cout << "run " << ctime(&end_time)
+                      << "elapsed time: " << elapsed_secondsTotal.count() << "s\n";
+        }
+
+        if (!G_BENCHMARK) {}
+        else {
+            std::cout << typeid(this).name() << "\t" << loadUnit.getNumberOfGc() << "\t" << elapsed_secondsCalc.count()
+                      << "\t" << elapsed_secondsTotal.count() << "\n";
+        }
+    }
+}
+
+
+void CudaTask2ab::performQuery(GcLoadUnit loadUnit) {
+    int times = G_BENCHMARK ? G_BENCHMARK_REPEAT : 1;
+    std::cout << "-----------------------------------" << std::endl;
+
+    for (int i = 0; i < times; i++) {
+        std::vector<GraphCode> codes = loadUnit.getGcCodes();
+        auto start = std::chrono::system_clock::now();
+        std::vector<Metrics> results;
+        for (int j = 1; j < codes.size(); j++) {
+            Metrics res = demoCudaLinearMatrixMemoryCudaReduceSum(codes.at(0), codes.at(j));
+            results.push_back(res);
+        }
+        auto endOfCalc = std::chrono::system_clock::now();
+
+        std::sort(results.begin(), results.end(), comp);
+
+        auto end = std::chrono::system_clock::now();
+
+
+        std::chrono::duration<double> elapsed_secondsCalc = endOfCalc - start;
+        std::chrono::duration<double> elapsed_secondsTotal = end - start;
+        time_t end_time = std::chrono::system_clock::to_time_t(end);
+
+        if (G_DEBUG) {
+            std::cout << "run " << ctime(&end_time)
+                      << "elapsed time: " << elapsed_secondsTotal.count() << "s\n";
+        }
+
+        if (!G_BENCHMARK) {}
+        else {
+            std::cout << typeid(this).name() << "\t" << loadUnit.getNumberOfGc() << "\t" << elapsed_secondsCalc.count()
+                      << "\t" << elapsed_secondsTotal.count() << "\n";
+        }
+    }
 }
