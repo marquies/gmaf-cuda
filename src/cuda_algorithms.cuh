@@ -86,6 +86,7 @@ Metrics *demoCalculateGCsOnCuda(int numberOfGcs,
  * @param gcMatrixSizes  device pointer to an index array with the sizes of gcMatricData.
  * @param gcDictOffsets  device pointer to an index array with the offsets of gcDictData.
  * @param gcQuery position of the query Graph Code within the gcMatrixData
+ * @param numberOfGcs the number of GCs
  * @param metrics device pointer to a return array for the calculated metrics
  */
 __global__ void compare2(unsigned short *gcMatrixData,
@@ -94,6 +95,7 @@ __global__ void compare2(unsigned short *gcMatrixData,
                          unsigned int *gcMatrixSizes,
                          unsigned int *gcDictOffsets,
                          int gcQuery,
+                         int numberOfGcs,
                          Metrics *metrics);
 
 /**

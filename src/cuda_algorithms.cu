@@ -599,9 +599,16 @@ void convertGc2Cuda(const json &gcq, json &gc1Dictionary, int &numberOfElements,
 
 
 __global__ void compare2(unsigned short *gcMatrixData, unsigned int *gcDictData, unsigned int *gcMatrixOffsets,
-                         unsigned int *gcMatrixSizes, unsigned int *gcDictOffsets, int gcQuery,
+                         unsigned int *gcMatrixSizes, unsigned int *gcDictOffsets, int gcQuery, int numberOfGcs,
                          Metrics *metrics) {
-    int index = blockIdx.x;
+//    int index = blockIdx.x;
+    //int /*offset*/ tid = x + y * blockDim.x * gridDim.x;
+    //int x = threadIdx.x + blockIdx.x * blockDim.x
+    int index =  threadIdx.x + blockIdx.x * blockDim.x ;
+    if (index >= numberOfGcs)
+        return;
+//    int /*offset*/ tid = x ;
+
     int gc1 = gcQuery;
     int gc2 = index;
 
@@ -674,13 +681,16 @@ Metrics *demoCalculateGCsOnCuda(int numberOfGcs,
     HANDLE_ERROR(cudaMalloc((void **) &d_result, numberOfGcs * sizeof(Metrics)));
 
 
-//    compare2<<<numberOfGcs/1024, 1024>>>(d_gcMatrixData,
-    compare2<<<numberOfGcs, 1>>>(d_gcMatrixData,
+    int gridDim = ceil((float)numberOfGcs/1024.0);
+
+    compare2<<<gridDim, 1024>>>(d_gcMatrixData,
+//    compare2<<<numberOfGcs, 1>>>(d_gcMatrixData,
                                  d_gcDictData,
                                  d_gcMatrixOffsets,
                                  d_gcMatrixSizes,
                                  d_gcDictOffsets,
                                  gcQueryPosition,
+                                 numberOfGcs,
                                  d_result);
 
     HANDLE_ERROR(cudaPeekAtLastError());
@@ -749,6 +759,7 @@ Metrics *demoCalculateGCsOnCudaWithCopy(int numberOfGcs,
                                  d_gcMatrixSizes,
                                  d_gcDictOffsets,
                                  gcQueryPosition,
+                                 numberOfGcs,
                                  d_result);
 
     HANDLE_ERROR(cudaPeekAtLastError());

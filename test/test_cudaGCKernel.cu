@@ -16,6 +16,7 @@
 #include "cuda_algorithms.cuh"
 #include <time.h>
 #include <stdlib.h>
+#include <gcloadunit.cuh>
 
 
 void testGcSimilarityKernelWith100x100();
@@ -28,6 +29,8 @@ void appendMatrix(const unsigned short *mat1, unsigned short sizeofMat, unsigned
 
 
 void testGcSimilarityKernelWithMany3x3();
+
+void testGcSimilarityKernelWith10000();
 
 struct uuid {
     uint32_t time_low;
@@ -192,6 +195,33 @@ int main() {
     testGcSimilarityKernelWith100x100();
     testGcSimilarityKernelWith3x3();
     testGcSimilarityKernelWithMany3x3();
+    testGcSimilarityKernelWith10000();
+}
+
+void testGcSimilarityKernelWith10000() {
+    int numberOfGcs = 100;
+    GcLoadUnit loadUnit(GcLoadUnit::MODE_MEMORY_MAP);
+    loadUnit.loadArtificialGcs(numberOfGcs, 100);
+    loadUnit.loadIntoCudaMemory();
+    auto start = std::chrono::system_clock::now();
+
+    Metrics *result = demoCalculateGCsOnCuda(loadUnit.getNumberOfGc(),
+                                             loadUnit.getNumberOfDictElements(),
+                                             loadUnit.getGcMatrixDataCudaPtr(),
+                                             loadUnit.getGcDictDataCudaPtr(),
+                                             loadUnit.getGcMatrixOffsetsCudaPtr(),
+                                             loadUnit.getDictOffsetCudaPtr(),
+                                             loadUnit.getMatrixSizesCudaPtr()
+    );
+    auto endOfCalc = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_secondsCalc = endOfCalc - start;
+    std::cout << loadUnit.getNumberOfGc() << "\t" << elapsed_secondsCalc.count()
+              << "\n";
+
+    for (int i = 0; i < numberOfGcs; i++) {
+        assert(result[i].similarity == 1);
+    }
+
 }
 
 
@@ -206,8 +236,6 @@ void testGcSimilarityKernelWithMany3x3() {
     unsigned short *gcMatrixData = (unsigned short *) malloc(0);
     unsigned int *gcDictData = (unsigned int *) malloc(0);
 
-    //unsigned int *gcMatrixOffsets = (unsigned int *) malloc(0);
-    //unsigned int *gcMatrixSizesPtr = (unsigned int *) malloc(0);
 
     unsigned int *gcMatrixOffsets = (unsigned int *) malloc(sizeof(unsigned int) * NUMBER_OF_GCS);
     unsigned int *gcDictOffsets = (unsigned int *) malloc(sizeof(unsigned int) * NUMBER_OF_GCS);
@@ -591,7 +619,9 @@ void testGcSimilarityKernelWith3x3() {
             cudaMemcpy(d_gcDictOffsets, gcDictOffsets, NUMBER_OF_GCS * sizeof(unsigned int), cudaMemcpyHostToDevice));
 
 
-    compare2<<<NUMBER_OF_GCS, 1>>>(d_gcMatrixData, d_gcDictData, d_gcMatrixOffsets, d_gcMatrixSizes, d_gcDictOffsets, 0,
+    compare2<<<1, NUMBER_OF_GCS>>>(d_gcMatrixData, d_gcDictData, d_gcMatrixOffsets, d_gcMatrixSizes,
+                                   d_gcDictOffsets, 0,
+                                   NUMBER_OF_GCS,
                                    d_result);
 
     HANDLE_ERROR(cudaPeekAtLastError());
