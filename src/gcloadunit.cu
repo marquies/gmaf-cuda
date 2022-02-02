@@ -393,6 +393,7 @@ void GcLoadUnit::addGcFromFileMemMap(const std::string &filepath) {
 
     appendGCMatrixToMatrix(gc, gc.dict->size() * gc.dict->size());
 
+    free(&jf);
 
     gcSize++;
 }
@@ -495,8 +496,10 @@ void GcLoadUnit::loadGraphCodes(const char *cvalue, int limit) {
 
     for (const auto &entry: std::experimental::filesystem::v1::__cxx11::directory_iterator(cvalue)) {
         try {
+
             addGcFromFile(entry.path().string());
         } catch (json::exception &e) {
+            std::cerr << entry.path().string() << '\n';
             std::cerr << e.what() << '\n';
         }
         n++;

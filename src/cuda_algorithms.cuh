@@ -114,4 +114,9 @@ __global__ void calcMetrices(unsigned short int *data,
                              unsigned int *edgeMetricCount,
                              unsigned int *edgeType);
 
+
+void run_qsort(unsigned int *data, unsigned int nitems);
+    void check_results(int n, unsigned int *results_d);
+
+
 #endif //GCSIM_ALGORITHMS_CUH
