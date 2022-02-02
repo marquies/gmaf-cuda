@@ -393,7 +393,7 @@ void GcLoadUnit::addGcFromFileMemMap(const std::string &filepath) {
 
     appendGCMatrixToMatrix(gc, gc.dict->size() * gc.dict->size());
 
-    free(&jf);
+//    free(&jf);
 
     gcSize++;
 }

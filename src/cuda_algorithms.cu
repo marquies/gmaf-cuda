@@ -23,7 +23,8 @@
 
 #include <cuda_profiler_api.h>
 
-
+#define MAX_DEPTH       24
+#define INSERTION_SORT  32
 
 
 void checkNxNConstraint(const GraphCode &gc1, const GraphCode &gc2);
@@ -705,6 +706,42 @@ Metrics *demoCalculateGCsOnCuda(int numberOfGcs,
     return result;
 }
 
+Metrics *demoCalculateGCsOnCudaSorted(int numberOfGcs,
+                                unsigned int dictCounter,
+                                unsigned short *d_gcMatrixData,
+                                unsigned int *d_gcDictData,
+                                unsigned int *d_gcMatrixOffsets,
+                                unsigned int *d_gcDictOffsets,
+                                unsigned int *d_gcMatrixSizes,
+                                int gcQueryPosition) {
+    Metrics *d_result;
+
+    HANDLE_ERROR(cudaMalloc((void **) &d_result, numberOfGcs * sizeof(Metrics)));
+
+
+    int gridDim = ceil((float)numberOfGcs/1024.0);
+
+    compare2<<<gridDim, 1024>>>(d_gcMatrixData,
+//    compare2<<<numberOfGcs, 1>>>(d_gcMatrixData,
+                                d_gcDictData,
+                                d_gcMatrixOffsets,
+                                d_gcMatrixSizes,
+                                d_gcDictOffsets,
+                                gcQueryPosition,
+                                numberOfGcs,
+                                d_result);
+
+    HANDLE_ERROR(cudaPeekAtLastError());
+    HANDLE_ERROR(cudaDeviceSynchronize());
+    auto end = std::chrono::system_clock::now();
+
+    Metrics *result = (Metrics *) malloc(numberOfGcs * sizeof(Metrics));
+    HANDLE_ERROR(cudaMemcpy(result, d_result, numberOfGcs * sizeof(Metrics), cudaMemcpyDeviceToHost));
+    HANDLE_ERROR(cudaFree(d_result));
+
+    return result;
+}
+
 
 Metrics *demoCalculateGCsOnCudaWithCopy(int numberOfGcs,
                                         unsigned int dictCounter,
@@ -801,23 +838,33 @@ Metrics *demoCalculateGCsOnCudaWithCopy(int numberOfGcs,
 }
 
 
-#define MAX_DEPTH       16
-#define INSERTION_SORT  32
+
+
+__device__ float dcompare(Metrics positionA, Metrics positionB) {
+    float a = positionA.similarity * 100000.0f + positionA.recommendation * 100.0f +
+              positionA.inferencing;
+
+
+    float b = positionB.similarity * 100000.0f + positionB.recommendation * 100.0f +
+              positionB.inferencing;
+
+    return a-b;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Selection sort used when depth gets too big or the number of elements drops
 // below a threshold.
 ////////////////////////////////////////////////////////////////////////////////
-__device__ void selection_sort(unsigned int *data, int left, int right) {
+__device__ void selection_sort(Metrics *data, int left, int right) {
     for (int i = left; i <= right; ++i) {
-        unsigned min_val = data[i];
+        Metrics min_val = data[i];
         int min_idx = i;
 
         // Find the smallest value in the range [left, right].
         for (int j = i + 1; j <= right; ++j) {
-            unsigned val_j = data[j];
+            Metrics val_j = data[j];
 
-            if (val_j < min_val) {
+            if (dcompare(val_j, min_val) > 0) {
                 min_idx = j;
                 min_val = val_j;
             }
@@ -834,31 +881,31 @@ __device__ void selection_sort(unsigned int *data, int left, int right) {
 ////////////////////////////////////////////////////////////////////////////////
 // Very basic quicksort algorithm, recursively launching the next level.
 ////////////////////////////////////////////////////////////////////////////////
-__global__ void cdp_simple_quicksort(unsigned int *data, int left, int right, int depth) {
+__global__ void cdp_simple_quicksort(Metrics *data, int left, int right, int depth) {
     // If we're too deep or there are few elements left, we use an insertion sort...
     if (depth >= MAX_DEPTH || right - left <= INSERTION_SORT) {
         selection_sort(data, left, right);
         return;
     }
 
-    unsigned int *lptr = data + left;
-    unsigned int *rptr = data + right;
-    unsigned int pivot = data[(left + right) / 2];
+    Metrics *lptr = data + left;
+    Metrics *rptr = data + right;
+    Metrics pivot = data[(left + right) / 2];
 
     // Do the partitioning.
     while (lptr <= rptr) {
         // Find the next left- and right-hand values to swap
-        unsigned int lval = *lptr;
-        unsigned int rval = *rptr;
+        Metrics lval = *lptr;
+        Metrics rval = *rptr;
 
         // Move the left pointer as long as the pointed element is smaller than the pivot.
-        while (lval < pivot) {
+        while (dcompare(lval, pivot) > 0) {
             lptr++;
             lval = *lptr;
         }
 
         // Move the right pointer as long as the pointed element is larger than the pivot.
-        while (rval > pivot) {
+        while (dcompare(rval, pivot) < 0) {
             rptr--;
             rval = *rptr;
         }
@@ -894,7 +941,7 @@ __global__ void cdp_simple_quicksort(unsigned int *data, int left, int right, in
 ////////////////////////////////////////////////////////////////////////////////
 // Call the quicksort kernel from the host.
 ////////////////////////////////////////////////////////////////////////////////
-void run_qsort(unsigned int *data, unsigned int nitems) {
+void run_qsort(Metrics *data, unsigned int nitems) {
     // Prepare CDP for the max depth 'MAX_DEPTH'.
     HANDLE_ERROR(cudaDeviceSetLimit(cudaLimitDevRuntimeSyncDepth, MAX_DEPTH));
 
@@ -906,22 +953,3 @@ void run_qsort(unsigned int *data, unsigned int nitems) {
     HANDLE_ERROR(cudaDeviceSynchronize());
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Verify the results.
-////////////////////////////////////////////////////////////////////////////////
-void check_results(int n, unsigned int *results_d) {
-    unsigned int *results_h = new unsigned[n];
-    HANDLE_ERROR(cudaMemcpy(results_h, results_d, n * sizeof(unsigned), cudaMemcpyDeviceToHost));
-
-    for (int i = 1; i < n; ++i)
-        if (results_h[i - 1] > results_h[i]) {
-            std::cout << "Invalid item[" << i - 1 << "]: " << results_h[i - 1] << " greater than " << results_h[i]
-                      << std::endl;
-            exit(EXIT_FAILURE);
-        }
-
-    std::cout << "OK" << std::endl;
-    delete[] results_h;
-}

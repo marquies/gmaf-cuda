@@ -115,8 +115,18 @@ __global__ void calcMetrices(unsigned short int *data,
                              unsigned int *edgeType);
 
 
-void run_qsort(unsigned int *data, unsigned int nitems);
-    void check_results(int n, unsigned int *results_d);
+Metrics *demoCalculateGCsOnCudaSorted(int numberOfGcs,
+                                      unsigned int dictCounter,
+                                      unsigned short *d_gcMatrixData,
+                                      unsigned int *d_gcDictData,
+                                      unsigned int *d_gcMatrixOffsets,
+                                      unsigned int *d_gcDictOffsets,
+                                      unsigned int *d_gcMatrixSizes,
+                                      int gcQueryPosition = 0);
+
+__global__ void cdp_simple_quicksort(Metrics *data, int left, int right, int depth);
+
+void run_qsort(Metrics *data, unsigned int nitems);
 
 
 #endif //GCSIM_ALGORITHMS_CUH
