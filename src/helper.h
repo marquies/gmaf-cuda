@@ -25,6 +25,8 @@ void Introsort(Metrics* array, int begin, int end);
 
 void HeapSort(Metrics *data, int size);
 
+void swap(Metrics *const x, Metrics *const y);
+
 float compare(Metrics *positionA, Metrics *positionB);
 
 void writeMetricsToFile(Metrics* metrics, int n);

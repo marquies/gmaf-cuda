@@ -747,6 +747,18 @@ Metrics *demoSortAndRetrieveMetrics(Metrics* devicePtr, int numberOfGcs) {
     sortOnMem(devicePtr, result, numberOfGcs, 128, Device);
 //    HANDLE_ERROR(cudaFree(devicePtr));
 
+// pointer1 pointing at the beginning of the array
+    Metrics *pointer1 = result,
+
+    // pointer2 pointing at end of the array
+    *pointer2 = result + numberOfGcs - 1;
+    while (pointer1 < pointer2) {
+        swap(pointer1, pointer2);
+        pointer1++;
+        pointer2--;
+    }
+
+
     return result;
 }
 
