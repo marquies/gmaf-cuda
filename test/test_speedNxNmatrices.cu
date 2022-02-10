@@ -9,7 +9,7 @@
 
 #include "../src/cuda_algorithms.cuh"
 
-#include "testhelper.cpp"
+#include "testhelper.h"
 #include "cudahelper.cuh"
 #include "reduce.cuh"
 #include "cpualgorithms.h"
@@ -102,7 +102,7 @@ void testCudaCalc() {
 
 
 
-    const json &gc_sample = generateTestData(L);
+    const json gc_sample = generateTestData(L);
 
     std::vector<json> *others = new std::vector<json>();
 
@@ -115,7 +115,7 @@ void testCudaCalc() {
 
     // Do a plain simple version of the calc
     for (const auto agc: *others) {
-        demoCudaLinearMatrixMemoryWithCopy(gc_sample, agc);
+        demoCudaLinearMatrixMemory(gc_sample, agc);
     }
 
     auto end = std::chrono::system_clock::now();

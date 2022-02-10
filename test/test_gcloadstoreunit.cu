@@ -5,10 +5,9 @@
 
 #include <gcloadunit.cuh>
 #include <cassert>
-#include <cuda_algorithms.cuh>
 #include <helper.h>
 #include <fstream>
-#include "testhelper.cpp"
+#include "testhelper.h"
 
 
 void testLoadSimple();

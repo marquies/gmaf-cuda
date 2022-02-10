@@ -544,14 +544,6 @@ void sort(Metrics *inputData, Metrics *outputData, uint size, uint threadCount, 
     uint nblock = 10 * blocks;
     int partition_max = 262144;
 
-    unsigned long long int total = partition_max * sizeof(Block<Metrics>) + nblock * sizeof(Partition<Metrics>) +
-                                   2 * partition_max * sizeof(uint) + 3 * (size) * sizeof(Metrics);
-
-//    printf("\nINFO: Device Memory consumed is %.3f GB out of %.3f GB of available memory\n", ((double) total / GIGA),
-//           (double) deviceProp.totalGlobalMem / GIGA);
-
-    //Allocating and initializing CUDA arrays
-//	sdkCreateTimer(&htimer);
     HANDLE_ERROR(cudaMalloc((void **) &dbucket, partition_max * sizeof(Block<Metrics>)));
     HANDLE_ERROR(cudaMalloc((void **) &partition, nblock * sizeof(Partition<Metrics>))); //nblock
 
@@ -734,14 +726,6 @@ void sortOnMem(Metrics *ddata, Metrics *outputData, uint size, uint threadCount,
     uint nblock = 10 * blocks;
     int partition_max = 262144;
 
-    unsigned long long int total = partition_max * sizeof(Block<Metrics>) + nblock * sizeof(Partition<Metrics>) +
-                                   2 * partition_max * sizeof(uint) + 3 * (size) * sizeof(Metrics);
-
-//    printf("\nINFO: Device Memory consumed is %.3f GB out of %.3f GB of available memory\n", ((double) total / GIGA),
-//           (double) deviceProp.totalGlobalMem / GIGA);
-
-    //Allocating and initializing CUDA arrays
-//	sdkCreateTimer(&htimer);
     HANDLE_ERROR(cudaMalloc((void **) &dbucket, partition_max * sizeof(Block<Metrics>)));
     HANDLE_ERROR(cudaMalloc((void **) &partition, nblock * sizeof(Partition<Metrics>))); //nblock
 

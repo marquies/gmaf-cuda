@@ -2,7 +2,7 @@
 // Created by breucking on 30.12.21.
 //
 
-#include "testhelper.cpp"
+#include "testhelper.h"
 #include "../src/cuda_algorithms.cuh"
 #include <cuda_runtime.h>
 #include <uuid/uuid.h>

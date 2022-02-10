@@ -4,7 +4,7 @@
 
 #include <cassert>
 #include <cpualgorithms.h>
-#include "testhelper.cpp"
+#include "testhelper.h"
 
 void testBasic();
 
@@ -14,7 +14,6 @@ int main(int, char**)
 {
     testBasic();
     testMassTest();
-
 }
 
 void testMassTest() {

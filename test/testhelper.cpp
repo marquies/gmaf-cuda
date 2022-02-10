@@ -3,10 +3,8 @@
 //
 
 
-#ifndef TESTHELPER_CPP
-#define TESTHELPER_CPP
+#include "testhelper.h"
 
-#include <nlohmann/json.hpp>
 #include <cuda_algorithms.cuh>
 
 using json = nlohmann::json;
@@ -324,14 +322,7 @@ std::vector<std::string> DICT2 = {"root-asset1", "date1", "null1", "type1", "blo
 double EPSILON = 0.000001;
 
 
-/*
- * Decleration of methods.
- */
-json generateTestData(int n);
 
-GraphCode generateTestDataGc(int n);
-
-bool AreSame(double a, double b);
 
 /**
  * Helper for to generate test data of size.
@@ -422,4 +413,3 @@ GraphCode generateTestDataGc(int n) {
 }
 
 
-#endif

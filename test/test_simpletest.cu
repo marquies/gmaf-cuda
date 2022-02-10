@@ -6,7 +6,7 @@
 
 #include <helper.h>
 #include "../src/graphcode.h"
-#include "testhelper.cpp"
+#include "testhelper.h"
 
 
 void testAnother();
@@ -105,8 +105,6 @@ void testCompare() {
 void testAnother() {
 
 
-    long addedElements = 0;
-    long addedDictItems = 0;
     int count = 10000;
     int dimension = 100;
 

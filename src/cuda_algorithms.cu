@@ -739,23 +739,9 @@ Metrics *demoCalculateGCsOnCudaAndKeepMetricsInMem(int numberOfGcs,
 }
 
 Metrics *demoSortAndRetrieveMetrics(Metrics* devicePtr, int numberOfGcs) {
-//    HANDLE_ERROR(cudaDeviceSetLimit(cudaLimitDevRuntimeSyncDepth, MAX_DEPTH));
-//
-//    // Launch on device
-//    int left = 0;
-//    int right = numberOfGcs - 1;
-//    cdp_simple_quicksort<<< 1, 1 >>>(devicePtr, left, right, 0);
-//    HANDLE_ERROR(cudaDeviceSynchronize());
-//    HANDLE_ERROR(cudaPeekAtLastError());
-//
     Metrics *result = (Metrics *) malloc(numberOfGcs * sizeof(Metrics));
-//    HANDLE_ERROR(cudaMemcpy(result, devicePtr, numberOfGcs * sizeof(Metrics), cudaMemcpyDeviceToHost));
-//    HANDLE_ERROR(cudaFree(devicePtr));
-
 
     int Device = 0;
-    cudaDeviceProp deviceProp;
-
 
     sortOnMem(devicePtr, result, numberOfGcs, 128, Device);
     HANDLE_ERROR(cudaFree(devicePtr));
