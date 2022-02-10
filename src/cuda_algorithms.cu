@@ -22,6 +22,7 @@
 #include "reduce.cuh"
 
 #include <cuda_profiler_api.h>
+#include "cuda-quicksort/CUDA-Quicksort.h"
 
 #define MAX_DEPTH       24
 #define INSERTION_SORT  32
@@ -667,6 +668,8 @@ __global__ void compare2(unsigned short *gcMatrixData, unsigned int *gcDictData,
     if (edge_metric_count > 0) {
         /*edge_type_metric*/ metrics[index].inferencing = (float) edge_type / (float) edge_metric_count;
     }
+    metrics[index].compareValue = metrics[index].similarity * 100000.0f + metrics[index].recommendation * 100.0f +
+            metrics[index].inferencing;
 }
 
 Metrics *demoCalculateGCsOnCuda(int numberOfGcs,
@@ -696,8 +699,6 @@ Metrics *demoCalculateGCsOnCuda(int numberOfGcs,
 
     HANDLE_ERROR(cudaPeekAtLastError());
     HANDLE_ERROR(cudaDeviceSynchronize());
-    auto end = std::chrono::system_clock::now();
-
 
     Metrics *result = (Metrics *) malloc(numberOfGcs * sizeof(Metrics));
     HANDLE_ERROR(cudaMemcpy(result, d_result, numberOfGcs * sizeof(Metrics), cudaMemcpyDeviceToHost));
@@ -706,14 +707,14 @@ Metrics *demoCalculateGCsOnCuda(int numberOfGcs,
     return result;
 }
 
-Metrics *demoCalculateGCsOnCudaSorted(int numberOfGcs,
+Metrics *demoCalculateGCsOnCudaAndKeepMetricsInMem(int numberOfGcs,
                                 unsigned int dictCounter,
                                 unsigned short *d_gcMatrixData,
                                 unsigned int *d_gcDictData,
                                 unsigned int *d_gcMatrixOffsets,
                                 unsigned int *d_gcDictOffsets,
                                 unsigned int *d_gcMatrixSizes,
-                                int gcQueryPosition) {
+                                int gcQueryPosition ) {
     Metrics *d_result;
 
     HANDLE_ERROR(cudaMalloc((void **) &d_result, numberOfGcs * sizeof(Metrics)));
@@ -733,11 +734,31 @@ Metrics *demoCalculateGCsOnCudaSorted(int numberOfGcs,
 
     HANDLE_ERROR(cudaPeekAtLastError());
     HANDLE_ERROR(cudaDeviceSynchronize());
-    auto end = std::chrono::system_clock::now();
 
+    return d_result;
+}
+
+Metrics *demoSortAndRetrieveMetrics(Metrics* devicePtr, int numberOfGcs) {
+//    HANDLE_ERROR(cudaDeviceSetLimit(cudaLimitDevRuntimeSyncDepth, MAX_DEPTH));
+//
+//    // Launch on device
+//    int left = 0;
+//    int right = numberOfGcs - 1;
+//    cdp_simple_quicksort<<< 1, 1 >>>(devicePtr, left, right, 0);
+//    HANDLE_ERROR(cudaDeviceSynchronize());
+//    HANDLE_ERROR(cudaPeekAtLastError());
+//
     Metrics *result = (Metrics *) malloc(numberOfGcs * sizeof(Metrics));
-    HANDLE_ERROR(cudaMemcpy(result, d_result, numberOfGcs * sizeof(Metrics), cudaMemcpyDeviceToHost));
-    HANDLE_ERROR(cudaFree(d_result));
+//    HANDLE_ERROR(cudaMemcpy(result, devicePtr, numberOfGcs * sizeof(Metrics), cudaMemcpyDeviceToHost));
+//    HANDLE_ERROR(cudaFree(devicePtr));
+
+
+    int Device = 0;
+    cudaDeviceProp deviceProp;
+
+
+    sortOnMem(devicePtr, result, numberOfGcs, 128, Device);
+    HANDLE_ERROR(cudaFree(devicePtr));
 
     return result;
 }

@@ -41,7 +41,8 @@ enum Algorithms {
     Algo_pc_cpu_seq,
     Algo_pc_cpu_par,
     Algo_pm_cuda,
-    Algo_pmr_cuda
+    Algo_pmr_cuda,
+    Algo_pcs_cuda
     //others...
 };
 
@@ -61,6 +62,8 @@ Algorithms resolveAlgorithm(std::string input) {
     if (input == "pc_cpu_par") return Algo_pc_cpu_par;
     if (input == "pm_cuda") return Algo_pm_cuda;
     if (input == "pmr_cuda") return Algo_pmr_cuda;
+    if (input == "pcs_cuda") return Algo_pcs_cuda;
+
     return Algo_Invalid;
 }
 
@@ -69,10 +72,12 @@ void printUsageAndExit(char *const *argv) {
     std::cout << "    -v verbose in terms of debug" << std::endl;
     std::cout << "    -c limits the maximum number of GCs" << std::endl;
     std::cout << "Algorithms available" << std::endl;
-    std::cout << "    pc" << std::endl;
+    std::cout << "    pc_cuda" << std::endl;
     std::cout << "    pc_cpu_seq" << std::endl;
     std::cout << "    pc_cpu_par" << std::endl;
     std::cout << "    pm_cuda" << std::endl;
+    std::cout << "    pmr_cuda" << std::endl;
+    std::cout << "    pcs_cuda" << std::endl;
 
 
     exit(EXIT_FAILURE);
@@ -157,6 +162,10 @@ int main_init(int argc, char *argv[]) {
             qh.setStrategy(std::unique_ptr<Strategy>(new CudaTask2ab));
             loadUnit = new GcLoadUnit(GcLoadUnit::Modes::MODE_VECTOR_MAP);
             break;
+        case Algo_pcs_cuda:
+            qh.setStrategy(std::unique_ptr<Strategy>(new CudaTask13));
+            loadUnit = new GcLoadUnit(GcLoadUnit::Modes::MODE_MEMORY_MAP);
+            break;
 
         case Algo_Invalid:
         default:
@@ -192,7 +201,7 @@ int main_init(int argc, char *argv[]) {
                 mainLoop = false;
             } else {
                 if (qh.validate(str)) {
-                    qh.processQuery(str, *loadUnit);
+                    qh.processQuery(str, loadUnit);
                 } else {
                     std::cout << "Query invalid" << std::endl;
                 }

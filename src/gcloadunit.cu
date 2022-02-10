@@ -345,6 +345,8 @@ unsigned int GcLoadUnit::getDictCode(std::string key) {
 void GcLoadUnit::addGcFromFile(std::string filepath) {
     if (opMode == MODE_MEMORY_MAP) {
         addGcFromFileMemMap(filepath);
+    } else {
+        throw new std::runtime_error("Files not implemented for vectors");
     }
 }
 
@@ -431,6 +433,9 @@ unsigned int GcLoadUnit::getNumberOfDictElements() {
 }
 
 void GcLoadUnit::loadIntoCudaMemory() {
+    if(isInCudaMemory) {
+        return;
+    }
 
     long md_size = 0;
     for (int i = 0; i < gcSize; i++) {
@@ -455,7 +460,7 @@ void GcLoadUnit::loadIntoCudaMemory() {
             cudaMemcpy(d_gcMatrixSizes, gcMatrixSizesPtr, gcSize * sizeof(unsigned int), cudaMemcpyHostToDevice));
     HANDLE_ERROR(
             cudaMemcpy(d_gcDictOffsets, gcDictOffsetsPtr, gcSize * sizeof(unsigned int), cudaMemcpyHostToDevice));
-
+    isInCudaMemory = true;
 }
 
 void GcLoadUnit::freeAll() {
@@ -467,6 +472,7 @@ void GcLoadUnit::freeAll() {
         HANDLE_ERROR(cudaFree(d_gcMatrixOffsets));
     if (d_gcMatrixSizes)
         HANDLE_ERROR(cudaFree(d_gcMatrixSizes));
+    isInCudaMemory = false;
 }
 
 unsigned short *GcLoadUnit::getGcMatrixDataCudaPtr() {

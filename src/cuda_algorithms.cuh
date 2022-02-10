@@ -115,14 +115,18 @@ __global__ void calcMetrices(unsigned short int *data,
                              unsigned int *edgeType);
 
 
-Metrics *demoCalculateGCsOnCudaSorted(int numberOfGcs,
-                                      unsigned int dictCounter,
-                                      unsigned short *d_gcMatrixData,
-                                      unsigned int *d_gcDictData,
-                                      unsigned int *d_gcMatrixOffsets,
-                                      unsigned int *d_gcDictOffsets,
-                                      unsigned int *d_gcMatrixSizes,
-                                      int gcQueryPosition = 0);
+
+
+Metrics *demoCalculateGCsOnCudaAndKeepMetricsInMem(int numberOfGcs,
+                                                   unsigned int dictCounter,
+                                                   unsigned short *d_gcMatrixData,
+                                                   unsigned int *d_gcDictData,
+                                                   unsigned int *d_gcMatrixOffsets,
+                                                   unsigned int *d_gcDictOffsets,
+                                                   unsigned int *d_gcMatrixSizes,
+                                                   int gcQueryPosition =0);
+
+Metrics *demoSortAndRetrieveMetrics(Metrics* devicePtr, int numberOfGcs);
 
 __global__ void cdp_simple_quicksort(Metrics *data, int left, int right, int depth);
 

@@ -196,9 +196,9 @@ void testSelectionSort() {
 }
 
 void testSimpleQuery() {
-    GcLoadUnit loadUnit = GcLoadUnit(GcLoadUnit::MODE_MEMORY_MAP);
+    GcLoadUnit *loadUnit = new GcLoadUnit(GcLoadUnit::MODE_MEMORY_MAP);
     QueryHandler queryHandler;
-    loadUnit.loadArtificialGcs(10, 1);
+    loadUnit->loadArtificialGcs(10, 1);
     int value = queryHandler.processQuery("Query by Example: 6.gc", loadUnit);
     assert(value == 0);
 }
@@ -215,7 +215,7 @@ void testErrorQuery() {
 
     try {
         QueryHandler queryHandler;
-        queryHandler.processQuery("", GcLoadUnit(GcLoadUnit::MODE_MEMORY_MAP));
+        queryHandler.processQuery("", new GcLoadUnit(GcLoadUnit::MODE_MEMORY_MAP));
         assert(false);
     } catch (std::invalid_argument) {
 

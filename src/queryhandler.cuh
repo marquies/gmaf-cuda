@@ -13,7 +13,7 @@
 
 class Strategy {
 public:
-    virtual void performQuery(GcLoadUnit loadUnit) = 0;
+    virtual void performQuery(GcLoadUnit *loadUnit) = 0;
 
     virtual ~Strategy() = default;
 };
@@ -23,7 +23,7 @@ class QueryHandler {
     std::unique_ptr<Strategy> strat_;
 
 public:
-    int processQuery(std::string query, GcLoadUnit loadUnit);
+    int processQuery(std::string query, GcLoadUnit *loadUnit);
 
     static bool validate(std::string query);
 
@@ -39,30 +39,36 @@ public:
 
 class CudaTask1OnGpuMemory : public Strategy {
 public:
-    void performQuery(GcLoadUnit loadUnit) override;
+    void performQuery(GcLoadUnit *loadUnit) override;
 };
 
 class CudaTask1MemCopy : public Strategy {
 public:
-    void performQuery(GcLoadUnit loadUnit) override;
+    void performQuery(GcLoadUnit *loadUnit) override;
 };
 
 class CpuSequentialTask1 : public Strategy {
 public:
-    void performQuery(GcLoadUnit loadUnit) override;
+    void performQuery(GcLoadUnit *loadUnit) override;
 };
 class CpuParallelTask1 : public Strategy {
 public:
-    void performQuery(GcLoadUnit loadUnit) override;
+    void performQuery(GcLoadUnit *loadUnit) override;
 };
 
 class CudaTask2a : public Strategy {
 public:
-    void performQuery(GcLoadUnit loadUnit) override;
+    void performQuery(GcLoadUnit *loadUnit) override;
 };
 class CudaTask2ab : public Strategy {
 public:
-    void performQuery(GcLoadUnit loadUnit) override;
+    void performQuery(GcLoadUnit *loadUnit) override;
 };
+class CudaTask13 : public Strategy {
+public:
+    void performQuery(GcLoadUnit *loadUnit) override;
+};
+
+
 
 #endif //GCSIM_QUERYHANDLER_CUH

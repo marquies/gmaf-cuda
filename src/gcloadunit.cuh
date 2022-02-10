@@ -87,6 +87,7 @@ private:
 
     int gcSize = 0;
     bool init = false;
+    bool isInCudaMemory = false;
     int lastOffset = 0;
     int lastPosition = 0;
     unsigned int lastDictOffset = 0;

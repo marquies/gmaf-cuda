@@ -18,10 +18,11 @@ typedef struct GraphCode {
 using json = nlohmann::json;
 
 struct Metrics {
-    int idx;
+    unsigned  int idx;
     float similarity;
     float recommendation;
     float inferencing;
+    float compareValue;
 };
 
 

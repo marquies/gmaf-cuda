@@ -3,15 +3,19 @@
 
 #include <c++/9/iostream>
 #include <helper.h>
+#include <CUDA-Quicksort.h>
 #include "../src/cuda_algorithms.cuh"
 #include "../src/cudahelper.cuh"
 
 
 void testCudaSort();
-//
-//int main() {
-//    testCudaSort();
-//}
+
+void test_cdpQuicksort();
+
+int main() {
+    test_cdpQuicksort();
+    testCudaSort();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Initialize data on the host.
@@ -28,7 +32,7 @@ void initialize_data(unsigned int *dst, unsigned int nitems) {
 ////////////////////////////////////////////////////////////////////////////////
 // Main entry point.
 ////////////////////////////////////////////////////////////////////////////////
-int main(int argc, char **argv) {
+void test_cdpQuicksort() {
     int num_items = 1000;
     bool verbose = true;
 
@@ -36,12 +40,12 @@ int main(int argc, char **argv) {
 
     for (int i = 0; i < num_items; i++) {
         inData[i].idx = i;
-        inData[i].similarity =  i ;
-        inData[i].recommendation =  i ;
-        inData[i].recommendation =  i ;
+        inData[i].similarity = i;
+        inData[i].recommendation = i;
+        inData[i].recommendation = i;
     }
     for (int i = 1; i < num_items; i++) {
-        assert(compare(inData + i, inData + (i - 1)) >0);
+        assert(compare(inData + i, inData + (i - 1)) > 0);
     }
 
     // Get device properties
@@ -76,8 +80,8 @@ int main(int argc, char **argv) {
 //    initialize_data(h_data, num_items);
 
 //    if (verbose) {
-        for (int i = 0; i < num_items; i++)
-            std::cout << "Data [" << i << "]: " << h_data[i].similarity << std::endl;
+    for (int i = 0; i < num_items; i++)
+        std::cout << "Data [" << i << "]: " << h_data[i].similarity << std::endl;
 //    }
 
     // Allocate GPU memory.
@@ -95,7 +99,7 @@ int main(int argc, char **argv) {
     std::cout << "Validating results: ";
     //check_results(num_items, d_data);
     for (int i = 1; i < num_items; i++) {
-        std::cout << "Data [" << i-1 << "]: " << h_data[i-1].similarity << std::endl;
+        std::cout << "Data [" << i - 1 << "]: " << h_data[i - 1].similarity << std::endl;
         assert(compare(h_data + i, h_data + (i - 1)) < 0);
     }
 
@@ -108,30 +112,35 @@ int main(int argc, char **argv) {
     // profiled. Calling cudaDeviceReset causes all profile data to be
     // flushed before the application exits
     cudaDeviceReset();
-    exit(EXIT_SUCCESS);
+
 }
 
 //
 void testCudaSort() {
-//
-//    const unsigned int N = 100000;
-//    Metrics *inData = new Metrics[N];
-//
-//    for (int i = 0; i < N; i++) {
-//        inData[i].idx = N - i;
-//    }
-//
-//    for (int i = 0; i < N; i++) {
-//        // std::cout << "(" << i <<") " << inData[i] << " " ;
-//    }
-//    Metrics *outData = new Metrics[N];
-//    unsigned int num_items = N;
-////    CUDA_Quicksort(inData,outData, N,128);
-//
-//
-//    for (int i = 0; i < N; i++) {
-//        std::cout << "(" << i << ") " << outData[i].idx << " ";
-//    }
+
+    const unsigned int N = 100;
+    Metrics *inData = new Metrics[N];
+//    unsigned int *inData = new unsigned int[N];
+
+    for (int i = 0; i < N; i++) {
+        inData[i].idx = N - i;
+        inData[i].compareValue = N - i;
+
+    }
+
+    for (int i = 0; i < N; i++) {
+        std::cout << "(" << i << ") " << inData[i].compareValue << " ";
+    }
+    std::cout << std::endl << "------" << std::endl;
+    Metrics *outData = new Metrics[N];
+    unsigned int num_items = N;
+//    CUDA_Quicksort(inData,outData, N,128);
+    // threads  =128; threshold   =512;
+    CUDA_Quicksort(inData, outData, N, 128);
+
+    for (int i = 0; i < N; i++) {
+        std::cout << "(" << i << ") " << outData[i].compareValue << " ";
+    }
 
 
 }

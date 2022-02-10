@@ -10,6 +10,7 @@ ADD_EXECUTABLE(test_queryhandler test_queryhandler.cpp ${Foo_SOURCES})
 ADD_EXECUTABLE(test_cpuparallelgckernel test_cpuparallelgckernel.cu ${Foo_SOURCES})
 ADD_EXECUTABLE(test_cudasort test_cudasort.cu ${Foo_SOURCES})
 
+
 ADD_TEST(test_simpletest test_simpletest)
 ADD_TEST(test_cudaNxNmatrices test_cudaNxNmatrices)
 ADD_TEST(test_speedNxNmatrices test_speedNxNmatrices)
@@ -19,6 +20,8 @@ ADD_TEST(test_gcloadstoreunit test_gcloadstoreunit)
 ADD_TEST(test_queryhandler test_queryhandler)
 ADD_TEST(test_cpuparallelgckernel test_cpuparallelgckernel)
 ADD_TEST(test_cudasort test_cudasort)
+
+
 
 
 target_include_directories(test_simpletest PUBLIC ${Foo_INCLUDE_DIRS})

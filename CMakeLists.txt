@@ -129,8 +129,8 @@ set_target_properties(GCS PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON)
 add_executable (gcsim main2.cpp)
 
-#set_target_properties(gcsim PROPERTIES
-#        CUDA_SEPARABLE_COMPILATION ON)
+set_target_properties(gcsim PROPERTIES
+        CUDA_SEPARABLE_COMPILATION ON)
 
 target_include_directories(gcsim PUBLIC ${Foo_INCLUDE_DIRS} ${UUID_INCLUDE_DIRS})
 
