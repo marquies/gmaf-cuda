@@ -743,8 +743,9 @@ Metrics *demoSortAndRetrieveMetrics(Metrics* devicePtr, int numberOfGcs) {
 
     int Device = 0;
 
+
     sortOnMem(devicePtr, result, numberOfGcs, 128, Device);
-    HANDLE_ERROR(cudaFree(devicePtr));
+//    HANDLE_ERROR(cudaFree(devicePtr));
 
     return result;
 }

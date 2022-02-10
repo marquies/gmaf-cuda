@@ -91,7 +91,9 @@ void CudaTask1OnGpuMemory::performQuery(GcLoadUnit *loadUnit) {
         std::chrono::duration<double> elapsed_secondsCalc = endOfCalc - start;
         std::chrono::duration<double> elapsed_secondsTotal = end - start;
         time_t end_time = std::chrono::system_clock::to_time_t(end);
-
+        if(i == times-1) {
+            writeMetricsToFile(result, loadUnit->getNumberOfGc());
+        }
         if (G_DEBUG) {
 
 
@@ -241,7 +243,9 @@ void CpuParallelTask1::performQuery(GcLoadUnit *loadUnit) {
             std::cout << "run " << ctime(&end_time)
                       << "elapsed time: " << elapsed_secondsTotal.count() << "s\n";
         }
-
+        if(i == times-1) {
+            writeMetricsToFile(results);
+        }
         if (!G_BENCHMARK) {}
         else {
             std::cout << typeid(this).name() << "\t" << loadUnit->getNumberOfGc() << "\t" << elapsed_secondsCalc.count()
@@ -345,6 +349,7 @@ void CudaTask13::performQuery(GcLoadUnit *loadUnit) {
                 //TODO: Add the compare position
                 /* , */
         );
+
         auto endOfCalc = std::chrono::system_clock::now();
         Metrics *result = demoSortAndRetrieveMetrics(devicePtr, loadUnit->getNumberOfGc());
 
@@ -364,6 +369,9 @@ void CudaTask13::performQuery(GcLoadUnit *loadUnit) {
 
         auto end = std::chrono::system_clock::now();
 
+        if(i == times-1) {
+            writeMetricsToFile(result, loadUnit->getNumberOfGc());
+        }
 
         std::chrono::duration<double> elapsed_secondsCalc = endOfCalc - start;
         std::chrono::duration<double> elapsed_secondsTotal = end - start;

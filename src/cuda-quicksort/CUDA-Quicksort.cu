@@ -704,13 +704,13 @@ void sort(Metrics *inputData, Metrics *outputData, uint size, uint threadCount, 
 
 void sortOnMem(Metrics *ddata, Metrics *outputData, uint size, uint threadCount, int device) {
 
-    cudaSetDevice(device);
+    //cudaSetDevice(device);
 
     cudaGetLastError();
     //cudaDeviceReset();
 
     cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, device);
+    HANDLE_ERROR(cudaGetDeviceProperties(&deviceProp, device));
 
 //	StopWatchInterface* htimer=NULL;
 //    Metrics *ddata;
@@ -733,7 +733,7 @@ void sortOnMem(Metrics *ddata, Metrics *outputData, uint size, uint threadCount,
     HANDLE_ERROR(cudaMalloc((void **) &npartitions2, partition_max * sizeof(uint)));
 
     HANDLE_ERROR(cudaMalloc((void **) &dbuffer, (size) * sizeof(Metrics)));
-    HANDLE_ERROR(cudaMalloc((void **) &ddata, (size) * sizeof(Metrics)));
+//    HANDLE_ERROR(cudaMalloc((void **) &ddata, (size) * sizeof(Metrics)));
 
 //    HANDLE_ERROR(cudaMemcpy(ddata, inputData, size * sizeof(Metrics), cudaMemcpyHostToDevice));
 

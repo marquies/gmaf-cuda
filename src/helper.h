@@ -27,4 +27,8 @@ void HeapSort(Metrics *data, int size);
 
 float compare(Metrics *positionA, Metrics *positionB);
 
+void writeMetricsToFile(Metrics* metrics, int n);
+void writeMetricsToFile(std::vector<Metrics> metrics);
+
+
 #endif

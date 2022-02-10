@@ -6,6 +6,7 @@
 #include "helper.h"
 #include "graphcode.h"
 #include <iomanip>
+#include <fstream>
 
 bool G_DEBUG = false;
 bool G_BENCHMARK = false;
@@ -62,7 +63,8 @@ float compare(Metrics *positionA, Metrics *positionB) {
               positionB->inferencing;
 
     if (G_DEBUG) {
-        std::cout << std::fixed << std::setprecision(10) << "a: " << positionA->similarity << ";" << positionA->recommendation << ";"
+        std::cout << std::fixed << std::setprecision(10) << "a: " << positionA->similarity << ";"
+                  << positionA->recommendation << ";"
                   << positionA->inferencing << std::endl;
         std::cout << a << std::endl;
         std::cout << "b: " << positionB->similarity << ";" << positionB->recommendation << ";"
@@ -216,7 +218,7 @@ void MinHeapify(Metrics *data, int heapSize, int index) {
 
 void HeapSort(Metrics *data, int size) {
 
-    for (int p = (size) / 2-1 ; p >= 0; p--)
+    for (int p = (size) / 2 - 1; p >= 0; p--)
         MinHeapify(data, size, p);
 
     for (int i = size - 1; i >= 0; i--) {
@@ -331,4 +333,32 @@ int findLargestDivisor(int n) {
 
     return 0;
 
+}
+
+void writeMetricsToFile(Metrics *metrics, int n) {
+    std::ofstream myfile;
+    myfile.open("example.csv", std::ios::trunc);
+    for (int i = 0; i < n; i++) {
+        myfile << std::setprecision(5) << std::fixed;
+        myfile << metrics[i].similarity << "," << metrics[i].recommendation << "," << metrics[i].inferencing << ","
+               << metrics[i].compareValue;
+        if (i < n - 1) {
+            myfile << std::endl;
+        }
+    }
+    myfile.close();
+}
+
+void writeMetricsToFile(std::vector<Metrics> metrics) {
+    std::ofstream myfile;
+    myfile.open("example.csv", std::ios::trunc);
+    for (int i = 0; i < metrics.size(); i++) {
+        myfile << std::setprecision(5) << std::fixed;
+        myfile << metrics[i].similarity << "," << metrics[i].recommendation << "," << metrics[i].inferencing << ","
+               << metrics[i].compareValue;
+        if (i < metrics.size() - 1) {
+            myfile << std::endl;
+        }
+    }
+    myfile.close();
 }
