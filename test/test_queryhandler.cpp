@@ -20,8 +20,6 @@ void testIntroSort();
 
 void testHeapSort();
 
-void testPosition();
-
 int main() {
 
     testErrorQuery();
@@ -30,31 +28,6 @@ int main() {
     testSelectionSort();
     testHeapSort();
     testIntroSort();
-    testPosition();
-
-}
-
-//TODO: move me to gcloadUnit tests
-void testPosition() {
-    GcLoadUnit gc = GcLoadUnit(GcLoadUnit::MODE_VECTOR_MAP);
-    gc.loadArtificialGcs(10, 5);
-    assert(gc.hasGc("0.gc") == true);
-    assert(gc.getGcPosition("0.gc") == 0);
-    assert(gc.hasGc("1.gc") == true);
-    assert(gc.getGcPosition("1.gc") == 1);
-    assert(gc.hasGc("2.gc") == true);
-    assert(gc.getGcPosition("2.gc") == 2);
-
-    gc = GcLoadUnit(GcLoadUnit::MODE_MEMORY_MAP);
-    std::string file = "/home/breucking/CLionProjects/gmaf-cuda/GMAF_TMP_17316548361524909203.png.gc";
-    gc.addGcFromFile(file);
-    file = "/home/breucking/CLionProjects/gmaf-cuda/example2.gc";
-    gc.addGcFromFile(file);
-
-    assert(gc.hasGc("example2.gc") == true);
-    assert(gc.getGcPosition("example2.gc") == 1);
-    assert(gc.hasGc("GMAF_TMP_17316548361524909203.png.gc") == true);
-    assert(gc.getGcPosition("GMAF_TMP_17316548361524909203.png.gc") == 0);
 
 }
 

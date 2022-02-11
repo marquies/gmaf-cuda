@@ -3,6 +3,7 @@
 //
 
 
+#include <queryhandler.cuh>
 #include <gcloadunit.cuh>
 #include <cassert>
 #include <helper.h>
@@ -18,11 +19,15 @@ void testLoadTwoRealGcs();
 
 void testConvertJsonToGraphCode();
 
+void testPosition();
+
 int main() {
     testLoadSimple();
     testLoadMultipleByExample();
     testLoadTwoRealGcs();
     testConvertJsonToGraphCode();
+    testPosition();
+
 }
 
 void testConvertJsonToGraphCode() {
@@ -263,5 +268,28 @@ void testLoadSimple() {
         assert(msize == dim*dim);
 
     }
+
+}
+
+void testPosition() {
+    GcLoadUnit gc = GcLoadUnit(GcLoadUnit::MODE_VECTOR_MAP);
+    gc.loadArtificialGcs(10, 5);
+    assert(gc.hasGc("0.gc") == true);
+    assert(gc.getGcPosition("0.gc") == 0);
+    assert(gc.hasGc("1.gc") == true);
+    assert(gc.getGcPosition("1.gc") == 1);
+    assert(gc.hasGc("2.gc") == true);
+    assert(gc.getGcPosition("2.gc") == 2);
+
+    gc = GcLoadUnit(GcLoadUnit::MODE_MEMORY_MAP);
+    std::basic_string<char> file = "/home/breucking/CLionProjects/gmaf-cuda/GMAF_TMP_17316548361524909203.png.gc";
+    gc.addGcFromFile(file);
+    file = "/home/breucking/CLionProjects/gmaf-cuda/example2.gc";
+    gc.addGcFromFile(file);
+
+    assert(gc.hasGc("example2.gc") == true);
+    assert(gc.getGcPosition("example2.gc") == 1);
+    assert(gc.hasGc("GMAF_TMP_17316548361524909203.png.gc") == true);
+    assert(gc.getGcPosition("GMAF_TMP_17316548361524909203.png.gc") == 0);
 
 }
