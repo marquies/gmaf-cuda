@@ -49,8 +49,10 @@ void GcLoadUnit::loadArtificialGcs(int count, int dimension) {
 
             //newVec->push_back(std::to_string(n));
 
+            gcNames.push_back(std::to_string(n).append(".gc"));
+            addedDictItems++;
             for (int i = 0; i < dimension; i++) {
-                gcNames.push_back(std::to_string(i).append(".gc"));
+
                 newVec->at(i) = std::to_string(i);
                 std::vector<int> x;
                 for (int j = 0; j < dimension; j++) {
@@ -527,7 +529,7 @@ std::vector<GraphCode> GcLoadUnit::getGcCodes() {
 
 }
 
-int GcLoadUnit::getGcPosition(const char *gcFileName) {
+int GcLoadUnit::getGcPosition(std::string gcFileName) {
     const std::vector<std::string>::iterator &it = std::find(gcNames.begin(), gcNames.end(), gcFileName);
     return std::distance(gcNames.begin(), it);
 }

@@ -77,7 +77,7 @@ public:
 
     std::vector<GraphCode> getGcCodes();
 
-    int getGcPosition(const char *gcFileName);
+    int getGcPosition(std::string gcFileName);
 
 private:
 

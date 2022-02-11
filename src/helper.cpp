@@ -347,6 +347,7 @@ void writeMetricsToFile(Metrics *metrics, int n) {
         }
     }
     myfile.close();
+    myfile.flush();
 }
 
 void writeMetricsToFile(std::vector<Metrics> metrics) {

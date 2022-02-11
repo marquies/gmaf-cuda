@@ -26,11 +26,18 @@ int QueryHandler::processQuery(std::string query, GcLoadUnit *loadUnit) {
         std::string gcQueryName = m.str(1);
         std::cout << m.str(1) << " ";
         if (loadUnit->hasGc(gcQueryName)) {
-            if (strat_)
-                strat_->performQuery(loadUnit);
+
+            if (strat_) {
+                strat_->performQuery(loadUnit, loadUnit->getGcPosition(gcQueryName));
+            } else {
+                throw std::runtime_error("Algorithm strategy not set");
+            }
 
             return 0;
-        }
+        } else {
+            std::cout << "GC not found." << std::endl;
+
+        };
     }
 
     return 1;
@@ -47,7 +54,7 @@ bool QueryHandler::validate(std::string query) {
 }
 
 
-void CudaTask1OnGpuMemory::performQuery(GcLoadUnit *loadUnit) {
+void CudaTask1OnGpuMemory::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
 // call algorithm in form of
     std::cout << "-----------------------------------" << std::endl;
 
@@ -63,8 +70,8 @@ void CudaTask1OnGpuMemory::performQuery(GcLoadUnit *loadUnit) {
                                                  loadUnit->getGcDictDataCudaPtr(),
                                                  loadUnit->getGcMatrixOffsetsCudaPtr(),
                                                  loadUnit->getDictOffsetCudaPtr(),
-                                                 loadUnit->getMatrixSizesCudaPtr()
-                /* , */
+                                                 loadUnit->getMatrixSizesCudaPtr(),
+                                                 gcPosition
         );
 
         auto endOfCalc = std::chrono::system_clock::now();
@@ -91,7 +98,7 @@ void CudaTask1OnGpuMemory::performQuery(GcLoadUnit *loadUnit) {
         std::chrono::duration<double> elapsed_secondsCalc = endOfCalc - start;
         std::chrono::duration<double> elapsed_secondsTotal = end - start;
         time_t end_time = std::chrono::system_clock::to_time_t(end);
-        if(i == times-1) {
+        if (i == times - 1) {
             writeMetricsToFile(result, loadUnit->getNumberOfGc());
         }
         if (G_DEBUG) {
@@ -109,7 +116,7 @@ void CudaTask1OnGpuMemory::performQuery(GcLoadUnit *loadUnit) {
     }
 }
 
-void CudaTask1MemCopy::performQuery(GcLoadUnit *loadUnit) {
+void CudaTask1MemCopy::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
 // call algorithm in form of
     std::cout << "-----------------------------------" << std::endl;
 
@@ -123,8 +130,8 @@ void CudaTask1MemCopy::performQuery(GcLoadUnit *loadUnit) {
                                                          loadUnit->getGcDictDataPtr(),
                                                          loadUnit->getGcMatrixOffsetsPtr(),
                                                          loadUnit->getDictOffsetPtr(),
-                                                         loadUnit->getMatrixSizesPtr()
-                /* , */
+                                                         loadUnit->getMatrixSizesPtr(),
+                                                         gcPosition
         );
 
 
@@ -179,7 +186,7 @@ bool comp(Metrics e1, Metrics e2) {
     return b - a < 0;
 }
 
-void CpuSequentialTask1::performQuery(GcLoadUnit *loadUnit) {
+void CpuSequentialTask1::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
     int times = G_BENCHMARK ? G_BENCHMARK_REPEAT : 1;
     std::cout << "-----------------------------------" << std::endl;
 
@@ -188,7 +195,7 @@ void CpuSequentialTask1::performQuery(GcLoadUnit *loadUnit) {
         auto start = std::chrono::system_clock::now();
         std::vector<Metrics> results;
         for (int j = 1; j < codes.size(); j++) {
-            Metrics res = demoCalculateSimilaritySequentialOrdered(codes.at(0), codes.at(j));
+            Metrics res = demoCalculateSimilaritySequentialOrdered(codes.at(gcPosition), codes.at(j));
             results.push_back(res);
         }
         auto endOfCalc = std::chrono::system_clock::now();
@@ -217,7 +224,7 @@ void CpuSequentialTask1::performQuery(GcLoadUnit *loadUnit) {
 }
 
 
-void CpuParallelTask1::performQuery(GcLoadUnit *loadUnit) {
+void CpuParallelTask1::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
     int times = G_BENCHMARK ? G_BENCHMARK_REPEAT : 1;
     std::cout << "-----------------------------------" << std::endl;
 
@@ -226,7 +233,7 @@ void CpuParallelTask1::performQuery(GcLoadUnit *loadUnit) {
         auto start = std::chrono::system_clock::now();
         std::vector<Metrics> results;
 
-        results = demoCalculateCpuThreaded(codes.at(0), codes, 8);
+        results = demoCalculateCpuThreaded(codes.at(gcPosition), codes, 8);
 
         auto endOfCalc = std::chrono::system_clock::now();
 
@@ -243,9 +250,10 @@ void CpuParallelTask1::performQuery(GcLoadUnit *loadUnit) {
             std::cout << "run " << ctime(&end_time)
                       << "elapsed time: " << elapsed_secondsTotal.count() << "s\n";
         }
-        if(i == times-1) {
+        if (i == times - 1) {
             writeMetricsToFile(results);
         }
+
         if (!G_BENCHMARK) {}
         else {
             std::cout << typeid(this).name() << "\t" << loadUnit->getNumberOfGc() << "\t" << elapsed_secondsCalc.count()
@@ -255,7 +263,7 @@ void CpuParallelTask1::performQuery(GcLoadUnit *loadUnit) {
 
 }
 
-void CudaTask2a::performQuery(GcLoadUnit *loadUnit) {
+void CudaTask2a::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
     int times = G_BENCHMARK ? G_BENCHMARK_REPEAT : 1;
     std::cout << "-----------------------------------" << std::endl;
 
@@ -264,7 +272,7 @@ void CudaTask2a::performQuery(GcLoadUnit *loadUnit) {
         auto start = std::chrono::system_clock::now();
         std::vector<Metrics> results;
         for (int j = 1; j < codes.size(); j++) {
-            Metrics res = demoCudaLinearMatrixMemoryWithCopy(codes.at(0), codes.at(j));
+            Metrics res = demoCudaLinearMatrixMemoryWithCopy(codes.at(gcPosition), codes.at(j));
             results.push_back(res);
         }
         auto endOfCalc = std::chrono::system_clock::now();
@@ -292,7 +300,7 @@ void CudaTask2a::performQuery(GcLoadUnit *loadUnit) {
 }
 
 
-void CudaTask2ab::performQuery(GcLoadUnit *loadUnit) {
+void CudaTask2ab::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
     int times = G_BENCHMARK ? G_BENCHMARK_REPEAT : 1;
     std::cout << "-----------------------------------" << std::endl;
 
@@ -301,7 +309,7 @@ void CudaTask2ab::performQuery(GcLoadUnit *loadUnit) {
         auto start = std::chrono::system_clock::now();
         std::vector<Metrics> results;
         for (int j = 1; j < codes.size(); j++) {
-            Metrics res = demoCudaLinearMatrixMemoryCudaReduceSum(codes.at(0), codes.at(j));
+            Metrics res = demoCudaLinearMatrixMemoryCudaReduceSum(codes.at(gcPosition), codes.at(j));
             results.push_back(res);
         }
         auto endOfCalc = std::chrono::system_clock::now();
@@ -329,7 +337,7 @@ void CudaTask2ab::performQuery(GcLoadUnit *loadUnit) {
 }
 
 
-void CudaTask13::performQuery(GcLoadUnit *loadUnit) {
+void CudaTask13::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
 // call algorithm in form of
     std::cout << "-----------------------------------" << std::endl;
 
@@ -340,19 +348,17 @@ void CudaTask13::performQuery(GcLoadUnit *loadUnit) {
         auto start = std::chrono::system_clock::now();
 
         Metrics *devicePtr = demoCalculateGCsOnCudaAndKeepMetricsInMem(loadUnit->getNumberOfGc(),
-                                                 loadUnit->getNumberOfDictElements(),
-                                                 loadUnit->getGcMatrixDataCudaPtr(),
-                                                 loadUnit->getGcDictDataCudaPtr(),
-                                                 loadUnit->getGcMatrixOffsetsCudaPtr(),
-                                                 loadUnit->getDictOffsetCudaPtr(),
-                                                 loadUnit->getMatrixSizesCudaPtr()
-                //TODO: Add the compare position
-                /* , */
+                                                                       loadUnit->getNumberOfDictElements(),
+                                                                       loadUnit->getGcMatrixDataCudaPtr(),
+                                                                       loadUnit->getGcDictDataCudaPtr(),
+                                                                       loadUnit->getGcMatrixOffsetsCudaPtr(),
+                                                                       loadUnit->getDictOffsetCudaPtr(),
+                                                                       loadUnit->getMatrixSizesCudaPtr(),
+                                                                       gcPosition
         );
 
         auto endOfCalc = std::chrono::system_clock::now();
         Metrics *result = demoSortAndRetrieveMetrics(devicePtr, loadUnit->getNumberOfGc());
-
 
 
         if (G_DEBUG) {
@@ -369,7 +375,7 @@ void CudaTask13::performQuery(GcLoadUnit *loadUnit) {
 
         auto end = std::chrono::system_clock::now();
 
-        if(i == times-1) {
+        if (i == times - 1) {
             writeMetricsToFile(result, loadUnit->getNumberOfGc());
         }
 
