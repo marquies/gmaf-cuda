@@ -526,3 +526,8 @@ std::vector<GraphCode> GcLoadUnit::getGcCodes() {
     return gcCodes;
 
 }
+
+int GcLoadUnit::getGcPosition(const char *gcFileName) {
+    const std::vector<std::string>::iterator &it = std::find(gcNames.begin(), gcNames.end(), gcFileName);
+    return std::distance(gcNames.begin(), it);
+}

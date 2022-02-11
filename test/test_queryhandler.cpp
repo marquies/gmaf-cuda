@@ -20,6 +20,8 @@ void testIntroSort();
 
 void testHeapSort();
 
+void testPosition();
+
 int main() {
 
     testErrorQuery();
@@ -28,49 +30,34 @@ int main() {
     testSelectionSort();
     testHeapSort();
     testIntroSort();
+    testPosition();
 
 }
 
-// Function to swap the the position of two elements
-void swap(float *a, float *b) {
-    int temp = *a;
-    *a = *b;
-    *b = temp;
+//TODO: move me to gcloadUnit tests
+void testPosition() {
+    GcLoadUnit gc = GcLoadUnit(GcLoadUnit::MODE_VECTOR_MAP);
+    gc.loadArtificialGcs(10, 5);
+    assert(gc.hasGc("0.gc") == true);
+    assert(gc.getGcPosition("0.gc") == 0);
+    assert(gc.hasGc("1.gc") == true);
+    assert(gc.getGcPosition("1.gc") == 1);
+    assert(gc.hasGc("2.gc") == true);
+    assert(gc.getGcPosition("2.gc") == 2);
+
+    gc = GcLoadUnit(GcLoadUnit::MODE_MEMORY_MAP);
+    std::string file = "/home/breucking/CLionProjects/gmaf-cuda/GMAF_TMP_17316548361524909203.png.gc";
+    gc.addGcFromFile(file);
+    file = "/home/breucking/CLionProjects/gmaf-cuda/example2.gc";
+    gc.addGcFromFile(file);
+
+    assert(gc.hasGc("example2.gc") == true);
+    assert(gc.getGcPosition("example2.gc") == 1);
+    assert(gc.hasGc("GMAF_TMP_17316548361524909203.png.gc") == true);
+    assert(gc.getGcPosition("GMAF_TMP_17316548361524909203.png.gc") == 0);
+
 }
 
-void heapify(float *arr, int n, int i) {
-    // Find largest among root, left child and right child
-    int largest = i;
-    int left = 2 * i + 1;
-    int right = 2 * i + 2;
-
-    if (left < n && arr[left] > arr[largest])
-        largest = left;
-
-    if (right < n && arr[right] > arr[largest])
-        largest = right;
-
-    // Swap and continue heapifying if root is not largest
-    if (largest != i) {
-        swap(&arr[i], &arr[largest]);
-        heapify(arr, n, largest);
-    }
-}
-
-// Main function to do heap sort
-void heapSort(float *arr, int n) {
-    // Build max heap
-    for (int i = n / 2 - 1; i >= 0; i--)
-        heapify(arr, n, i);
-
-    // Heap sort
-    for (int i = n - 1; i >= 0; i--) {
-        swap(&arr[0], &arr[i]);
-
-        // Heapify root element to get highest element at root again
-        heapify(arr, i, 0);
-    }
-}
 
 // Print an array
 void printArray(float *arr, int n) {
@@ -81,26 +68,7 @@ void printArray(float *arr, int n) {
 
 void testHeapSort() {
     int n = 100000;
-//    srand(time(NULL));
-//    float arr[n];// = arr[n];
-//    for (int i = 0; i <n; i++) {
-//        //arr[i] = rand();// Initialization, should only be called once.
-//        arr[i] = (n-i) / (float) n;
-//    }
-//
-////    int arr[] = {1, 12, 9, 5, 6, 10};
-//    int c = sizeof(arr) / sizeof(arr[0]);
-//
-//    heapSort(arr, c);
-//
-//    printf("Sorted array is \n");
-//    printArray(arr, c);
-//
-//    for (int i = 0; i < n; i++) {
-//        assert(arr[i] == (i+1) / (float) n);
-//    }
-//
-//    return;
+
 
     Metrics *metrics = (Metrics *) malloc(sizeof(Metrics) * n);
 

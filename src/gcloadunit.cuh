@@ -77,6 +77,8 @@ public:
 
     std::vector<GraphCode> getGcCodes();
 
+    int getGcPosition(const char *gcFileName);
+
 private:
 
     int opMode;
