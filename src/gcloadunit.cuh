@@ -114,7 +114,7 @@ private:
 
     void reinit();
 
-    void appendMatrix(const unsigned short *mat1, unsigned short sizeofMat, unsigned short *gcMatrixData,
+    void appendMatrix(const unsigned short *mat1, unsigned long sizeofMat, unsigned short *gcMatrixData,
                       unsigned int *gcDictData, unsigned int *gcMatrixOffsets, unsigned int *gcMatrixSizes,
                       int *lastOffset,
                       int position);

@@ -606,13 +606,13 @@ __global__ void compare2(unsigned short *gcMatrixData, unsigned int *gcDictData,
 //    int index = blockIdx.x;
     //int /*offset*/ tid = x + y * blockDim.x * gridDim.x;
     //int x = threadIdx.x + blockIdx.x * blockDim.x
-    int index =  threadIdx.x + blockIdx.x * blockDim.x ;
+    unsigned int index =  threadIdx.x + blockIdx.x * blockDim.x ;
     if (index >= numberOfGcs)
         return;
 //    int /*offset*/ tid = x ;
 
-    int gc1 = gcQuery;
-    int gc2 = index;
+    unsigned int gc1 = gcQuery;
+    unsigned int gc2 = index;
 
     int sim = 0;
     int elementsGc1 = sqrtf((float) gcMatrixSizes[gc1]);
@@ -627,7 +627,7 @@ __global__ void compare2(unsigned short *gcMatrixData, unsigned int *gcDictData,
             unsigned int d2 = gcDictData[off2 + j];
             if (d1 == d2) {
                 sim++;
-                break;
+//                break;
             }
         }
     }
@@ -658,7 +658,7 @@ __global__ void compare2(unsigned short *gcMatrixData, unsigned int *gcDictData,
 
                 long transX = -1;
                 long transY = -1;
-                int endposition = gcDictOffsets[gc2] + elementsGc2;
+                unsigned endposition = gcDictOffsets[gc2] + elementsGc2;
                 for (int k = gcDictOffsets[gc2]; k <= endposition; k++){
                     if (gcDictData[k] == vocVal1) {
                         transX = k - gcDictOffsets[gc2];

@@ -11,7 +11,7 @@
 #include <chrono>
 
 
-int QueryHandler::processQuery(std::string query, GcLoadUnit *loadUnit) {
+int QueryHandler::processQuery(const std::string& query, GcLoadUnit *loadUnit) {
     if (!validate(query)) {
         throw std::invalid_argument("Empty String");
     }
@@ -37,15 +37,15 @@ int QueryHandler::processQuery(std::string query, GcLoadUnit *loadUnit) {
         } else {
             std::cout << "GC not found." << std::endl;
 
-        };
+        }
     }
 
     return 1;
 }
 
 
-bool QueryHandler::validate(std::string query) {
-    if (query.empty() || query.compare("") == 0) {
+bool QueryHandler::validate(const std::string& query) {
+    if (query.empty()) {
         return false;
     }
     if (!regex_match(query, std::regex("(Query by Example: )(.*)$")))
@@ -196,6 +196,7 @@ void CpuSequentialTask1::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
         std::vector<Metrics> results;
         for (int j = 0; j < codes.size(); j++) {
             Metrics res = demoCalculateSimilaritySequentialOrdered(codes.at(gcPosition), codes.at(j));
+            res.idx = j;
             results.push_back(res);
         }
         auto endOfCalc = std::chrono::system_clock::now();
