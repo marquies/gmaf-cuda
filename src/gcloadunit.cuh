@@ -132,6 +132,8 @@ private:
     void loadArtificialGcsMemMap(int count, int dimension);
 
     void addGcFromFileMemMap(const std::string &filepath);
+
+    void addGcFromFileVecMap(std::string basicString);
 };
 
 

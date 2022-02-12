@@ -115,7 +115,7 @@ set (CUDA_PROPAGATE_HOST_FLAGS OFF)
 
 #set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_61,code=sm_61 --generate-code=arch=compute_61,code=[compute_61,sm_61]")
 #set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --cudart shared -lcudadevrt -rdc=true")
-#set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS}  -lineinfo -G -g ")
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS}  -lineinfo -G -g ")
 
 
 

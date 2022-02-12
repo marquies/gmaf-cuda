@@ -194,7 +194,7 @@ void CpuSequentialTask1::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
         std::vector<GraphCode> codes = loadUnit->getGcCodes();
         auto start = std::chrono::system_clock::now();
         std::vector<Metrics> results;
-        for (int j = 1; j < codes.size(); j++) {
+        for (int j = 0; j < codes.size(); j++) {
             Metrics res = demoCalculateSimilaritySequentialOrdered(codes.at(gcPosition), codes.at(j));
             results.push_back(res);
         }
@@ -214,6 +214,10 @@ void CpuSequentialTask1::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
                       << "elapsed time: " << elapsed_secondsTotal.count() << "s\n";
         }
 
+        if (i == times - 1) {
+            writeMetricsToFile(results);
+        }
+
         if (!G_BENCHMARK) {}
         else {
             std::cout << typeid(this).name() << "\t" << loadUnit->getNumberOfGc() << "\t" << elapsed_secondsCalc.count()
@@ -231,9 +235,8 @@ void CpuParallelTask1::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
     for (int i = 0; i < times; i++) {
         std::vector<GraphCode> codes = loadUnit->getGcCodes();
         auto start = std::chrono::system_clock::now();
-        std::vector<Metrics> results;
 
-        results = demoCalculateCpuThreaded(codes.at(gcPosition), codes, 8);
+        std::vector<Metrics> results = demoCalculateCpuThreaded(codes.at(gcPosition), codes, 1);
 
         auto endOfCalc = std::chrono::system_clock::now();
 

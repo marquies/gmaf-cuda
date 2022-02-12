@@ -147,12 +147,12 @@ void GcLoadUnit::reinit() {
 
     }
     gcNames.clear();
+    lastOffset = 0;
+    lastPosition = 0;
+    gcSize = 0;
+    lastDictOffset = 0;
+    dictCounter = 0;
     if (opMode == MODE_MEMORY_MAP) {
-        lastOffset = 0;
-        lastPosition = 0;
-        gcSize = 0;
-        lastDictOffset = 0;
-        dictCounter = 0;
         gcMatrixDataPtr = (unsigned short *) malloc(0);
         gcDictDataPtr = (unsigned int *) malloc(0);
 
@@ -160,8 +160,10 @@ void GcLoadUnit::reinit() {
         gcDictOffsetsPtr = (unsigned int *) malloc(0);
         gcMatrixSizesPtr = (unsigned int *) malloc(0);
 
-        init = true;
+    } else {
+        gcCodes.clear();
     }
+    init = true;
 }
 
 void GcLoadUnit::loadMultipleByExample(int count, GraphCode code) {
@@ -304,8 +306,8 @@ void GcLoadUnit::appendMatrix(const unsigned short *mat1, unsigned short sizeofM
     gcMatrixSizes[position] = sizeofMat; // / sizeof (unsigned short )
 
     for (int i = 0; i < gcMatrixSizes[position]; i++) {
-        if (G_DEBUG)
-            std::cout << i << " ; position: " << gcMatrixOffsets[position] + i << std::endl;
+//        if (G_DEBUG)
+//            std::cout << i << " ; position: " << gcMatrixOffsets[position] + i << std::endl;
         gcMatrixData[gcMatrixOffsets[position] + i] = mat1[i];
     }
     *lastOffset += sizeofMat;
@@ -348,7 +350,7 @@ void GcLoadUnit::addGcFromFile(std::string filepath) {
     if (opMode == MODE_MEMORY_MAP) {
         addGcFromFileMemMap(filepath);
     } else {
-        throw new std::runtime_error("Files not implemented for vectors");
+        addGcFromFileVecMap(filepath);
     }
 }
 
@@ -363,10 +365,6 @@ void GcLoadUnit::addGcFromFileMemMap(const std::string &filepath) {
     gcNames.push_back(std::string(basename(filepath.c_str())));
 
 
-    // TODO: xthis could be replaced by direct conversions
-//    GraphCode gc = GcLoadUnit::convertJsonToGraphCode(jf);
-
-    // TODO: Replace with non-static member
     json gc1Dictionary = jf["dictionary"];
     json jsonMatrix = jf["matrix"];
     std::vector<std::string> *dict = new std::vector<std::string>;
@@ -402,6 +400,49 @@ void GcLoadUnit::addGcFromFileMemMap(const std::string &filepath) {
     gcSize++;
 }
 
+void GcLoadUnit::addGcFromFileVecMap(std::string filepath) {
+    std::ifstream ifs(filepath);
+    json jf = json::parse(ifs);
+
+    if (!init) {
+        reinit();
+    }
+
+    gcNames.push_back(std::string(basename(filepath.c_str())));
+
+
+    json gc1Dictionary = jf["dictionary"];
+    json jsonMatrix = jf["matrix"];
+    std::vector<std::string> *dict = new std::vector<std::string>;
+    int size = gc1Dictionary.size();
+    dict->reserve(size);
+
+    for (const auto &item2: gc1Dictionary.items()) {
+        dict->push_back(item2.value().get<std::string>());
+    }
+
+    dictCounter++;
+
+    unsigned short *matrix = (unsigned short *) malloc(sizeof(unsigned short) * size * size);
+
+
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+
+            matrix[i * size + j] = jsonMatrix.at(i).at(j);
+        }
+    }
+
+    GraphCode gc;
+    gc.matrix = matrix;
+    gc.dict = dict;
+
+    gcCodes.push_back(gc);
+
+    gcSize++;
+}
+
+
 GraphCode GcLoadUnit::convertJsonToGraphCode(json jsonGraphCode) {
     json gc1Dictionary = jsonGraphCode["dictionary"];
     json jsonMatrix = jsonGraphCode["matrix"];
@@ -435,7 +476,7 @@ unsigned int GcLoadUnit::getNumberOfDictElements() {
 }
 
 void GcLoadUnit::loadIntoCudaMemory() {
-    if(isInCudaMemory) {
+    if (isInCudaMemory) {
         return;
     }
 
@@ -456,7 +497,7 @@ void GcLoadUnit::loadIntoCudaMemory() {
     HANDLE_ERROR(
             cudaMemcpy(d_gcMatrixData, gcMatrixDataPtr, md_size * sizeof(unsigned short), cudaMemcpyHostToDevice));
     HANDLE_ERROR(cudaMemcpy(d_gcDictData, gcDictDataPtr, dictCounter * sizeof(unsigned int), cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_gcMatrixOffsets, gcDictOffsetsPtr, gcSize * sizeof(unsigned int),
+    HANDLE_ERROR(cudaMemcpy(d_gcMatrixOffsets, gcMatrixOffsetsPtr, gcSize * sizeof(unsigned int),
                             cudaMemcpyHostToDevice));
     HANDLE_ERROR(
             cudaMemcpy(d_gcMatrixSizes, gcMatrixSizesPtr, gcSize * sizeof(unsigned int), cudaMemcpyHostToDevice));
@@ -504,14 +545,16 @@ void GcLoadUnit::loadGraphCodes(const char *cvalue, int limit) {
 
     for (const auto &entry: std::experimental::filesystem::v1::__cxx11::directory_iterator(cvalue)) {
         try {
-
             addGcFromFile(entry.path().string());
+            if (G_DEBUG) {
+                std::cout << "Added file " << entry.path().string() << std::endl;
+            }
         } catch (json::exception &e) {
             std::cerr << entry.path().string() << '\n';
             std::cerr << e.what() << '\n';
         }
         n++;
-        if (n > limit) {
+        if (n >= limit) {
             break;
         }
     }
@@ -533,3 +576,4 @@ int GcLoadUnit::getGcPosition(std::string gcFileName) {
     const std::vector<std::string>::iterator &it = std::find(gcNames.begin(), gcNames.end(), gcFileName);
     return std::distance(gcNames.begin(), it);
 }
+

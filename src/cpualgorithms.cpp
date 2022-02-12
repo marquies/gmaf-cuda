@@ -95,7 +95,26 @@ Metrics demoCalculateSimilaritySequentialOrdered(GraphCode gcQuery, GraphCode gc
                     continue;
                 }
 
-                int edge = matrix2[position1 * gcQuery.dict->size() + position2];//matrix2[position1][position2];
+                std::basic_string<char> &v1 = gcQuery.dict->at(i);
+                std::basic_string<char> &v2 = gcQuery.dict->at(j);
+
+                const std::vector<std::string>::iterator &it1 = std::find(gcCompare.dict->begin(), gcCompare.dict->end(), v1);
+                if (it1 == gcCompare.dict->end()) {
+                    continue;
+                }
+                long transX = std::distance(gcCompare.dict->begin(), it1);
+
+                const std::vector<std::string>::iterator &it2 = std::find(gcCompare.dict->begin(), gcCompare.dict->end(), v2);
+                if (it2 == gcCompare.dict->end()) {
+                    continue;
+                }
+                long transY = std::distance(gcCompare.dict->begin(), it2);
+
+
+                
+                unsigned short edge = matrix2
+                        [transX * gcCompare.dict->size()+transY];
+                        //matrix2[position1 * gcQuery.dict->size() + position2];//matrix2[position1][position2];
                 if (edge != 0) {
                     edge_metric_count++;
                 }

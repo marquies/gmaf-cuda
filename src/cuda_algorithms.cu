@@ -615,16 +615,19 @@ __global__ void compare2(unsigned short *gcMatrixData, unsigned int *gcDictData,
     int gc2 = index;
 
     int sim = 0;
-    int elements = sqrtf((float) gcMatrixSizes[gc1]);
+    int elementsGc1 = sqrtf((float) gcMatrixSizes[gc1]);
+    int elementsGc2 = sqrtf((float) gcMatrixSizes[gc2]);
 
-    for (int i = 0; i < elements; i++) {
-        for (int j = 0; j < elements; j++) {
-            unsigned int off1 = gcDictOffsets[gc1];
-            unsigned int off2 = gcDictOffsets[gc2];
+    unsigned int off1 = gcDictOffsets[gc1];
+    unsigned int off2 = gcDictOffsets[gc2];
+    for (int i = 0; i < elementsGc1; i++) {
+        for (int j = 0; j < elementsGc2; j++) {
+
             unsigned int d1 = gcDictData[off1 + i];
             unsigned int d2 = gcDictData[off2 + j];
             if (d1 == d2) {
                 sim++;
+                break;
             }
         }
     }
@@ -634,10 +637,10 @@ __global__ void compare2(unsigned short *gcMatrixData, unsigned int *gcDictData,
     int edge_type = 0;
 
 
-    for (int i = 0; i < elements; i++) {
-        for (int j = 0; j < elements; j++) {
+    for (int i = 0; i < elementsGc1; i++) {
+        for (int j = 0; j < elementsGc1; j++) {
 
-            if (i != j && gcMatrixData[gcMatrixOffsets[gc1] + i * elements + j] != 0) {
+            if (i != j && gcMatrixData[gcMatrixOffsets[gc1] + i * elementsGc1 + j] != 0) {
                 num_of_non_zero_edges++;
 
                 int position1 = i;
@@ -645,12 +648,43 @@ __global__ void compare2(unsigned short *gcMatrixData, unsigned int *gcDictData,
                 if (position1 == -1 || position2 == -1) {
                     continue;
                 }
-                int edge = gcMatrixData[gcMatrixOffsets[gc2] + position1 * elements +
-                                        position2];
+
+//                std::basic_string<char> &v1 = gcQuery.dict->at(i);
+                unsigned int vocVal1 = gcDictData[gcDictOffsets[gc1] + i];
+
+                
+//                std::basic_string<char> &v2 = gcQuery.dict->at(j);
+                unsigned int vocVal2 = gcDictData[gcDictOffsets[gc1] + j];
+
+                long transX = -1;
+                long transY = -1;
+                int endposition = gcDictOffsets[gc2] + elementsGc2;
+                for (int k = gcDictOffsets[gc2]; k <= endposition; k++){
+                    if (gcDictData[k] == vocVal1) {
+                        transX = k - gcDictOffsets[gc2];
+                    }
+                    if (gcDictData[k] == vocVal2) {
+                        transY = k - gcDictOffsets[gc2];
+                    }
+                    if (transX != -1 && transY != -1) {
+                        break;
+                    }
+                }
+
+                if (transX == -1 || transY == -1) {
+                    continue;
+                }
+
+                unsigned short edge = gcMatrixData[gcMatrixOffsets[gc2] + (transX) * elementsGc2 +
+                                                   (transY)];
+
+
+//                int edge = gcMatrixData[gcMatrixOffsets[gc2] + position1 * elements +
+//                                        position2];
                 if (edge != 0) {
                     edge_metric_count++;
                 }
-                if (edge == gcMatrixData[gcMatrixOffsets[gc1] + i * elements + j]) {
+                if (edge == gcMatrixData[gcMatrixOffsets[gc1] + i * elementsGc1 + j]) {
                     edge_type++;
                 }
 
@@ -660,7 +694,7 @@ __global__ void compare2(unsigned short *gcMatrixData, unsigned int *gcDictData,
     metrics[index].similarity = 0.0;
     metrics[index].recommendation = 0.0;
     metrics[index].inferencing = 0.0;
-    metrics[index].similarity = (float) sim / (float) elements;
+    metrics[index].similarity = (float) sim / (float) elementsGc1;
     metrics[index].idx = index;
     if (num_of_non_zero_edges > 0) {
         /*edge_metric*/ metrics[index].recommendation = (float) edge_metric_count / (float) num_of_non_zero_edges;
@@ -687,7 +721,9 @@ Metrics *demoCalculateGCsOnCuda(int numberOfGcs,
 
     int gridDim = ceil((float)numberOfGcs/1024.0);
 
-    compare2<<<gridDim, 1024>>>(d_gcMatrixData,
+    int block = (numberOfGcs < 1024) ? numberOfGcs : 1024;
+
+    compare2<<<gridDim, block>>>(d_gcMatrixData,
 //    compare2<<<numberOfGcs, 1>>>(d_gcMatrixData,
                                  d_gcDictData,
                                  d_gcMatrixOffsets,

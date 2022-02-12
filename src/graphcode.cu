@@ -349,9 +349,9 @@ int calculateSimilarityCuda(json gc1, json gc2, float *results) {
 
     int items = gc1Dictionary.size() * gc1Dictionary.size();
     if (G_DEBUG) {
-        for(int i = 0; i < items; i++) {
-            std::cout << "pos: " << i << " value: " << a[i] << std::endl;
-        }
+//        for(int i = 0; i < items; i++) {
+//            std::cout << "pos: " << i << " value: " << a[i] << std::endl;
+//        }
     }
 
     //cudaArray_t dst;

@@ -337,10 +337,11 @@ int findLargestDivisor(int n) {
 
 void writeMetricsToFile(Metrics *metrics, int n) {
     std::ofstream myfile;
-    myfile.open("example.csv", std::ios::trunc);
+    myfile.open("output.csv", std::ios::trunc);
     for (int i = 0; i < n; i++) {
         myfile << std::setprecision(5) << std::fixed;
-        myfile << metrics[i].similarity << "," << metrics[i].recommendation << "," << metrics[i].inferencing << ","
+        myfile << metrics[i].idx << "," << metrics[i].similarity << "," << metrics[i].recommendation << ","
+               << metrics[i].inferencing << ","
                << metrics[i].compareValue;
         if (i < n - 1) {
             myfile << std::endl;
@@ -352,10 +353,11 @@ void writeMetricsToFile(Metrics *metrics, int n) {
 
 void writeMetricsToFile(std::vector<Metrics> metrics) {
     std::ofstream myfile;
-    myfile.open("example.csv", std::ios::trunc);
+    myfile.open("output.csv", std::ios::trunc);
     for (int i = 0; i < metrics.size(); i++) {
         myfile << std::setprecision(5) << std::fixed;
-        myfile << metrics[i].similarity << "," << metrics[i].recommendation << "," << metrics[i].inferencing << ","
+        myfile << metrics[i].idx << "," << metrics[i].similarity << "," << metrics[i].recommendation << ","
+               << metrics[i].inferencing << ","
                << metrics[i].compareValue;
         if (i < metrics.size() - 1) {
             myfile << std::endl;
