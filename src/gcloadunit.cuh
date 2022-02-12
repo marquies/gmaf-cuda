@@ -90,7 +90,7 @@ private:
     int gcSize = 0;
     bool init = false;
     bool isInCudaMemory = false;
-    int lastOffset = 0;
+    long lastOffset = 0;
     int lastPosition = 0;
     unsigned int lastDictOffset = 0;
     unsigned int dictCounter = 0;
@@ -116,7 +116,7 @@ private:
 
     void appendMatrix(const unsigned short *mat1, unsigned long sizeofMat, unsigned short *gcMatrixData,
                       unsigned int *gcDictData, unsigned int *gcMatrixOffsets, unsigned int *gcMatrixSizes,
-                      int *lastOffset,
+                      long *lastOffset,
                       int position);
 
     int addVectorToDictMap(const std::vector<std::string> *vect);

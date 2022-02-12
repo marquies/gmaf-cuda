@@ -1,16 +1,10 @@
 //
 // Created by breucking on 19.01.22.
 //
-#include "queryhandler.cuh"
 #include "graphcode.h"
-#include <signal.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <experimental/filesystem>
-#include <thread>
 #include<string.h>
-#include <dirent.h>
-#include <unistd.h>
 #include <iostream>
 #include <algorithm>
 #include <fstream>
@@ -300,7 +294,7 @@ int GcLoadUnit::addVectorToDictMap(const std::vector<std::string> *vect) {
 
 void GcLoadUnit::appendMatrix(const unsigned short *mat1, unsigned long sizeofMat, unsigned short *gcMatrixData,
                               unsigned int *gcDictData, unsigned int *gcMatrixOffsets, unsigned int *gcMatrixSizes,
-                              int *lastOffset,
+                              long *lastOffset,
                               int position) {
     gcMatrixOffsets[position] = *lastOffset;
     gcMatrixSizes[position] = sizeofMat; // / sizeof (unsigned short )
