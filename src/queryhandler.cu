@@ -237,7 +237,7 @@ void CpuParallelTask1::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
         std::vector<GraphCode> codes = loadUnit->getGcCodes();
         auto start = std::chrono::system_clock::now();
 
-        std::vector<Metrics> results = demoCalculateCpuThreaded(codes.at(gcPosition), codes, 1);
+        std::vector<Metrics> results = demoCalculateCpuThreaded(codes.at(gcPosition), codes, 5);
 
         auto endOfCalc = std::chrono::system_clock::now();
 
