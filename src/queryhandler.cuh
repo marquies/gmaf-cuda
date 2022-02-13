@@ -9,14 +9,8 @@
 #include <stdlib.h>
 #include "gcloadunit.cuh"
 #include "helper.h"
+#include "algorithmstrategies.h"
 
-
-class Strategy {
-public:
-    virtual void performQuery(GcLoadUnit *loadUnit, int gcPosition) = 0;
-
-    virtual ~Strategy() = default;
-};
 
 class QueryHandler {
 
@@ -35,40 +29,6 @@ public:
 
 
 };
-
-
-class CudaTask1OnGpuMemory : public Strategy {
-public:
-    void performQuery(GcLoadUnit *loadUnit, int gcPosition) override;
-};
-
-class CudaTask1MemCopy : public Strategy {
-public:
-    void performQuery(GcLoadUnit *loadUnit, int gcPosition) override;
-};
-
-class CpuSequentialTask1 : public Strategy {
-public:
-    void performQuery(GcLoadUnit *loadUnit, int gcPosition) override;
-};
-class CpuParallelTask1 : public Strategy {
-public:
-    void performQuery(GcLoadUnit *loadUnit, int gcPosition) override;
-};
-
-class CudaTask2a : public Strategy {
-public:
-    void performQuery(GcLoadUnit *loadUnit, int gcPosition) override;
-};
-class CudaTask2ab : public Strategy {
-public:
-    void performQuery(GcLoadUnit *loadUnit, int gcPosition) override;
-};
-class CudaTask13 : public Strategy {
-public:
-    void performQuery(GcLoadUnit *loadUnit, int gcPosition) override;
-};
-
 
 
 #endif //GCSIM_QUERYHANDLER_CUH

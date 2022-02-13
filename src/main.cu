@@ -19,6 +19,7 @@ namespace fs = std::experimental::filesystem;
 #include "queryhandler.cuh"
 #include "helper.h"
 #include "cpualgorithms.h"
+#include "algorithmstrategies.h"
 
 
 
@@ -35,16 +36,7 @@ void printUsageAndExit(char *const *argv);
 bool mainLoop = true;
 
 
-enum Algorithms {
-    Algo_Invalid,
-    Algo_pc_cuda,
-    Algo_pc_cpu_seq,
-    Algo_pc_cpu_par,
-    Algo_pm_cuda,
-    Algo_pmr_cuda,
-    Algo_pcs_cuda
-    //others...
-};
+
 
 Algorithms resolveAlgorithm(std::string input);
 
@@ -127,8 +119,8 @@ int main_init(int argc, char *argv[]) {
 
     // Setup based on parameters
 
-    QueryHandler qh;
-    GcLoadUnit *loadUnit = NULL;
+    QueryHandler *qh = new QueryHandler();
+    GcLoadUnit *loadUnit;
 
 
     if (cvalue == NULL && !simulation) {
@@ -139,40 +131,17 @@ int main_init(int argc, char *argv[]) {
         printUsageAndExit(argv);
     }
 
-    switch (resolveAlgorithm(algorithm)) {
-        case Algo_pc_cuda:
-
-            qh.setStrategy(std::unique_ptr<Strategy>(new CudaTask1OnGpuMemory));
-            //qh.setStrategy(std::unique_ptr<Strategy>(new CudaTask1MemCopy));
-            loadUnit = new GcLoadUnit(GcLoadUnit::Modes::MODE_MEMORY_MAP);
-            break;
-        case Algo_pc_cpu_seq:
-            qh.setStrategy(std::unique_ptr<Strategy>(new CpuSequentialTask1));
-            loadUnit = new GcLoadUnit(GcLoadUnit::Modes::MODE_VECTOR_MAP);
-            break;
-        case Algo_pc_cpu_par:
-            qh.setStrategy(std::unique_ptr<Strategy>(new CpuParallelTask1));
-            loadUnit = new GcLoadUnit(GcLoadUnit::Modes::MODE_VECTOR_MAP);
-            break;
-        case Algo_pm_cuda:
-            qh.setStrategy(std::unique_ptr<Strategy>(new CudaTask2a));
-            loadUnit = new GcLoadUnit(GcLoadUnit::Modes::MODE_VECTOR_MAP);
-            break;
-        case Algo_pmr_cuda:
-            qh.setStrategy(std::unique_ptr<Strategy>(new CudaTask2ab));
-            loadUnit = new GcLoadUnit(GcLoadUnit::Modes::MODE_VECTOR_MAP);
-            break;
-        case Algo_pcs_cuda:
-            qh.setStrategy(std::unique_ptr<Strategy>(new CudaTask13));
-            loadUnit = new GcLoadUnit(GcLoadUnit::Modes::MODE_MEMORY_MAP);
-            break;
-
-        case Algo_Invalid:
-        default:
-            std::cout << "Unknown algorithm: " << algorithm << std::endl;
-            printUsageAndExit(argv);
-            break;
-
+//    Strategy* strategy;
+//    GcLoadUnit::Modes mode;
+    StrategyFactory sf;
+    try {
+        loadUnit = sf.setupStrategy(resolveAlgorithm(algorithm), qh);
+//        auto [mode, strategy] = sf.setupStrategy1(resolveAlgorithm(algorithm));
+//        loadUnit = new GcLoadUnit(mode);
+//        qh->setStrategy(std::unique_ptr<Strategy>(strategy));
+    } catch (std::runtime_error e) {
+        std::cout << "Unknown algorithm: " << algorithm << std::endl;
+        printUsageAndExit(argv);
     }
 
 
@@ -200,8 +169,8 @@ int main_init(int argc, char *argv[]) {
             if (str.compare("quit") == 0) {
                 mainLoop = false;
             } else {
-                if (qh.validate(str)) {
-                    qh.processQuery(str, loadUnit);
+                if (qh->validate(str)) {
+                    qh->processQuery(str, loadUnit);
                 } else {
                     std::cout << "Query invalid" << std::endl;
                 }

@@ -78,7 +78,7 @@ pkg_search_module(UUID REQUIRED uuid)
 #include_directories(${LIBUUID_INCLUDE_DIR})
 
 set( CMAKE_VERBOSE_MAKEFILE on )
-find_package(CUDA 8.1 REQUIRED)
+find_package(CUDA 10 REQUIRED)
 #find_package(Thrust REQUIRED CONFIG)
 #find_package(Thrust)
 SET(CUDA_SEPARABLE_COMPILATION ON)
@@ -124,7 +124,7 @@ set (CUDA_PROPAGATE_HOST_FLAGS OFF)
 #link_directories(src)
 
 #add_executable(gcsim ${Foo_SOURCES})
-add_library (GCS SHARED ${Foo_SOURCES} src/cudahelper.cu src/cudahelper.cuh src/helper.h src/helper.cpp src/queryhandler.cuh src/queryhandler.cu src/cpualgorithms.cpp src/cpualgorithms.h   )
+add_library (GCS SHARED ${Foo_SOURCES} src/cudahelper.cu src/cudahelper.cuh src/helper.h src/helper.cpp src/queryhandler.cuh src/queryhandler.cu src/cpualgorithms.cpp src/cpualgorithms.h src/algorithmstrategies.cpp src/algorithmstrategies.h)
 set_target_properties(GCS PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON)
 add_executable (gcsim main2.cpp)
