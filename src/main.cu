@@ -217,13 +217,14 @@ void handleNetworkInput(QueryHandler *qh, GcLoadUnit *loadUnit) {
         perror("listen");
         exit(EXIT_FAILURE);
     }
+    std::cout << "Started network daemon IP '" << inet_ntoa(address.sin_addr) << "' Port: '" << port << "'"
+              << std::endl;
     if ((new_socket = accept(server_fd, (struct sockaddr *) &address,
                              (socklen_t *) &addrlen)) < 0) {
         perror("accept");
         exit(EXIT_FAILURE);
     }
-    std::cout << "Started network daemon IP '" << inet_ntoa(address.sin_addr) << "' Port: '" << port << "'"
-              << std::endl;
+
 
     do {
         char buffer[1024] = {0};
