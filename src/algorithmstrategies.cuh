@@ -2,8 +2,8 @@
 // Created by breucking on 13.02.22.
 //
 
-#ifndef GCSIM_ALGORITHMSTRATEGIES_H
-#define GCSIM_ALGORITHMSTRATEGIES_H
+#ifndef GCSIM_ALGORITHMSTRATEGIES_CUH
+#define GCSIM_ALGORITHMSTRATEGIES_CUH
 
 
 #include <iostream>
@@ -74,4 +74,4 @@ public:
     void performQuery(GcLoadUnit *loadUnit, int gcPosition) override;
 };
 
-#endif //GCSIM_ALGORITHMSTRATEGIES_H
+#endif //GCSIM_ALGORITHMSTRATEGIES_CUH

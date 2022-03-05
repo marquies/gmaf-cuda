@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include "gcloadunit.cuh"
 #include "helper.h"
-#include "algorithmstrategies.h"
+#include "algorithmstrategies.cuh"
 
 
 class QueryHandler {

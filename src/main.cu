@@ -25,7 +25,7 @@ namespace fs = std::experimental::filesystem;
 #include "gcloadunit.cuh"
 #include "queryhandler.cuh"
 #include "helper.h"
-#include "algorithmstrategies.h"
+#include "algorithmstrategies.cuh"
 
 
 

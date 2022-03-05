@@ -9,7 +9,7 @@
 #include "gcloadunit.cuh"
 #include "queryhandler.cuh"
 #include <regex>
-#include "algorithmstrategies.h"
+#include "algorithmstrategies.cuh"
 
 bool comp(Metrics e1, Metrics e2);
 
