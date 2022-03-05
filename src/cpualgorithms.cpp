@@ -3,7 +3,6 @@
 //
 
 #include "helper.h"
-#include "gcloadunit.cuh"
 #include <stdlib.h>
 #include <thread>
 #include<string.h>
@@ -151,13 +150,13 @@ Metrics demoCalculateSimilaritySequentialOrdered(json gc1, json gc2) {
     long items1;
     unsigned short int *matrix1;
 
-    convertGc2Cuda(gc1, gc1Dictionary, numberOfElements1, items1, matrix1);
+    convertJsonGc2GcDataStructure(gc1, gc1Dictionary, numberOfElements1, items1, matrix1);
 
     json gc2Dictionary;
     int numberOfElements2;
     long items2;
     unsigned short int *matrix2;
-    convertGc2Cuda(gc2, gc2Dictionary, numberOfElements2, items2, matrix2);
+    convertJsonGc2GcDataStructure(gc2, gc2Dictionary, numberOfElements2, items2, matrix2);
 
     std::vector<std::basic_string<char>> dict2;
     for (const auto &item2: gc2Dictionary.items()) {
