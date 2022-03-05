@@ -154,7 +154,7 @@ void testConvertGc4Cuda() {
     int numberOfElements1;
     long items1;
     unsigned short *inputMatrix1;
-    convertGc2Cuda(gcq3, dict, numberOfElements1, items1, inputMatrix1);
+    convertJsonGc2GcDataStructure(gcq3, dict, numberOfElements1, items1, inputMatrix1);
 
     assert(inputMatrix1[0] == 1);
     assert(inputMatrix1[1] == 1);

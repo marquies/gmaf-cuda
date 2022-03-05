@@ -365,3 +365,24 @@ void writeMetricsToFile(std::vector<Metrics> metrics) {
     }
     myfile.close();
 }
+
+
+void convertJsonGc2GcDataStructure(const json &gcq, json &gc1Dictionary, int &numberOfElements, long &items,
+                                   unsigned short int *&inputMatrix) {
+    gc1Dictionary = gcq["dictionary"];
+    numberOfElements = gc1Dictionary.size();
+    items = numberOfElements * numberOfElements;// Transform to data structures for calculations
+    int *matrix1;
+    matrix1 = (int *) malloc(sizeof(int) * numberOfElements * numberOfElements);
+
+    convertDict2Matrix(numberOfElements, matrix1, gcq["matrix"]);
+
+    inputMatrix = (unsigned short int *) malloc(sizeof(unsigned short int) * numberOfElements * numberOfElements);
+
+    int count = 0;
+    for (int i = 0; i < numberOfElements; i++)
+        for (int j = 0; j < numberOfElements; j++) {
+            inputMatrix[count++] = matrix1[i * numberOfElements + j]; //matrix1[i][j];
+        }
+    free(matrix1);
+}

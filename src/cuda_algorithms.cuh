@@ -18,8 +18,6 @@ typedef struct GraphCode2 {
 
 
 
-void convertGc2Cuda(const json &gcq, json &gc1Dictionary, int &numberOfElements, long &items,
-                    unsigned short int *&inputMatrix);
 
 /**
  * Calculates a launch config.

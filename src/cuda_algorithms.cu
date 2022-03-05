@@ -412,14 +412,14 @@ Metrics demoCudaLinearMatrixMemory(json json1, json json2) {
     long items1;
     unsigned short int *inputMatrix1;
 
-    convertGc2Cuda(json1, gc1Dictionary, numberOfElements1, items1, inputMatrix1);
+    convertJsonGc2GcDataStructure(json1, gc1Dictionary, numberOfElements1, items1, inputMatrix1);
 
 
     json gc2Dictionary;
     int numberOfElements2;
     long items2;
     unsigned short int *inputMatrix2;
-    convertGc2Cuda(json2, gc2Dictionary, numberOfElements2, items2, inputMatrix2);
+    convertJsonGc2GcDataStructure(json2, gc2Dictionary, numberOfElements2, items2, inputMatrix2);
 
     // Prep for cuda
 
@@ -577,26 +577,6 @@ void calcKernelLaunchConfig(int width, dim3 &block, dim3 &grid) {
         block = dim3(width, width);
         grid = (1);
     }
-}
-
-void convertGc2Cuda(const json &gcq, json &gc1Dictionary, int &numberOfElements, long &items,
-                    unsigned short int *&inputMatrix) {
-    gc1Dictionary = gcq["dictionary"];
-    numberOfElements = gc1Dictionary.size();
-    items = numberOfElements * numberOfElements;// Transform to data structures for calculations
-    int *matrix1;
-    matrix1 = (int *) malloc(sizeof(int) * numberOfElements * numberOfElements);
-
-    convertDict2Matrix(numberOfElements, matrix1, gcq["matrix"]);
-
-    inputMatrix = (unsigned short int *) malloc(sizeof(unsigned short int) * numberOfElements * numberOfElements);
-
-    int count = 0;
-    for (int i = 0; i < numberOfElements; i++)
-        for (int j = 0; j < numberOfElements; j++) {
-            inputMatrix[count++] = matrix1[i * numberOfElements + j]; //matrix1[i][j];
-        }
-    free(matrix1);
 }
 
 
