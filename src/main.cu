@@ -178,7 +178,8 @@ int main_init(int argc, char *argv[]) {
 }
 
 void handleNetworkInput(QueryHandler *qh, GcLoadUnit *loadUnit) {
-    int server_fd, new_socket, valread;
+    int server_fd, new_socket;
+    ssize_t valread;
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
@@ -220,12 +221,13 @@ void handleNetworkInput(QueryHandler *qh, GcLoadUnit *loadUnit) {
         exit(EXIT_FAILURE);
     }
 
+    const int bufferSize = 1024;
 
     do {
-        char buffer[1024] = {0};
+        char buffer[bufferSize] = {0};
         send(new_socket, hello, strlen(hello), 0);
-        valread = read(new_socket, buffer, 1024);
-        if (/*fgets(buf, sizeof(buf), stdin) != NULL && */ mainLoop) {
+        valread = read(new_socket, buffer, ssize_t(bufferSize));
+        if (valread > 0 && mainLoop) {
             printf("Got : %s\n", buffer);
             std::string str(buffer);
             str.erase(std::remove(str.begin(), str.end(), '\r'), str.end());
