@@ -17,9 +17,7 @@ GcLoadUnit *StrategyFactory::setupStrategy(Algorithms algorithm, QueryHandler *q
     GcLoadUnit *loadUnit;
     switch (algorithm) {
         case Algo_pc_cuda:
-
             qh->setStrategy(std::unique_ptr<Strategy>(new CudaTask1OnGpuMemory));
-            //qh.setStrategy(std::unique_ptr<Strategy>(new CudaTask1MemCopy));
             loadUnit = new GcLoadUnit(GcLoadUnit::Modes::MODE_MEMORY_MAP);
             break;
         case Algo_pc_cpu_seq:
