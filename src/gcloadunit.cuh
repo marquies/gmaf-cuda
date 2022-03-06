@@ -13,7 +13,7 @@
 
 #include <vector>
 #include <string>
-#include "cuda_algorithms.cuh"
+#include "cudaalgorithms.cuh"
 
 class GcLoadUnit {
 

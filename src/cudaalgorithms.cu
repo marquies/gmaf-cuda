@@ -5,7 +5,7 @@
 #include <time.h>
 #include <c++/9/chrono>
 #include <string>
-#include "cuda_algorithms.cuh"
+#include "cudaalgorithms.cuh"
 
 #include <cstdlib>
 

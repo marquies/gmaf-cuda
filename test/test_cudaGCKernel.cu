@@ -3,7 +3,7 @@
 //
 
 #include "testhelper.h"
-#include "../src/cuda_algorithms.cuh"
+#include "../src/cudaalgorithms.cuh"
 #include <cuda_runtime.h>
 #include <uuid/uuid.h>
 #include <string>
@@ -13,7 +13,7 @@
 #include <cudahelper.cuh>
 #include <c++/9/chrono>
 #include "helper.h"
-#include "cuda_algorithms.cuh"
+#include "cudaalgorithms.cuh"
 #include <time.h>
 #include <stdlib.h>
 #include <gcloadunit.cuh>

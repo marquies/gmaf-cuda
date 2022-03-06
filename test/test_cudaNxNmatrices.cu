@@ -6,7 +6,7 @@
 
 
 #include "../src/graphcode.h"
-#include "../src/cuda_algorithms.cuh"
+#include "../src/cudaalgorithms.cuh"
 
 #include "testhelper.h"
 

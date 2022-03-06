@@ -5,7 +5,7 @@
 
 #include "testhelper.h"
 
-#include <cuda_algorithms.cuh>
+#include <cudaalgorithms.cuh>
 
 using json = nlohmann::json;
 

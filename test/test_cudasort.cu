@@ -4,7 +4,7 @@
 #include <c++/9/iostream>
 #include <helper.h>
 #include <CUDA-Quicksort.h>
-#include "../src/cuda_algorithms.cuh"
+#include "../src/cudaalgorithms.cuh"
 #include "../src/cudahelper.cuh"
 
 
