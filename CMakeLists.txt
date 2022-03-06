@@ -96,9 +96,9 @@ SET(CMAKE_CUDA_ARCHITECTURES 35)
 
 SET(GCC_COVERAGE_LINK_FLAGS    "-lstdc++fs -mavx2 -msse4.1 -march=native")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=nehalem")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1 -msse4.2")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=nehalem")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1 -msse4.2")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -Wall -Wextra -Wconversion -pedantic ")
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O1")
