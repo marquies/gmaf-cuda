@@ -223,11 +223,11 @@ int calculateSimilaritySequential(json gc1, json gc2, float *results) {
 
 
 
-    int matrix1[gc1Dictionary.size()][gc1Dictionary.size()];
-    convertDict2Matrix(gc1Dictionary.size(), (int *) matrix1, gc1["matrix"]);
+    unsigned short matrix1[gc1Dictionary.size()][gc1Dictionary.size()];
+    convertDict2Matrix(gc1Dictionary.size(), (unsigned short *) matrix1, gc1["matrix"]);
 
-    int matrix2[gc2Dictionary.size()][gc2Dictionary.size()];
-    convertDict2Matrix(gc2Dictionary.size(), (int *) matrix2, gc2["matrix"]);
+    unsigned short matrix2[gc2Dictionary.size()][gc2Dictionary.size()];
+    convertDict2Matrix(gc2Dictionary.size(), (unsigned short *) matrix2, gc2["matrix"]);
 
 
     std::vector<std::string> dict2;
@@ -298,22 +298,16 @@ int calculateSimilarityCuda(json gc1, json gc2, float *results) {
     json gc1Dictionary = gc1["dictionary"];
     json gc2Dictionary = gc2["dictionary"];
 
-
-
     std::string gc1Dict[gc1Dictionary.size()];
 
     int n = 0;
-
     int sim = 0;
 
+    unsigned short matrix1[gc1Dictionary.size()][gc1Dictionary.size()];
+    convertDict2Matrix(gc1Dictionary.size(), (unsigned short *) matrix1, gc1["matrix"]);
 
-
-
-    int matrix1[gc1Dictionary.size()][gc1Dictionary.size()];
-    convertDict2Matrix(gc1Dictionary.size(), (int *) matrix1, gc1["matrix"]);
-
-    int matrix2[gc2Dictionary.size()][gc2Dictionary.size()];
-    convertDict2Matrix(gc2Dictionary.size(), (int *) matrix2, gc2["matrix"]);
+    unsigned short matrix2[gc2Dictionary.size()][gc2Dictionary.size()];
+    convertDict2Matrix(gc2Dictionary.size(), (unsigned short *) matrix2, gc2["matrix"]);
 
 
 

@@ -29,7 +29,7 @@ demoCalculateCpuThreaded(GraphCode &gcQuery, std::vector<GraphCode> &compares, i
  * @param end end position in the vector
  * @param metrics return vector for the calculated metrics (need to be same size than compares)
  */
-void calculateSimilarityV(GraphCode *gcQuery, std::vector<GraphCode> *compares, int start, int end,
+void calculateSimilarityV(GraphCode *gcQuery, std::vector<GraphCode> *compares, unsigned long start, unsigned long end,
                           std::vector<Metrics> *metrics, int index = 0);
 
 /**

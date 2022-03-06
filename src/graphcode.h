@@ -18,7 +18,7 @@ typedef struct GraphCode {
 using json = nlohmann::json;
 
 struct Metrics {
-    unsigned  int idx;
+    unsigned long idx;
     float similarity;
     float recommendation;
     float inferencing;

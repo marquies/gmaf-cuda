@@ -408,16 +408,16 @@ Metrics demoCudaLinearMatrixMemory(json json1, json json2) {
     //checkNxNConstraint(json1, json2);
 
     json gc1Dictionary;
-    int numberOfElements1;
-    long items1;
+    unsigned long numberOfElements1;
+    unsigned long items1;
     unsigned short int *inputMatrix1;
 
     convertJsonGc2GcDataStructure(json1, gc1Dictionary, numberOfElements1, items1, inputMatrix1);
 
 
     json gc2Dictionary;
-    int numberOfElements2;
-    long items2;
+    unsigned long numberOfElements2;
+    unsigned long items2;
     unsigned short int *inputMatrix2;
     convertJsonGc2GcDataStructure(json2, gc2Dictionary, numberOfElements2, items2, inputMatrix2);
 

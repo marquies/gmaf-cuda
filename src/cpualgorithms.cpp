@@ -13,14 +13,14 @@
 std::vector<Metrics>
 demoCalculateCpuThreaded(GraphCode &gcQuery, std::vector<GraphCode> &compares, int numberOfThreads) {
 
-    int x = compares.size() / numberOfThreads;
+    unsigned long x = compares.size() / numberOfThreads;
     std::vector<std::thread> threads;
 
     std::vector<Metrics> metrics = std::vector<Metrics>(compares.size());
 
     for (int i = 0; i < numberOfThreads; i++) {
-        int start = i * x;
-        int end = i == numberOfThreads - 1 ? compares.size() - 1 : start + x -1; //(i + 1) * x;
+        unsigned long start = i * x;
+        unsigned long end = i == numberOfThreads - 1 ? compares.size() - 1 : start + x -1; //(i + 1) * x;
         threads.push_back(std::thread(calculateSimilarityV, &compares.at(0), &compares, start, end, &metrics, i));
     }
 
@@ -32,7 +32,7 @@ demoCalculateCpuThreaded(GraphCode &gcQuery, std::vector<GraphCode> &compares, i
 
 
 void
-calculateSimilarityV(GraphCode *gcQuery, std::vector<GraphCode> *compares, int start, int end,
+calculateSimilarityV(GraphCode *gcQuery, std::vector<GraphCode> *compares, unsigned long start, unsigned long end,
                      std::vector<Metrics> *metrics, int index) {
     if (compares == NULL) {
         std::cout << "Argument compare is NULL" << std::endl;
@@ -40,7 +40,7 @@ calculateSimilarityV(GraphCode *gcQuery, std::vector<GraphCode> *compares, int s
     }
 
 
-    for (int i = start; i <= end; i++) {
+    for (unsigned long i = start; i <= end; i++) {
 
         if (G_DEBUG)
             std::cout << "Idx " << index << " i " << i << " limit(" << end << ")" << std::endl;
@@ -82,14 +82,15 @@ Metrics demoCalculateSimilaritySequentialOrdered(GraphCode gcQuery, GraphCode gc
     int edge_metric_count = 0;
     int edge_type = 0;
 
-    for (int i = 0; i < gcQuery.dict->size(); i++) {
-        for (int j = 0; j < gcQuery.dict->size(); j++) {
+    for (unsigned long i = 0; i < gcQuery.dict->size(); i++) {
+        for (unsigned long j = 0; j < gcQuery.dict->size(); j++) {
 
             if (i != j && matrix1[i * gcQuery.dict->size() + j] != 0) {
                 num_of_non_zero_edges++;
 
-                int position1 = i;
-                int position2 = j;
+                unsigned long position1 = i;
+                unsigned long position2 = j;
+                //TODO: Was soll das?
                 if (position1 == -1 || position2 == -1) {
                     continue;
                 }
@@ -146,15 +147,15 @@ Metrics demoCalculateSimilaritySequentialOrdered(json gc1, json gc2) {
     int sim = 0;
 
     json gc1Dictionary;
-    int numberOfElements1;
-    long items1;
+    unsigned long numberOfElements1;
+    unsigned long items1;
     unsigned short int *matrix1;
 
     convertJsonGc2GcDataStructure(gc1, gc1Dictionary, numberOfElements1, items1, matrix1);
 
     json gc2Dictionary;
-    int numberOfElements2;
-    long items2;
+    unsigned long numberOfElements2;
+    unsigned long items2;
     unsigned short int *matrix2;
     convertJsonGc2GcDataStructure(gc2, gc2Dictionary, numberOfElements2, items2, matrix2);
 
@@ -179,14 +180,15 @@ Metrics demoCalculateSimilaritySequentialOrdered(json gc1, json gc2) {
     int edge_metric_count = 0;
     int edge_type = 0;
 
-    for (int i = 0; i < gc1Dictionary.size(); i++) {
-        for (int j = 0; j < gc1Dictionary.size(); j++) {
+    for (unsigned long i = 0; i < gc1Dictionary.size(); i++) {
+        for (unsigned long j = 0; j < gc1Dictionary.size(); j++) {
 
             if (i != j && matrix1[i * gc1Dictionary.size() + j] != 0) {
                 num_of_non_zero_edges++;
 
-                int position1 = i;
-                int position2 = j;
+                unsigned long position1 = i;
+                unsigned long position2 = j;
+                // TODO: Was soll das?
                 if (position1 == -1 || position2 == -1) {
                     continue;
                 }

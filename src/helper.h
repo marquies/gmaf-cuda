@@ -13,7 +13,7 @@ extern bool G_DEBUG;
 extern bool G_BENCHMARK;
 extern short G_BENCHMARK_REPEAT;
 
-void convertDict2Matrix(int size, int *destMatrix, nlohmann::json jsonMatrix);
+void convertDict2Matrix(unsigned long size, unsigned short *destMatrix, nlohmann::json jsonMatrix);
 
 //void convertDict2Matrix(int size, int **destMatrix, nlohmann::json jsonMatrix);
 bool isPrime(int number);
@@ -34,7 +34,7 @@ void writeMetricsToFile(Metrics *metrics, int n);
 
 void writeMetricsToFile(std::vector<Metrics> metrics);
 
-void convertJsonGc2GcDataStructure(const json &gcq, json &gc1Dictionary, int &numberOfElements, long &items,
+void convertJsonGc2GcDataStructure(const json &gcq, json &gc1Dictionary, unsigned long &numberOfElements, unsigned long &items,
                                    unsigned short int *&inputMatrix);
 
 

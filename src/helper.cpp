@@ -12,7 +12,7 @@ bool G_DEBUG = false;
 bool G_BENCHMARK = false;
 short G_BENCHMARK_REPEAT = 10;
 
-void convertDict2Matrix(int size, int *destMatrix, nlohmann::json jsonMatrix) {
+void convertDict2Matrix(unsigned long size, unsigned short *destMatrix, nlohmann::json jsonMatrix) {
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
 
@@ -367,13 +367,13 @@ void writeMetricsToFile(std::vector<Metrics> metrics) {
 }
 
 
-void convertJsonGc2GcDataStructure(const json &gcq, json &gc1Dictionary, int &numberOfElements, long &items,
+void convertJsonGc2GcDataStructure(const json &gcq, json &gc1Dictionary, unsigned long &numberOfElements, unsigned long &items,
                                    unsigned short int *&inputMatrix) {
     gc1Dictionary = gcq["dictionary"];
     numberOfElements = gc1Dictionary.size();
     items = numberOfElements * numberOfElements;// Transform to data structures for calculations
-    int *matrix1;
-    matrix1 = (int *) malloc(sizeof(int) * numberOfElements * numberOfElements);
+    unsigned short *matrix1;
+    matrix1 = (unsigned short *) malloc(sizeof(unsigned short) * numberOfElements * numberOfElements);
 
     convertDict2Matrix(numberOfElements, matrix1, gcq["matrix"]);
 

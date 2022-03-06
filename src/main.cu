@@ -145,14 +145,9 @@ int main_init(int argc, char *argv[]) {
         printUsageAndExit(argv);
     }
 
-//    Strategy* strategy;
-//    GcLoadUnit::Modes mode;
     StrategyFactory sf;
     try {
         loadUnit = sf.setupStrategy(resolveAlgorithm(algorithm), qh);
-//        auto [mode, strategy] = sf.setupStrategy1(resolveAlgorithm(algorithm));
-//        loadUnit = new GcLoadUnit(mode);
-//        qh->setStrategy(std::unique_ptr<Strategy>(strategy));
     } catch (std::runtime_error e) {
         std::cout << "Unknown algorithm: " << algorithm << std::endl;
         printUsageAndExit(argv);
@@ -187,9 +182,9 @@ void handleNetworkInput(QueryHandler *qh, GcLoadUnit *loadUnit) {
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
-    int port = 4711;
+    unsigned short port = 4711;
 
-    char *hello = "Enter Query: ";
+    const char *hello = "Enter Query: ";
 
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
@@ -241,7 +236,7 @@ void handleNetworkInput(QueryHandler *qh, GcLoadUnit *loadUnit) {
                 if (qh->validate(str)) {
                     qh->processQuery(str, loadUnit);
                 } else {
-                    char *msg = "Query invalid";
+                    const char *msg = "Query invalid";
                     send(new_socket, msg, strlen(msg), 0);
                     std::cout << msg << std::endl;
                 }
