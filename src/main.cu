@@ -45,7 +45,7 @@ bool mainLoop = true;
 Algorithms resolveAlgorithm(std::string input);
 
 
-void handleConsuleInput(QueryHandler *qh, GcLoadUnit *loadUnit);
+void handleConsoleInput(QueryHandler *qh, GcLoadUnit *loadUnit);
 
 void handleNetworkInput(QueryHandler *qh, GcLoadUnit *loadUnit);
 
@@ -167,7 +167,7 @@ int main_init(int argc, char *argv[]) {
         handleNetworkInput(qh, loadUnit);
 
     } else {
-        handleConsuleInput(qh, loadUnit);
+        handleConsoleInput(qh, loadUnit);
     }
     signal(SIGINT, old); /* restore initial handler */
 
@@ -247,14 +247,12 @@ void handleNetworkInput(QueryHandler *qh, GcLoadUnit *loadUnit) {
     } while (mainLoop);
 }
 
-void handleConsuleInput(QueryHandler *qh, GcLoadUnit *loadUnit) {
+void handleConsoleInput(QueryHandler *qh, GcLoadUnit *loadUnit) {
     std::string queryString;
 
     char buf[256];
 
 
-    // Enable to work without query
-//qh.processQuery("Query by Example: 1.gc", *loadUnit);
     do {
         std::cout << "Enter Query: " << std::endl;
         if (fgets(buf, sizeof(buf), stdin) != NULL && mainLoop) {
