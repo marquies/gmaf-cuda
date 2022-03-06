@@ -379,25 +379,13 @@ GraphCode generateTestDataGc(int n) {
         }
     }
 
-
-//DICT.insert( DICT.end(), DICT2.begin(), DICT2.end() );
-
-
-
-
     std::vector<std::string> *newVec = new std::vector<std::string>(DICT.begin(), DICT.begin() + n);
-    //extractElements(DICT, subA, n);
-
-    //std::vector<std::vector<int>> data;
     unsigned short *data = (unsigned short *) malloc(sizeof(int) * n * n);
 
     for (int i = 0; i < n; i++) {
-        //std::vector<int> x;
-        //data.push_back(x);
         for (int j = 0; j < n; j++) {
 
             if (i == j) {
-                //data[i][j] = 1;
                 data[i * n + j] = 1;
             } else {
                 data[i * n + j] = i + j % 2;
