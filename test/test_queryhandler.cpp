@@ -136,9 +136,11 @@ void testSelectionSort() {
 
 }
 
+
 void testSimpleQuery() {
     GcLoadUnit *loadUnit = new GcLoadUnit(GcLoadUnit::MODE_MEMORY_MAP);
     QueryHandler queryHandler;
+    queryHandler.setStrategy(std::unique_ptr<Strategy>(new CpuSequentialTask1));
     loadUnit->loadArtificialGcs(10, 1);
     int value = queryHandler.processQuery("Query by Example: 6.gc", loadUnit);
     assert(value == 0);

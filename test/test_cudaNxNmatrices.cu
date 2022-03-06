@@ -151,8 +151,8 @@ void testConvertGc4Cuda() {
                       {0, 1, 1}};
 
     json dict;
-    int numberOfElements1;
-    long items1;
+    unsigned long  numberOfElements1;
+    unsigned long items1;
     unsigned short *inputMatrix1;
     convertJsonGc2GcDataStructure(gcq3, dict, numberOfElements1, items1, inputMatrix1);
 
