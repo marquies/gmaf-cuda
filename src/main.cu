@@ -28,27 +28,39 @@ namespace fs = std::experimental::filesystem;
 #include "algorithmstrategies.cuh"
 
 
-
-//#include <thrust/host_vector.h>
-//#include <thrust/device_vector.h>
-
-
-
-void runSequential(std::vector<json> &arr, gmaf::GraphCode gc);
-
-
-void printUsageAndExit(char *const *argv);
-
 bool mainLoop = true;
 
+/**
+ * Print the usage text information to standard out.
+ * @param argv argument values handed over to the program
+ */
+void printUsageAndExit(char *const *argv);
 
+/**
+ * Evaluates the algorithm based on command line argument.
+ * @param input value of a command line argument
+ * @return the algorithm or Algorithms::Algo_Invalid if not resolved.
+ */
 Algorithms resolveAlgorithm(std::string input);
 
-
+/**
+ * Handling input in console mode.
+ * @param qh initialized QueryHandler
+ * @param loadUnit initialized load unit
+ */
 void handleConsoleInput(QueryHandler *qh, GcLoadUnit *loadUnit);
 
+/**
+ * Handling input in network mode.
+ * @param qh initialized QueryHandler
+ * @param loadUnit initialized load unit
+ */
 void handleNetworkInput(QueryHandler *qh, GcLoadUnit *loadUnit);
 
+/**
+ * Handler for CTRL+C input in console mode.
+ * @param sig
+ */
 void ctrl_c(int sig) {
     fprintf(stderr, "Ctrl-C caught - Please press enter\n");
     mainLoop = false;
@@ -88,9 +100,9 @@ void printUsageAndExit(char *const *argv) {
 
 /**
  * Main function of the program.
- * @param argc
- * @param argv
- * @return
+ * @param argc command line arguments
+ * @param argv command line argument values
+ * @return 0 if successful
  */
 int main_init(int argc, char *argv[]) {
 
