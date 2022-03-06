@@ -1,19 +1,8 @@
 #include <iostream>
 #include <unistd.h>
-#include <fstream>
-
-#include <dirent.h>
-
-#include<string.h>
-#include <thread>
-
-#include <experimental/filesystem>
-
-namespace fs = std::experimental::filesystem;
-
+#include <string.h>
 #include <stdio.h>
 #include <signal.h>
-
 #include <cstdlib>
 #include <memory>
 #include <string>
