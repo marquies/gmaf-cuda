@@ -5,8 +5,6 @@
 
 #include "testhelper.h"
 
-#include <cudaalgorithms.cuh>
-
 using json = nlohmann::json;
 
 /*
@@ -361,16 +359,28 @@ json generateTestData(int n) {
     return gcq;
 }
 
+/**
+ * Test helper to compare double values.
+ * @param a comperand
+ * @param b comparand
+ * @return true if equal unti limit of EPSILON.
+ */
 bool AreSame(double a, double b) {
     return fabs(a - b) < EPSILON;
 }
 
-GraphCode generateTestDataGc(int n) {
+/**
+ * Generated a Graph Code for testing.
+ *
+ * @param dimension the dimension of the word list and matrix
+ * @return the generated Graph Code
+ */
+GraphCode generateTestDataGc(int dimension) {
 
-    if (n > DICT.size()) {
+    if (dimension > DICT.size()) {
 
         int count = 0;
-        for(int i = 0; count < n; i++) {
+        for(int i = 0; count < dimension; i++) {
             for (std::string str: DICT2) {
                 DICT.push_back(str + std::to_string(i));
                 count++;
@@ -379,16 +389,16 @@ GraphCode generateTestDataGc(int n) {
         }
     }
 
-    std::vector<std::string> *newVec = new std::vector<std::string>(DICT.begin(), DICT.begin() + n);
-    unsigned short *data = (unsigned short *) malloc(sizeof(int) * n * n);
+    std::vector<std::string> *newVec = new std::vector<std::string>(DICT.begin(), DICT.begin() + dimension);
+    unsigned short *data = (unsigned short *) malloc(sizeof(int) * dimension * dimension);
 
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
+    for (int i = 0; i < dimension; i++) {
+        for (int j = 0; j < dimension; j++) {
 
             if (i == j) {
-                data[i * n + j] = 1;
+                data[i * dimension + j] = 1;
             } else {
-                data[i * n + j] = i + j % 2;
+                data[i * dimension + j] = i + j % 2;
             }
         }
     }

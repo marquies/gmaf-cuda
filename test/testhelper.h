@@ -18,7 +18,7 @@ extern double EPSILON;
  */
 json generateTestData(int n);
 
-GraphCode generateTestDataGc(int n);
+GraphCode generateTestDataGc(int dimension);
 
 bool AreSame(double a, double b);
 
