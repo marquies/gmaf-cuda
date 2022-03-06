@@ -26,13 +26,33 @@ void testMassTest() {
     }
 
 
-    const std::vector<Metrics> &results = demoCalculateCpuThreaded(arr.at(1), arr, 4);
+    const std::vector<Metrics> &results1 = demoCalculateCpuThreaded(arr.at(1), arr, 4);
 
-    assert(results.size() == arr.size());
+    assert(results1.size() == arr.size());
 
     for (int i = 0; i < 1000; i++) {
-        assert(results.at(i).idx == i);
+        assert(results1.at(i).idx == i);
     }
+
+    const GraphCode &misfit = generateTestDataGc(9);
+    arr.push_back(misfit);
+    const std::vector<Metrics> &results2 = demoCalculateCpuThreaded(arr.at(1000), arr, 4);
+
+    assert(results2.size() == arr.size());
+    assert(results2.at(1000).idx == 1000);
+    assert(results2.at(1000).inferencing == 1);
+
+
+    for (int i = 0; i < 1000; i++) {
+        assert(results2.at(i).idx == i);
+    }
+
+    const std::vector<Metrics> &results3 = demoCalculateCpuThreaded(arr.at(0), arr, 4);
+
+    assert(results3.size() == arr.size());
+    assert(results3.at(1000).idx == 1000);
+    assert(results3.at(1000).inferencing != 0);
+
 }
 
 void testBasic() {
@@ -57,7 +77,7 @@ void testBasic() {
     arr.push_back(m);
     arr.push_back(m);
 
-    const std::vector<Metrics> &results = demoCalculateCpuThreaded(arr.at(1), arr, 2);
+    const std::vector<Metrics> &results = demoCalculateCpuThreaded(arr.at(0), arr, 2);
 
     assert(results.size() == arr.size());
 

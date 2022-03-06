@@ -21,7 +21,7 @@ demoCalculateCpuThreaded(GraphCode &gcQuery, std::vector<GraphCode> &compares, i
     for (int i = 0; i < numberOfThreads; i++) {
         unsigned long start = i * x;
         unsigned long end = i == numberOfThreads - 1 ? compares.size() - 1 : start + x -1; //(i + 1) * x;
-        threads.push_back(std::thread(calculateSimilarityV, &compares.at(0), &compares, start, end, &metrics, i));
+        threads.push_back(std::thread(calculateSimilarityV, &gcQuery, &compares, start, end, &metrics, i));
     }
 
     for (auto &th: threads) {
