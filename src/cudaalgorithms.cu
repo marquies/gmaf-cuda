@@ -580,9 +580,9 @@ void calcKernelLaunchConfig(int width, dim3 &block, dim3 &grid) {
 }
 
 
-__global__ void compare2(unsigned short *gcMatrixData, unsigned int *gcDictData, unsigned int *gcMatrixOffsets,
-                         unsigned int *gcMatrixSizes, unsigned int *gcDictOffsets, int gcQuery, int numberOfGcs,
-                         Metrics *metrics) {
+__global__ void cudaGcCompute(unsigned short *gcMatrixData, unsigned int *gcDictData, unsigned int *gcMatrixOffsets,
+                              unsigned int *gcMatrixSizes, unsigned int *gcDictOffsets, int gcQuery, int numberOfGcs,
+                              Metrics *metrics) {
 //    int index = blockIdx.x;
     //int /*offset*/ tid = x + y * blockDim.x * gridDim.x;
     //int x = threadIdx.x + blockIdx.x * blockDim.x
@@ -703,15 +703,15 @@ Metrics *demoCalculateGCsOnCuda(int numberOfGcs,
 
     int block = (numberOfGcs < 1024) ? numberOfGcs : 1024;
 
-    compare2<<<gridDim, block>>>(d_gcMatrixData,
+    cudaGcCompute<<<gridDim, block>>>(d_gcMatrixData,
 //    compare2<<<numberOfGcs, 1>>>(d_gcMatrixData,
-                                 d_gcDictData,
-                                 d_gcMatrixOffsets,
-                                 d_gcMatrixSizes,
-                                 d_gcDictOffsets,
-                                 gcQueryPosition,
-                                 numberOfGcs,
-                                 d_result);
+                                      d_gcDictData,
+                                      d_gcMatrixOffsets,
+                                      d_gcMatrixSizes,
+                                      d_gcDictOffsets,
+                                      gcQueryPosition,
+                                      numberOfGcs,
+                                      d_result);
 
     HANDLE_ERROR(cudaPeekAtLastError());
     HANDLE_ERROR(cudaDeviceSynchronize());
@@ -738,15 +738,15 @@ Metrics *demoCalculateGCsOnCudaAndKeepMetricsInMem(int numberOfGcs,
 
     int gridDim = ceil((float)numberOfGcs/1024.0);
 
-    compare2<<<gridDim, 1024>>>(d_gcMatrixData,
+    cudaGcCompute<<<gridDim, 1024>>>(d_gcMatrixData,
 //    compare2<<<numberOfGcs, 1>>>(d_gcMatrixData,
-                                d_gcDictData,
-                                d_gcMatrixOffsets,
-                                d_gcMatrixSizes,
-                                d_gcDictOffsets,
-                                gcQueryPosition,
-                                numberOfGcs,
-                                d_result);
+                                     d_gcDictData,
+                                     d_gcMatrixOffsets,
+                                     d_gcMatrixSizes,
+                                     d_gcDictOffsets,
+                                     gcQueryPosition,
+                                     numberOfGcs,
+                                     d_result);
 
     HANDLE_ERROR(cudaPeekAtLastError());
     HANDLE_ERROR(cudaDeviceSynchronize());
@@ -759,21 +759,17 @@ Metrics *demoSortAndRetrieveMetrics(Metrics* devicePtr, int numberOfGcs) {
 
     int Device = 0;
 
-
     sortOnMem(devicePtr, result, numberOfGcs, 128, Device);
-//    HANDLE_ERROR(cudaFree(devicePtr));
 
-// pointer1 pointing at the beginning of the array
     Metrics *pointer1 = result,
-
-    // pointer2 pointing at end of the array
     *pointer2 = result + numberOfGcs - 1;
+
+    //Reverse sort
     while (pointer1 < pointer2) {
         swap(pointer1, pointer2);
         pointer1++;
         pointer2--;
     }
-
 
     return result;
 }
@@ -826,14 +822,14 @@ Metrics *demoCalculateGCsOnCudaWithCopy(int numberOfGcs,
 
     auto start = std::chrono::system_clock::now();
 
-    compare2<<<numberOfGcs, 1>>>(d_gcMatrixData,
-                                 d_gcDictData,
-                                 d_gcMatrixOffsets,
-                                 d_gcMatrixSizes,
-                                 d_gcDictOffsets,
-                                 gcQueryPosition,
-                                 numberOfGcs,
-                                 d_result);
+    cudaGcCompute<<<numberOfGcs, 1>>>(d_gcMatrixData,
+                                      d_gcDictData,
+                                      d_gcMatrixOffsets,
+                                      d_gcMatrixSizes,
+                                      d_gcDictOffsets,
+                                      gcQueryPosition,
+                                      numberOfGcs,
+                                      d_result);
 
     HANDLE_ERROR(cudaPeekAtLastError());
     HANDLE_ERROR(cudaDeviceSynchronize());

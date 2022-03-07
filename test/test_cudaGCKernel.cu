@@ -107,7 +107,7 @@ __device__ int cuda_uuid_compare(const uuid_t uu1, const uuid_t uu2) {
 }
 
 
-__global__ void compareUUID(GraphCode2 *gc1, GraphCode2 *gc2, Metrics *metrics) {
+__global__ void compareUUID(UUIDGraphCode *gc1, UUIDGraphCode *gc2, Metrics *metrics) {
 //
 //    uuid_t word1; //= gc1->dict[0];
 //    uuid_t word2;// = gc2->dict[0];
@@ -619,10 +619,10 @@ void testGcSimilarityKernelWith3x3() {
             cudaMemcpy(d_gcDictOffsets, gcDictOffsets, NUMBER_OF_GCS * sizeof(unsigned int), cudaMemcpyHostToDevice));
 
 
-    compare2<<<1, NUMBER_OF_GCS>>>(d_gcMatrixData, d_gcDictData, d_gcMatrixOffsets, d_gcMatrixSizes,
-                                   d_gcDictOffsets, 0,
-                                   NUMBER_OF_GCS,
-                                   d_result);
+    cudaGcCompute<<<1, NUMBER_OF_GCS>>>(d_gcMatrixData, d_gcDictData, d_gcMatrixOffsets, d_gcMatrixSizes,
+                                        d_gcDictOffsets, 0,
+                                        NUMBER_OF_GCS,
+                                        d_result);
 
     HANDLE_ERROR(cudaPeekAtLastError());
     HANDLE_ERROR(cudaDeviceSynchronize());
@@ -672,7 +672,7 @@ void appendMatrix(const unsigned short *mat1, unsigned short sizeofMat, unsigned
 void testGcSimilarityKernelWith100x100() {
     const GraphCode &gc = generateTestDataGc(100);
 
-    GraphCode2 newGc;
+    UUIDGraphCode newGc;
 
     for (int i = 0; i < 100 * 100; i++) {
         newGc.matrix[i] = gc.matrix[i];
@@ -691,8 +691,8 @@ void testGcSimilarityKernelWith100x100() {
     }
 
     Metrics *dResult;
-    GraphCode2 *dGC1;
-    GraphCode2 *dGC2;
+    UUIDGraphCode *dGC1;
+    UUIDGraphCode *dGC2;
     HANDLE_ERROR(cudaMalloc((void **) &dResult, sizeof(Metrics)));
     HANDLE_ERROR(cudaMalloc((void **) &dGC1, sizeof(newGc)));
     HANDLE_ERROR(cudaMalloc((void **) &dGC2, sizeof(newGc)));
