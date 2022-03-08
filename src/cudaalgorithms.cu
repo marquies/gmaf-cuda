@@ -57,7 +57,6 @@ calcMetrices(unsigned short int *data, unsigned short int *comparedata, unsigned
             if (data[tid] == comparedata[tid]) {
                 edgeType[tid] = 1;
             }
-
         }
     }
 
