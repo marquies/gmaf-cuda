@@ -69,9 +69,11 @@ Algorithms resolveAlgorithm(std::string input) {
 }
 
 void printUsageAndExit(char *const *argv) {
-    fprintf(stderr, "Usage: %s [-v] -a ALGORITHM -d dir -c limit_files\n", argv[0]);
+    fprintf(stderr, "Usage: %s [-vdsbn] -a ALGORITHM -d dir -c limit_data -l gc_size \n", argv[0]);
     std::cout << "    -v verbose in terms of debug" << std::endl;
+    std::cout << "    -s simulation mode (artificial data is used)" << std::endl;
     std::cout << "    -c limits the maximum number of GCs (default is 100)" << std::endl;
+    std::cout << "    -l set the length of elements of the artificial graph codes in simulation mode (default is 100)" << std::endl;
     std::cout << "    -n starts in network mode, binding to port 4711 (default is console)" << std::endl;
 
     std::cout << "Algorithms available" << std::endl;
@@ -100,11 +102,12 @@ int main_init(int argc, char *argv[]) {
     char *cvalue = NULL;
     char *algorithm = NULL;
     int limit = 100;
+    int dimension = 100;
     bool simulation = false;
     bool network = false;
 
 
-    while ((opt = getopt(argc, argv, "vd:c:sba:n")) != -1) {
+    while ((opt = getopt(argc, argv, "vd:c:sba:nl:")) != -1) {
         switch (opt) {
             case 's':
                 simulation = true;
@@ -126,6 +129,9 @@ int main_init(int argc, char *argv[]) {
                 break;
             case 'n':
                 network = true;
+                break;
+            case 'l':
+                dimension = atoi(optarg);
                 break;
             default:
                 printUsageAndExit(argv);
@@ -156,7 +162,8 @@ int main_init(int argc, char *argv[]) {
 
 
     if (simulation) {
-        loadUnit->loadArtificialGcs(limit, 100);
+
+        loadUnit->loadArtificialGcs(limit, dimension);
     } else {
         loadUnit->loadGraphCodes(cvalue, limit);
     }
