@@ -10,7 +10,7 @@
 #include <uuid/uuid.h>
 #include <cuda_runtime.h>
 
-
+// TODO: docu
 typedef struct UUIDGraphCode {
     uuid_t dict[100];
     unsigned short matrix[100 * 100];
@@ -25,11 +25,13 @@ typedef struct UUIDGraphCode {
  */
 void calcKernelLaunchConfig(int width, dim3 &block, dim3 &grid);
 
-
+// TODO: docu
 Metrics demoCudaLinearMatrixMemory(json json1, json json2);
 
+// TODO: docu
 Metrics demoCudaLinearMatrixMemoryWithCopy(GraphCode gc1, GraphCode gc2);
 
+// TODO: docu
 Metrics demoCudaLinearMatrixMemoryCudaReduceSum(GraphCode json1, GraphCode json2);
 
 /**
@@ -75,7 +77,7 @@ Metrics *demoCalculateGCsOnCuda(int numberOfGcs,
                                 int gcQueryPosition = 0);
 
 /**
- * Calculates metrics for Graph Codes on CUDA.
+ * Calculates metrics for Graph Codes on CUDA device for each GC in parallel. The function implements the algorithm PC.
  * @param gcMatrixData device pointer to the Graph Codes matrix data as a coalesced array.
  * @param gcDictData device pointer to the Graph Codes dictionary data as a coalesced array of mapped integers.
  * @param gcMatrixOffsets device pointer to an index array with the offsets of gcMatricData.
