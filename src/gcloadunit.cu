@@ -536,15 +536,24 @@ void GcLoadUnit::loadGraphCodes(const char *cvalue, int limit) {
 
     int n = 0;
 
+    std::vector<std::experimental::filesystem::v1::__cxx11::path> files_in_directory;
+    std::copy(std::experimental::filesystem::v1::__cxx11::directory_iterator(cvalue), std::experimental::filesystem::v1::__cxx11::directory_iterator(), std::back_inserter(files_in_directory));
+    std::sort(files_in_directory.begin(), files_in_directory.end());
 
-    for (const auto &entry: std::experimental::filesystem::v1::__cxx11::directory_iterator(cvalue)) {
+//    for (const std::string & filename : files_in_directory) {
+//        std::cout << path.string() << std::endl; // printed in alphabetical order
+//    }
+
+//    std::experimental::filesystem::v1::__cxx11::directory_iterator(cvalue)
+
+    for (const auto &entry: files_in_directory) {
         try {
-            addGcFromFile(entry.path().string());
+            addGcFromFile(entry.string());
             if (G_DEBUG) {
-                std::cout << "Added file " << entry.path().string() << std::endl;
+                std::cout << "Added file " << entry.string() << std::endl;
             }
         } catch (json::exception &e) {
-            std::cerr << entry.path().string() << '\n';
+            std::cerr << entry.string() << '\n';
             std::cerr << e.what() << '\n';
         }
         n++;
