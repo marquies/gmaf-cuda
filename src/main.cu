@@ -252,9 +252,7 @@ void handleNetworkInput(QueryHandler *qh, GcLoadUnit *loadUnit) {
 
                     const char *msg = "Metrics generated " + sizeof(metrics)/sizeof (Metrics);
                     send(new_socket, msg, strlen(msg), 0);
-                    for(int i = 0; i < 16; i++) {
-
-                        unsigned long num = metrics[i].idx;
+                    for(int i = 0; i < loadUnit->getNumberOfGc(); i++) {
                         nlohmann::json metric;
                         metric["idx"] = loadUnit->getGcNameOnPosition(metrics[i].idx);
                         metric["inferencing"] = metrics[i].inferencing;
