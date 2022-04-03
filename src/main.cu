@@ -54,8 +54,9 @@ void handleNetworkInput(QueryHandler *qh, GcLoadUnit *loadUnit);
  * @param sig
  */
 void ctrl_c(int sig) {
-    fprintf(stderr, "Ctrl-C caught - Please press enter\n");
+    fprintf(stderr, "Ctrl-C caught - Stopping program\n");
     mainLoop = false;
+    exit(EXIT_SUCCESS);
     signal(sig, ctrl_c); /* re-installs handler */
 
 }
@@ -300,10 +301,6 @@ void *connection_handler(void *arguments) {
                     Metrics *metrics = qh->processQuery(str, loadUnit);
 
                     auto result = nlohmann::json::array();
-
-
-                    const char *msg = "Metrics generated " + sizeof(metrics)/sizeof (Metrics);
-                    send(sock, msg, strlen(msg), 0);
                     for(int i = 0; i < loadUnit->getNumberOfGc(); i++) {
                         nlohmann::json metric;
                         metric["idx"] = loadUnit->getGcNameOnPosition(metrics[i].idx);
@@ -317,7 +314,6 @@ void *connection_handler(void *arguments) {
                     send(sock, res_msg, strlen(res_msg), 0);
                     char buf[] = "\r\n";
                     send(sock, buf, sizeof(buf), 0);
-                    std::cout << msg << std::endl;
                     free(metrics);
 
                 } else {
