@@ -10,6 +10,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netinet/tcp.h>
 
 #include "graphcode.h"
 #include "gcloadunit.cuh"
@@ -262,7 +263,15 @@ void handleNetworkInput(QueryHandler *qh, GcLoadUnit *loadUnit) {
                     }
                     std::string s = result.dump();
                     const char *res_msg = s.c_str();
+                    int flag = 1;
+                    //setsockopt(new_socket, IPPROTO_TCP, TCP_NODELAY, (char *) &flag, sizeof(int));
+//                    send(sock, "important data or end of the current message", ...);
                     send(new_socket, res_msg, strlen(res_msg), 0);
+                    flag = 0;
+                    //setsockopt(new_socket, IPPROTO_TCP, TCP_NODELAY, (char *) &flag, sizeof(int));
+
+                    char buf[] = "\r\n";
+                    send(new_socket, buf, sizeof(buf), 0);
                     std::cout << msg << std::endl;
 
                 } else {
