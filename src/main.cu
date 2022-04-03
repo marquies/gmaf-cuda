@@ -11,6 +11,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
+#include<pthread.h>
 
 #include "graphcode.h"
 #include "gcloadunit.cuh"
@@ -186,16 +187,21 @@ int main_init(int argc, char *argv[]) {
     return 0;
 
 }
+void *connection_handler(void *arguments);
+
+struct arg_struct {
+    int socket;
+    QueryHandler *qh;
+    GcLoadUnit *loadUnit;
+};
 
 void handleNetworkInput(QueryHandler *qh, GcLoadUnit *loadUnit) {
-    int server_fd, new_socket;
-    ssize_t valread;
+    int server_fd, new_socket, *new_sock;
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
     unsigned short port = 4711;
 
-    const char *hello = "Enter Query: ";
 
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
@@ -225,18 +231,63 @@ void handleNetworkInput(QueryHandler *qh, GcLoadUnit *loadUnit) {
     }
     std::cout << "Started network daemon IP '" << inet_ntoa(address.sin_addr) << "' Port: '" << port << "'"
               << std::endl;
-    if ((new_socket = accept(server_fd, (struct sockaddr *) &address,
-                             (socklen_t *) &addrlen)) < 0) {
-        perror("accept");
-        exit(EXIT_FAILURE);
+    while ((new_socket = accept(server_fd, (struct sockaddr *) &address,
+                                (socklen_t *) &addrlen)) ) {
+//        perror("accept");
+//        exit(EXIT_FAILURE);
+        pthread_t sniffer_thread;
+        new_sock = static_cast<int *>(malloc(1));
+        *new_sock = new_socket;
+        struct arg_struct args;
+        args.socket = *new_sock;
+        args.qh = qh;
+        args.loadUnit = loadUnit;
+
+        if (pthread_create(&sniffer_thread, NULL, connection_handler, (void *) &args) < 0) {
+            perror("could not create thread");
+            return;
+        }
+
+        //Now join the thread , so that we dont terminate before the thread
+        //pthread_join( sniffer_thread , NULL);
+        puts("Handler assigned");
     }
+    if (new_socket < 0) {
+        perror("accept failed");
+        return;
+    }
+    return;
+}
 
+
+void *connection_handler(void *arguments) {
     const int bufferSize = 1024;
+    const char *hello = "Enter Query: ";
+    ssize_t valread;
+    struct arg_struct *args = (struct arg_struct *)arguments;
 
+    int sock = args->socket;
+    QueryHandler* qh = args->qh;
+    GcLoadUnit* loadUnit = args->loadUnit;
+
+    send(sock, hello, strlen(hello), 0);
     do {
         char buffer[bufferSize] = {0};
-        send(new_socket, hello, strlen(hello), 0);
-        valread = read(new_socket, buffer, ssize_t(bufferSize));
+        valread = read(sock, buffer, ssize_t(bufferSize));
+
+
+        if(valread == 0)
+        {
+            puts("Client disconnected");
+            fflush(stdout);
+            return 0;
+        }
+        else if(valread == -1)
+        {
+            perror("recv failed");
+            return 0;
+        }
+
         if (valread > 0 && mainLoop) {
             printf("Got : %s\n", buffer);
             std::string str(buffer);
@@ -252,7 +303,7 @@ void handleNetworkInput(QueryHandler *qh, GcLoadUnit *loadUnit) {
 
 
                     const char *msg = "Metrics generated " + sizeof(metrics)/sizeof (Metrics);
-                    send(new_socket, msg, strlen(msg), 0);
+                    send(sock, msg, strlen(msg), 0);
                     for(int i = 0; i < loadUnit->getNumberOfGc(); i++) {
                         nlohmann::json metric;
                         metric["idx"] = loadUnit->getGcNameOnPosition(metrics[i].idx);
@@ -263,23 +314,19 @@ void handleNetworkInput(QueryHandler *qh, GcLoadUnit *loadUnit) {
                     }
                     std::string s = result.dump();
                     const char *res_msg = s.c_str();
-                    int flag = 1;
-                    //setsockopt(new_socket, IPPROTO_TCP, TCP_NODELAY, (char *) &flag, sizeof(int));
-//                    send(sock, "important data or end of the current message", ...);
-                    send(new_socket, res_msg, strlen(res_msg), 0);
-                    flag = 0;
-                    //setsockopt(new_socket, IPPROTO_TCP, TCP_NODELAY, (char *) &flag, sizeof(int));
-
+                    send(sock, res_msg, strlen(res_msg), 0);
                     char buf[] = "\r\n";
-                    send(new_socket, buf, sizeof(buf), 0);
+                    send(sock, buf, sizeof(buf), 0);
                     std::cout << msg << std::endl;
 
                 } else {
                     const char *msg = "Query invalid";
-                    send(new_socket, msg, strlen(msg), 0);
+                    send(sock, msg, strlen(msg), 0);
                     std::cout << msg << std::endl;
                 }
             }
+            send(sock, hello, strlen(hello), 0);
+
         }
     } while (mainLoop);
 }

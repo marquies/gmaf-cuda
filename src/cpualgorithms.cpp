@@ -2,11 +2,11 @@
 // Created by breucking on 26.01.22.
 //
 
-#include "helper.h"
 #include <stdlib.h>
 #include <thread>
-#include<string.h>
+#include <string.h>
 #include <iostream>
+#include "helper.h"
 #include "cpualgorithms.h"
 
 
@@ -20,7 +20,7 @@ demoCalculateCpuThreaded(GraphCode &gcQuery, std::vector<GraphCode> &compares, i
 
     for (int i = 0; i < numberOfThreads; i++) {
         unsigned long start = i * x;
-        unsigned long end = i == numberOfThreads - 1 ? compares.size() - 1 : start + x -1; //(i + 1) * x;
+        unsigned long end = i == numberOfThreads - 1 ? compares.size() - 1 : start + x - 1; //(i + 1) * x;
         threads.push_back(std::thread(calculateSimilarityV, &gcQuery, &compares, start, end, &metrics, i));
     }
 
@@ -98,23 +98,24 @@ Metrics demoCalculateSimilaritySequentialOrdered(GraphCode gcQuery, GraphCode gc
                 std::basic_string<char> &v1 = gcQuery.dict->at(i);
                 std::basic_string<char> &v2 = gcQuery.dict->at(j);
 
-                const std::vector<std::string>::iterator &it1 = std::find(gcCompare.dict->begin(), gcCompare.dict->end(), v1);
+                const std::vector<std::string>::iterator &it1 = std::find(gcCompare.dict->begin(),
+                                                                          gcCompare.dict->end(), v1);
                 if (it1 == gcCompare.dict->end()) {
                     continue;
                 }
                 long transX = std::distance(gcCompare.dict->begin(), it1);
 
-                const std::vector<std::string>::iterator &it2 = std::find(gcCompare.dict->begin(), gcCompare.dict->end(), v2);
+                const std::vector<std::string>::iterator &it2 = std::find(gcCompare.dict->begin(),
+                                                                          gcCompare.dict->end(), v2);
                 if (it2 == gcCompare.dict->end()) {
                     continue;
                 }
                 long transY = std::distance(gcCompare.dict->begin(), it2);
 
 
-                
                 unsigned short edge = matrix2
-                        [transX * gcCompare.dict->size()+transY];
-                        //matrix2[position1 * gcQuery.dict->size() + position2];//matrix2[position1][position2];
+                [transX * gcCompare.dict->size() + transY];
+                //matrix2[position1 * gcQuery.dict->size() + position2];//matrix2[position1][position2];
                 if (edge != 0) {
                     edge_metric_count++;
                 }
