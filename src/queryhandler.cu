@@ -21,7 +21,7 @@ Metrics * QueryHandler::processQuery(const std::string &query, GcLoadUnit *loadU
     std::smatch m;
 
     regex_search(query, m, regexp);
-    Metrics *pMetrics;
+    Metrics *pMetrics = NULL;
 
     if (m.size() > 1) {
         std::string gcQueryName = m.str(1);

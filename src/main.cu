@@ -3,15 +3,14 @@
 #include <string.h>
 #include <stdio.h>
 #include <signal.h>
-#include <stdlib.h>
 #include <cstdlib>
 #include <memory>
 #include <string>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <netinet/tcp.h>
 #include<pthread.h>
+#include <c++/9/fstream>
 
 #include "graphcode.h"
 #include "gcloadunit.cuh"
@@ -50,7 +49,7 @@ void handleConsoleInput(QueryHandler *qh, GcLoadUnit *loadUnit);
 void handleNetworkInput(QueryHandler *qh, GcLoadUnit *loadUnit);
 
 /**
- * Handler for CTRL+C input in console mode.
+ * Handler for CTRL+C input to stop the program.
  * @param sig
  */
 void ctrl_c(int sig) {
@@ -61,6 +60,11 @@ void ctrl_c(int sig) {
 
 }
 
+/**
+ * Maps String into Algorithms enum value.
+ * @param input string from command line or config
+ * @return the mappes algorithm or Algo_Invalid if not existing.
+ */
 Algorithms resolveAlgorithm(std::string input) {
     if (input == "pc_cuda") return Algo_pc_cuda;
     if (input == "pc_cpu_seq") return Algo_pc_cpu_seq;
@@ -72,12 +76,17 @@ Algorithms resolveAlgorithm(std::string input) {
     return Algo_Invalid;
 }
 
+/**
+ * Prints a usage text for this program.
+ * @param argv command line arguments.
+ */
 void printUsageAndExit(char *const *argv) {
     fprintf(stderr, "Usage: %s [-vdsbn] -a ALGORITHM -d dir -c limit_data -l gc_size \n", argv[0]);
     std::cout << "    -v verbose in terms of debug" << std::endl;
     std::cout << "    -s simulation mode (artificial data is used)" << std::endl;
     std::cout << "    -c limits the maximum number of GCs (default is 100)" << std::endl;
-    std::cout << "    -l set the length of elements of the artificial graph codes in simulation mode (default is 100)" << std::endl;
+    std::cout << "    -l set the length of elements of the artificial graph codes in simulation mode (default is 100)"
+              << std::endl;
     std::cout << "    -n starts in network mode, binding to port 4711 (default is console)" << std::endl;
 
     std::cout << "Algorithms available" << std::endl;
@@ -92,6 +101,19 @@ void printUsageAndExit(char *const *argv) {
     exit(EXIT_FAILURE);
 }
 
+std::string trim(std::string const &source, char const *delims = " \t\r\n") {
+    std::string result(source);
+    std::string::size_type index = result.find_last_not_of(delims);
+    if (index != std::string::npos)
+        result.erase(++index);
+
+    index = result.find_first_not_of(delims);
+    if (index != std::string::npos)
+        result.erase(0, index);
+    else
+        result.erase();
+    return result;
+}
 
 /**
  * Main function of the program.
@@ -109,10 +131,14 @@ int main_init(int argc, char *argv[]) {
     int dimension = 100;
     bool simulation = false;
     bool network = false;
+    char *iniFile = NULL;
 
 
-    while ((opt = getopt(argc, argv, "vd:c:sba:nl:")) != -1) {
+    while ((opt = getopt(argc, argv, "vd:c:sba:nl:i:")) != -1) {
         switch (opt) {
+            case 'i':
+                iniFile = optarg;
+                break;
             case 's':
                 simulation = true;
                 break;
@@ -139,6 +165,78 @@ int main_init(int argc, char *argv[]) {
                 break;
             default:
                 printUsageAndExit(argv);
+        }
+    }
+
+    // Evaluating properties if provided
+    if (iniFile != NULL) {
+        std::ifstream file(iniFile);
+
+        std::string line;
+        std::string name;
+        std::string value;
+        std::string inSection;
+        int posEqual;
+        while (std::getline(file, line)) {
+            if (!line.length()) continue;
+            if (line[0] == '#') continue;
+            if (line[0] == ';') continue;
+
+            posEqual = line.find('=');
+            name = trim(line.substr(0, posEqual));
+            value = trim(line.substr(posEqual + 1));
+
+            if (name == "s") {
+                if (value == "true") {
+                    simulation = true;
+                } else if (value == "false") {
+                    simulation = false;
+                } else {
+                    std::cout << "Invalid value '" << value << "' for parameter '" << name << "'" << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+            }
+            if (name == "d") {
+                if (value.length() <= 0) {
+                    std::cout << "Invalid value '" << value << "' for parameter '" << name << "'" << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+                const std::string::size_type size = value.size();
+                cvalue = new char[size + 1];   //we need extra char for NUL
+                memcpy(cvalue, value.c_str(), size + 1);
+            }
+            if (name == "a") {
+                if (value.length() <= 0) {
+                    std::cout << "Invalid value '" << value << "' for parameter '" << name << "'" << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+                const std::string::size_type size = value.size();
+                algorithm = new char[size + 1];   //we need extra char for NUL
+                memcpy(algorithm, value.c_str(), size + 1);
+            }
+            if (name == "c") {
+                if (value.length() <= 0) {
+                    std::cout << "Invalid value '" << value << "' for parameter '" << name << "'" << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+                limit = atoi(value.c_str());
+                if (limit <= 0) {
+                    std::cout << "Invalid value '" << value << "' for parameter '" << name << "'" << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+            }
+            if (name == "l") {
+                if (value.length() <= 0) {
+                    std::cout << "Invalid value '" << value << "' for parameter '" << name << "'" << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+                dimension = atoi(value.c_str());
+                if (dimension <= 0) {
+                    std::cout << "Invalid value '" << value << "' for parameter '" << name << "'" << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+            }
+
         }
     }
 
@@ -188,6 +286,7 @@ int main_init(int argc, char *argv[]) {
     return 0;
 
 }
+
 void *connection_handler(void *arguments);
 
 struct arg_struct {
@@ -233,7 +332,7 @@ void handleNetworkInput(QueryHandler *qh, GcLoadUnit *loadUnit) {
     std::cout << "Started network daemon IP '" << inet_ntoa(address.sin_addr) << "' Port: '" << port << "'"
               << std::endl;
     while ((new_socket = accept(server_fd, (struct sockaddr *) &address,
-                                (socklen_t *) &addrlen)) ) {
+                                (socklen_t *) &addrlen))) {
 //        perror("accept");
 //        exit(EXIT_FAILURE);
         pthread_t sniffer_thread;
@@ -263,13 +362,13 @@ void handleNetworkInput(QueryHandler *qh, GcLoadUnit *loadUnit) {
 
 void *connection_handler(void *arguments) {
     const int bufferSize = 1024;
-    const char *hello = "Enter Query: ";
+    const char *hello = "Enter Query: \r\n";
     ssize_t valread;
-    struct arg_struct *args = (struct arg_struct *)arguments;
+    struct arg_struct *args = (struct arg_struct *) arguments;
 
     int sock = args->socket;
-    QueryHandler* qh = args->qh;
-    GcLoadUnit* loadUnit = args->loadUnit;
+    QueryHandler *qh = args->qh;
+    GcLoadUnit *loadUnit = args->loadUnit;
 
     send(sock, hello, strlen(hello), 0);
     do {
@@ -277,14 +376,11 @@ void *connection_handler(void *arguments) {
         valread = read(sock, buffer, ssize_t(bufferSize));
 
 
-        if(valread == 0)
-        {
+        if (valread == 0) {
             puts("Client disconnected");
             fflush(stdout);
             return 0;
-        }
-        else if(valread == -1)
-        {
+        } else if (valread == -1) {
             perror("recv failed");
             return 0;
         }
@@ -299,22 +395,28 @@ void *connection_handler(void *arguments) {
             } else {
                 if (qh->validate(str)) {
                     Metrics *metrics = qh->processQuery(str, loadUnit);
+                    if (metrics != NULL) {
 
-                    auto result = nlohmann::json::array();
-                    for(int i = 0; i < loadUnit->getNumberOfGc(); i++) {
-                        nlohmann::json metric;
-                        metric["gc_filename"] = loadUnit->getGcNameOnPosition(metrics[i].idx);
-                        metric["inferencing"] = metrics[i].inferencing;
-                        metric["similarity"] = metrics[i].similarity;
-                        metric["recommendation"] = metrics[i].recommendation;
-                        result.push_back(metric);
+
+                        auto result = nlohmann::json::array();
+                        for (int i = 0; i < loadUnit->getNumberOfGc(); i++) {
+                            nlohmann::json metric;
+                            metric["gc_filename"] = loadUnit->getGcNameOnPosition(metrics[i].idx);
+                            metric["inferencing"] = metrics[i].inferencing;
+                            metric["similarity"] = metrics[i].similarity;
+                            metric["recommendation"] = metrics[i].recommendation;
+                            result.push_back(metric);
+                        }
+                        std::string s = result.dump();
+                        const char *res_msg = s.c_str();
+                        send(sock, res_msg, strlen(res_msg), 0);
+
+                        free(metrics);
+                    } else {
+                        const char *msg = "Item not found";
+                        send(sock, msg, strlen(msg), 0);
+                        std::cout << msg << std::endl;
                     }
-                    std::string s = result.dump();
-                    const char *res_msg = s.c_str();
-                    send(sock, res_msg, strlen(res_msg), 0);
-                    char buf[] = "\r\n";
-                    send(sock, buf, sizeof(buf), 0);
-                    free(metrics);
 
                 } else {
                     const char *msg = "Query invalid";
@@ -322,6 +424,8 @@ void *connection_handler(void *arguments) {
                     std::cout << msg << std::endl;
                 }
             }
+            char buf[] = "\r\n";
+            send(sock, buf, sizeof(buf), 0);
             send(sock, hello, strlen(hello), 0);
 
         }
