@@ -318,6 +318,7 @@ void *connection_handler(void *arguments) {
                     char buf[] = "\r\n";
                     send(sock, buf, sizeof(buf), 0);
                     std::cout << msg << std::endl;
+                    free(metrics);
 
                 } else {
                     const char *msg = "Query invalid";
@@ -329,6 +330,7 @@ void *connection_handler(void *arguments) {
 
         }
     } while (mainLoop);
+    return 0;
 }
 
 void handleConsoleInput(QueryHandler *qh, GcLoadUnit *loadUnit) {
@@ -347,7 +349,8 @@ void handleConsoleInput(QueryHandler *qh, GcLoadUnit *loadUnit) {
                 mainLoop = false;
             } else {
                 if (qh->validate(str)) {
-                    qh->processQuery(str, loadUnit);
+                    Metrics *result = qh->processQuery(str, loadUnit);
+                    free(result);
                 } else {
                     std::cout << "Query invalid" << std::endl;
                 }
