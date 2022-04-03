@@ -320,6 +320,10 @@ bool GcLoadUnit::hasGc(std::string basicString) {
     return std::find(gcNames.begin(), gcNames.end(), basicString) != gcNames.end();
 }
 
+std::string GcLoadUnit::getGcNameOnPosition(unsigned long index) {
+    return gcNames.at(index);
+}
+
 unsigned int *GcLoadUnit::getGcMatrixOffsetsPtr() {
     return gcMatrixOffsetsPtr;
 }

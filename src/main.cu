@@ -253,21 +253,14 @@ void handleNetworkInput(QueryHandler *qh, GcLoadUnit *loadUnit) {
                     const char *msg = "Metrics generated " + sizeof(metrics)/sizeof (Metrics);
                     send(new_socket, msg, strlen(msg), 0);
                     for(int i = 0; i < 16; i++) {
-                                unsigned long num = metrics[i].idx;
+
+                        unsigned long num = metrics[i].idx;
                         nlohmann::json metric;
-                        metric["idx"] = metrics[i].idx;
+                        metric["idx"] = loadUnit->getGcNameOnPosition(metrics[i].idx);
                         metric["inferencing"] = metrics[i].inferencing;
                         metric["similarity"] = metrics[i].similarity;
                         metric["recommendation"] = metrics[i].recommendation;
                         result.push_back(metric);
-//                        const int n = snprintf(NULL, 0, "%lu", num);
-//                        assert(n > 0);
-//                        char buf[n+1];
-//                        int c = snprintf(buf, n+1, "%lu", num);
-//
-//                        const char *msg = buf;
-
-
                     }
                     std::string s = result.dump();
                     const char *res_msg = s.c_str();

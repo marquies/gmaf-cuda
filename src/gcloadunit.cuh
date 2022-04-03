@@ -72,6 +72,7 @@ public:
 
     unsigned int *getMatrixSizesCudaPtr();
 
+    std::string getGcNameOnPosition(unsigned long index);
 
     void setOperationMode(const Modes mode);
 
