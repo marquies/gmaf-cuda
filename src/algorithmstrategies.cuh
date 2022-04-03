@@ -33,7 +33,7 @@ public:
      * @param loadUnit initialized LoadUnit
      * @param gcPosition position of the query Graph Code
      */
-    virtual void performQuery(GcLoadUnit *loadUnit, int gcPosition) = 0;
+    virtual Metrics* performQuery(GcLoadUnit *loadUnit, int gcPosition) = 0;
 
     virtual ~Strategy() = default;
 };
@@ -71,7 +71,7 @@ public:
      * @param loadUnit loadUnit with the data pointers.
      * @param gcPosition the position of the query Graph Code in the loaded data.
      */
-    void performQuery(GcLoadUnit *loadUnit, int gcPosition) override;
+    Metrics* performQuery(GcLoadUnit *loadUnit, int gcPosition) override;
 };
 
 /**
@@ -84,7 +84,7 @@ public:
      * @param loadUnit loadUnit with the data pointers.
      * @param gcPosition the position of the query Graph Code in the loaded data.
      */
-    void performQuery(GcLoadUnit *loadUnit, int gcPosition) override;
+    Metrics*  performQuery(GcLoadUnit *loadUnit, int gcPosition) override;
 };
 
 /**
@@ -97,7 +97,7 @@ public:
      * @param loadUnit loadUnit with the data pointers.
      * @param gcPosition the position of the query Graph Code in the loaded data.
      */
-    void performQuery(GcLoadUnit *loadUnit, int gcPosition) override;
+    Metrics*  performQuery(GcLoadUnit *loadUnit, int gcPosition) override;
 };
 
 /**
@@ -110,7 +110,7 @@ public:
      * @param loadUnit loadUnit with the data pointers.
      * @param gcPosition the position of the query Graph Code in the loaded data.
      */
-    void performQuery(GcLoadUnit *loadUnit, int gcPosition) override;
+    Metrics*  performQuery(GcLoadUnit *loadUnit, int gcPosition) override;
 };
 
 /**
@@ -123,7 +123,7 @@ public:
      * @param loadUnit loadUnit with the data pointers.
      * @param gcPosition the position of the query Graph Code in the loaded data.
      */
-    void performQuery(GcLoadUnit *loadUnit, int gcPosition) override;
+    Metrics*  performQuery(GcLoadUnit *loadUnit, int gcPosition) override;
 };
 
 /**
@@ -136,7 +136,7 @@ public:
      * @param loadUnit loadUnit with the data pointers.
      * @param gcPosition the position of the query Graph Code in the loaded data.
      */
-    void performQuery(GcLoadUnit *loadUnit, int gcPosition) override;
+    Metrics*  performQuery(GcLoadUnit *loadUnit, int gcPosition) override;
 };
 
 /**
@@ -144,7 +144,7 @@ public:
  */
 class CudaTask13 : public Strategy {
 public:
-    void performQuery(GcLoadUnit *loadUnit, int gcPosition) override;
+    Metrics*  performQuery(GcLoadUnit *loadUnit, int gcPosition) override;
 };
 
 #endif //GCSIM_ALGORITHMSTRATEGIES_CUH

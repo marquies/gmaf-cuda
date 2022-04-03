@@ -87,17 +87,17 @@ std::tuple<GcLoadUnit::Modes, Strategy *> StrategyFactory::setupStrategy1(Algori
     return {mode,strategy};
 }
 
-void CudaTask1OnGpuMemory::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
+Metrics* CudaTask1OnGpuMemory::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
 // call algorithm in form of
     std::cout << "-----------------------------------" << std::endl;
-
+    Metrics *result;
     loadUnit->loadIntoCudaMemory();
     int times = G_BENCHMARK ? G_BENCHMARK_REPEAT : 1;
 
     for (int i = 0; i < times; i++) {
         auto start = std::chrono::_V2::system_clock::now();
 
-        Metrics *result = demoCalculateGCsOnCuda(loadUnit->getNumberOfGc(),
+        result = demoCalculateGCsOnCuda(loadUnit->getNumberOfGc(),
                                                  loadUnit->getNumberOfDictElements(),
                                                  loadUnit->getGcMatrixDataCudaPtr(),
                                                  loadUnit->getGcDictDataCudaPtr(),
@@ -145,11 +145,13 @@ void CudaTask1OnGpuMemory::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
             std::cout << typeid(this).name() << "\t" << loadUnit->getNumberOfGc() << "\t" << elapsed_secondsCalc.count()
                       << "\t" << elapsed_secondsTotal.count() << "\n";
         }
-        free(result);
+        //free(result);
+
     }
+    return result;
 }
 
-void CudaTask1MemCopy::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
+Metrics*  CudaTask1MemCopy::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
 // call algorithm in form of
     std::cout << "-----------------------------------" << std::endl;
 
@@ -207,7 +209,7 @@ void CudaTask1MemCopy::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
     }
 }
 
-void CpuSequentialTask1::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
+Metrics*  CpuSequentialTask1::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
     int times = G_BENCHMARK ? G_BENCHMARK_REPEAT : 1;
     std::cout << "-----------------------------------" << std::endl;
 
@@ -249,7 +251,7 @@ void CpuSequentialTask1::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
 
 }
 
-void CpuParallelTask1::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
+Metrics*  CpuParallelTask1::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
     int times = G_BENCHMARK ? G_BENCHMARK_REPEAT : 1;
     std::cout << "-----------------------------------" << std::endl;
 
@@ -287,7 +289,7 @@ void CpuParallelTask1::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
 
 }
 
-void CudaTask2a::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
+Metrics*  CudaTask2a::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
     int times = G_BENCHMARK ? G_BENCHMARK_REPEAT : 1;
     std::cout << "-----------------------------------" << std::endl;
 
@@ -323,7 +325,7 @@ void CudaTask2a::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
     }
 }
 
-void CudaTask2ab::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
+Metrics*  CudaTask2ab::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
     int times = G_BENCHMARK ? G_BENCHMARK_REPEAT : 1;
     std::cout << "-----------------------------------" << std::endl;
 
@@ -359,7 +361,7 @@ void CudaTask2ab::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
     }
 }
 
-void CudaTask13::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
+Metrics*  CudaTask13::performQuery(GcLoadUnit *loadUnit, int gcPosition) {
 // call algorithm in form of
     std::cout << "-----------------------------------" << std::endl;
 

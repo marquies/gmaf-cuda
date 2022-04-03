@@ -17,7 +17,7 @@ class QueryHandler {
     std::unique_ptr<Strategy> strat_;
 
 public:
-    int processQuery(const std::string& query, GcLoadUnit *loadUnit);
+    Metrics * processQuery(const std::string &query, GcLoadUnit *loadUnit);
 
     static bool validate(const std::string& query);
 

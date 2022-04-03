@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <signal.h>
+#include <stdlib.h>
 #include <cstdlib>
 #include <memory>
 #include <string>
@@ -244,7 +245,35 @@ void handleNetworkInput(QueryHandler *qh, GcLoadUnit *loadUnit) {
                 mainLoop = false;
             } else {
                 if (qh->validate(str)) {
-                    qh->processQuery(str, loadUnit);
+                    Metrics *metrics = qh->processQuery(str, loadUnit);
+
+                    auto result = nlohmann::json::array();
+
+
+                    const char *msg = "Metrics generated " + sizeof(metrics)/sizeof (Metrics);
+                    send(new_socket, msg, strlen(msg), 0);
+                    for(int i = 0; i < 16; i++) {
+                                unsigned long num = metrics[i].idx;
+                        nlohmann::json metric;
+                        metric["idx"] = metrics[i].idx;
+                        metric["inferencing"] = metrics[i].inferencing;
+                        metric["similarity"] = metrics[i].similarity;
+                        metric["recommendation"] = metrics[i].recommendation;
+                        result.push_back(metric);
+//                        const int n = snprintf(NULL, 0, "%lu", num);
+//                        assert(n > 0);
+//                        char buf[n+1];
+//                        int c = snprintf(buf, n+1, "%lu", num);
+//
+//                        const char *msg = buf;
+
+
+                    }
+                    std::string s = result.dump();
+                    const char *res_msg = s.c_str();
+                    send(new_socket, res_msg, strlen(res_msg), 0);
+                    std::cout << msg << std::endl;
+
                 } else {
                     const char *msg = "Query invalid";
                     send(new_socket, msg, strlen(msg), 0);

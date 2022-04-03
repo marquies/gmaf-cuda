@@ -11,7 +11,7 @@
 #include <chrono>
 
 
-int QueryHandler::processQuery(const std::string& query, GcLoadUnit *loadUnit) {
+Metrics * QueryHandler::processQuery(const std::string &query, GcLoadUnit *loadUnit) {
     if (!validate(query)) {
         throw std::invalid_argument("Empty String");
     }
@@ -21,6 +21,7 @@ int QueryHandler::processQuery(const std::string& query, GcLoadUnit *loadUnit) {
     std::smatch m;
 
     regex_search(query, m, regexp);
+    Metrics *pMetrics;
 
     if (m.size() > 1) {
         std::string gcQueryName = m.str(1);
@@ -28,19 +29,19 @@ int QueryHandler::processQuery(const std::string& query, GcLoadUnit *loadUnit) {
         if (loadUnit->hasGc(gcQueryName)) {
 
             if (strat_) {
-                strat_->performQuery(loadUnit, loadUnit->getGcPosition(gcQueryName));
+                pMetrics = strat_->performQuery(loadUnit, loadUnit->getGcPosition(gcQueryName));
             } else {
                 throw std::runtime_error("Algorithm strategy not set");
             }
 
-            return 0;
+            return pMetrics;
         } else {
             std::cout << "GC not found." << std::endl;
 
         }
     }
 
-    return 1;
+    return pMetrics;
 }
 
 
