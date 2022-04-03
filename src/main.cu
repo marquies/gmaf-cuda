@@ -303,7 +303,7 @@ void *connection_handler(void *arguments) {
                     auto result = nlohmann::json::array();
                     for(int i = 0; i < loadUnit->getNumberOfGc(); i++) {
                         nlohmann::json metric;
-                        metric["idx"] = loadUnit->getGcNameOnPosition(metrics[i].idx);
+                        metric["gc_filename"] = loadUnit->getGcNameOnPosition(metrics[i].idx);
                         metric["inferencing"] = metrics[i].inferencing;
                         metric["similarity"] = metrics[i].similarity;
                         metric["recommendation"] = metrics[i].recommendation;
