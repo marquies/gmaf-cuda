@@ -407,9 +407,12 @@ void *connection_handler(void *arguments) {
                             metric["recommendation"] = metrics[i].recommendation;
                             result.push_back(metric);
                         }
-                        std::string s = result.dump();
+                        std::string s = result.dump() + "\r\n";
                         const char *res_msg = s.c_str();
                         send(sock, res_msg, strlen(res_msg), 0);
+
+                        const char *msgc = "metrics complete";
+                        send(sock, msgc, strlen(msgc), 0);
 
                         free(metrics);
                     } else {
@@ -424,7 +427,7 @@ void *connection_handler(void *arguments) {
                     std::cout << msg << std::endl;
                 }
             }
-            char buf[] = "\r\n";
+            char buf[] = "\r";
             send(sock, buf, sizeof(buf), 0);
             send(sock, hello, strlen(hello), 0);
 
