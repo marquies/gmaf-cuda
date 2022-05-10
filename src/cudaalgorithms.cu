@@ -35,6 +35,16 @@ void demoCalculateGCsOnCuda(int NUMBER_OF_GCS, unsigned int dictCounter, const u
                             const unsigned int *gcDictOffsets, const unsigned int *gcMatrixSizes);
 
 
+/**
+ * Calculates the metrics for two Graph Codes in parallel with Task 2a.
+ *
+ * @param data pointer to the gcQuery data in memory
+ * @param comparedata pointer to the gcCompare data in memory
+ * @param noItems dimension of the matrix, equal than word length
+ * @param numOfNonZeroEdges intermediate result value
+ * @param edgeMetricCount  intermediate result value
+ * @param edgeType  intermediate result value
+ */
 __global__ void
 calcMetrices(unsigned short int *data, unsigned short int *comparedata, unsigned long noItems,
              unsigned int *numOfNonZeroEdges, unsigned int *edgeMetricCount, unsigned int *edgeType) {
@@ -585,7 +595,7 @@ __global__ void cudaGcCompute(unsigned short *gcMatrixData, unsigned int *gcDict
 //    int index = blockIdx.x;
     //int /*offset*/ tid = x + y * blockDim.x * gridDim.x;
     //int x = threadIdx.x + blockIdx.x * blockDim.x
-    unsigned int index =  threadIdx.x + blockIdx.x * blockDim.x ;
+    unsigned int index = threadIdx.x + blockIdx.x * blockDim.x;
     if (index >= numberOfGcs)
         return;
 //    int /*offset*/ tid = x ;
@@ -631,14 +641,14 @@ __global__ void cudaGcCompute(unsigned short *gcMatrixData, unsigned int *gcDict
 //                std::basic_string<char> &v1 = gcQuery.dict->at(i);
                 unsigned int vocVal1 = gcDictData[gcDictOffsets[gc1] + i];
 
-                
+
 //                std::basic_string<char> &v2 = gcQuery.dict->at(j);
                 unsigned int vocVal2 = gcDictData[gcDictOffsets[gc1] + j];
 
                 long transX = -1;
                 long transY = -1;
                 unsigned endposition = gcDictOffsets[gc2] + elementsGc2;
-                for (int k = gcDictOffsets[gc2]; k <= endposition; k++){
+                for (int k = gcDictOffsets[gc2]; k <= endposition; k++) {
                     if (gcDictData[k] == vocVal1) {
                         transX = k - gcDictOffsets[gc2];
                     }
@@ -682,7 +692,7 @@ __global__ void cudaGcCompute(unsigned short *gcMatrixData, unsigned int *gcDict
         /*edge_type_metric*/ metrics[index].inferencing = (float) edge_type / (float) edge_metric_count;
     }
     metrics[index].compareValue = metrics[index].similarity * 100000.0f + metrics[index].recommendation * 100.0f +
-            metrics[index].inferencing;
+                                  metrics[index].inferencing;
 }
 
 Metrics *demoCalculateGCsOnCuda(int numberOfGcs,
@@ -698,7 +708,7 @@ Metrics *demoCalculateGCsOnCuda(int numberOfGcs,
     HANDLE_ERROR(cudaMalloc((void **) &d_result, numberOfGcs * sizeof(Metrics)));
 
 
-    int gridDim = ceil((float)numberOfGcs/1024.0);
+    int gridDim = ceil((float) numberOfGcs / 1024.0);
 
     int block = (numberOfGcs < 1024) ? numberOfGcs : 1024;
 
@@ -723,19 +733,19 @@ Metrics *demoCalculateGCsOnCuda(int numberOfGcs,
 }
 
 Metrics *demoCalculateGCsOnCudaAndKeepMetricsInMem(int numberOfGcs,
-                                unsigned int dictCounter,
-                                unsigned short *d_gcMatrixData,
-                                unsigned int *d_gcDictData,
-                                unsigned int *d_gcMatrixOffsets,
-                                unsigned int *d_gcDictOffsets,
-                                unsigned int *d_gcMatrixSizes,
-                                int gcQueryPosition ) {
+                                                   unsigned int dictCounter,
+                                                   unsigned short *d_gcMatrixData,
+                                                   unsigned int *d_gcDictData,
+                                                   unsigned int *d_gcMatrixOffsets,
+                                                   unsigned int *d_gcDictOffsets,
+                                                   unsigned int *d_gcMatrixSizes,
+                                                   int gcQueryPosition) {
     Metrics *d_result;
 
     HANDLE_ERROR(cudaMalloc((void **) &d_result, numberOfGcs * sizeof(Metrics)));
 
 
-    int gridDim = ceil((float)numberOfGcs/1024.0);
+    int gridDim = ceil((float) numberOfGcs / 1024.0);
 
     cudaGcCompute<<<gridDim, 1024>>>(d_gcMatrixData,
 //    compare2<<<numberOfGcs, 1>>>(d_gcMatrixData,
@@ -753,7 +763,7 @@ Metrics *demoCalculateGCsOnCudaAndKeepMetricsInMem(int numberOfGcs,
     return d_result;
 }
 
-Metrics *demoSortAndRetrieveMetrics(Metrics* devicePtr, int numberOfGcs) {
+Metrics *demoSortAndRetrieveMetrics(Metrics *devicePtr, int numberOfGcs) {
     Metrics *result = (Metrics *) malloc(numberOfGcs * sizeof(Metrics));
 
     int Device = 0;
@@ -761,7 +771,7 @@ Metrics *demoSortAndRetrieveMetrics(Metrics* devicePtr, int numberOfGcs) {
     sortOnMem(devicePtr, result, numberOfGcs, 128, Device);
 
     Metrics *pointer1 = result,
-    *pointer2 = result + numberOfGcs - 1;
+            *pointer2 = result + numberOfGcs - 1;
 
     //Reverse sort
     while (pointer1 < pointer2) {
@@ -869,8 +879,6 @@ Metrics *demoCalculateGCsOnCudaWithCopy(int numberOfGcs,
 }
 
 
-
-
 __device__ float dcompare(Metrics positionA, Metrics positionB) {
     float a = positionA.similarity * 100000.0f + positionA.recommendation * 100.0f +
               positionA.inferencing;
@@ -879,7 +887,7 @@ __device__ float dcompare(Metrics positionA, Metrics positionB) {
     float b = positionB.similarity * 100000.0f + positionB.recommendation * 100.0f +
               positionB.inferencing;
 
-    return a-b;
+    return a - b;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -46,6 +46,8 @@ Metrics demoCalculateSimilaritySequentialOrdered(GraphCode gcQuery, GraphCode gc
  * @param gcCompare  the compareUUID Graph Code as json object
  * @return the calculated metrics
  */
-Metrics demoCalculateSimilaritySequentialOrdered(json gc1, json gc2);
+Metrics demoCalculateSimilaritySequentialOrdered(json gcQuery, json gcCompare);
+
+
 
 #endif //GCSIM_CPUALGORITHMS_H

@@ -144,7 +144,7 @@ Metrics demoCalculateSimilaritySequentialOrdered(GraphCode gcQuery, GraphCode gc
 
 }
 
-Metrics demoCalculateSimilaritySequentialOrdered(json gc1, json gc2) {
+Metrics demoCalculateSimilaritySequentialOrdered(json gcQuery, json gcCompare) {
     int sim = 0;
 
     json gc1Dictionary;
@@ -152,13 +152,13 @@ Metrics demoCalculateSimilaritySequentialOrdered(json gc1, json gc2) {
     unsigned long items1;
     unsigned short int *matrix1;
 
-    convertJsonGc2GcDataStructure(gc1, gc1Dictionary, numberOfElements1, items1, matrix1);
+    convertJsonGc2GcDataStructure(gcQuery, gc1Dictionary, numberOfElements1, items1, matrix1);
 
     json gc2Dictionary;
     unsigned long numberOfElements2;
     unsigned long items2;
     unsigned short int *matrix2;
-    convertJsonGc2GcDataStructure(gc2, gc2Dictionary, numberOfElements2, items2, matrix2);
+    convertJsonGc2GcDataStructure(gcCompare, gc2Dictionary, numberOfElements2, items2, matrix2);
 
     std::vector<std::basic_string<char>> dict2;
     for (const auto &item2: gc2Dictionary.items()) {

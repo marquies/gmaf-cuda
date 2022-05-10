@@ -62,7 +62,8 @@ void ctrl_c(int sig) {
 
 /**
  * Maps String into Algorithms enum value.
- * @param input string from command line or config
+ *
+ * @param input string from command line or config.
  * @return the mappes algorithm or Algo_Invalid if not existing.
  */
 Algorithms resolveAlgorithm(std::string input) {
@@ -78,6 +79,7 @@ Algorithms resolveAlgorithm(std::string input) {
 
 /**
  * Prints a usage text for this program.
+ *
  * @param argv command line arguments.
  */
 void printUsageAndExit(char *const *argv) {

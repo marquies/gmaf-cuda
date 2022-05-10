@@ -25,13 +25,37 @@ typedef struct UUIDGraphCode {
  */
 void calcKernelLaunchConfig(int width, dim3 &block, dim3 &grid);
 
-// TODO: docu
+/**
+ * Calculates the metric values for two graph codes in parallel.
+ *
+ * @deprecated json format won't be supported in the future
+ * @param json1 Graph Code as json object
+ * @param json2 Graph Code as json object
+ * @return a Metrics object containing the calculated metrics
+ */
 Metrics demoCudaLinearMatrixMemory(json json1, json json2);
 
-// TODO: docu
+/**
+ * Calculates the metric values for two graph codes in parallel.
+ *
+ * The function copies the graph code objects in the CUDA memory.
+ *
+ * @param gc1 Graph Code as GraphCode object
+ * @param gc2 Graph Code as GraphCode object
+ * @return a Metrics object containing the calculated metrics
+ */
 Metrics demoCudaLinearMatrixMemoryWithCopy(GraphCode gc1, GraphCode gc2);
 
-// TODO: docu
+/**
+ * Calculates the metric values for two graph codes in parallel.
+ *
+ * This version uses Task 2b parallelism zu reduce the intermediate compute results.
+ *
+ * @deprecated json format won't be supported in the future
+ * @param json1 Graph Code as json object
+ * @param json2 Graph Code as json object
+ * @return a Metrics object containing the calculated metrics
+ */
 Metrics demoCudaLinearMatrixMemoryCudaReduceSum(GraphCode json1, GraphCode json2);
 
 /**
@@ -97,10 +121,10 @@ __global__ void cudaGcCompute(unsigned short *gcMatrixData,
                               Metrics *metrics);
 
 /**
- * Calc Metrices is a simple example to compareUUID two NxN matrices
- * @param data pinter to vectorized matrix
+ * Calc Metrices is a simple example to compareUUID two NxN matrices.
+ *
+ * @param data pointer to vectorized matrix
  * @param comparedata pointer to vectorized matrix
- * @param matrixSize dimension of the NxN matrix
  * @param numOfNonZeroEdges pointer to array to store the values for the non zero edges comparison
  * @param edgeMetricCount pointer to array to store the values for the edge metric comparison
  * @param edgeType pointer to array to store the values for the edge type metric comparison

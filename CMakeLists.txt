@@ -5,7 +5,7 @@ enable_language(CUDA)
 set(CMAKE_CUDA_STANDARD 17)
 
 set(CUDA_ALL_GPU_ARCHITECTURES "3.5" "5.0" "6.0" "7.0" "7.2" "7.5" "8.0")
-
+option(BUILD_DOC "Build documentation" ON)
 
 #set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
@@ -72,6 +72,45 @@ endif()
 find_package(PkgConfig REQUIRED)
 
 pkg_search_module(UUID REQUIRED uuid)
+
+
+find_package(Doxygen)
+if (DOXYGEN_FOUND)
+    # set input and output files
+    message("Doxygen build started")
+
+    set(DOXYGEN_GENERATE_HTML YES)
+    set(DOXYGEN_GENERATE_MAN NO)
+    set(DOXYGEN_FILE_PATTERNS *.c *.cc *.cxx *.cpp *.c++ *.cu *.cuh *.h *.md)
+    set(DOXYGEN_EXTENSION_MAPPING cuh=C++ cu=C++)
+    set(DOXYGEN_EXTRACT_ALL YES)
+    set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
+
+    set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in)
+    set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+    configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+
+    #
+    #    # request to configure the file
+    doxygen_add_docs(
+            doxygen
+            ${Foo_INCLUDE_DIRS} src/cudahelper.cu src/cudahelper.cuh src/helper.h src/helper.cpp src/queryhandler.cuh src/queryhandler.cu src/cpualgorithms.cpp src/cpualgorithms.h src/algorithmstrategies.cu src/algorithmstrategies.cuh
+            COMMENT "Generate man pages"
+    )
+
+
+    #
+#    # note the option ALL which allows to build the docs together with the application
+#    add_custom_target( doc_doxygen ALL
+#            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+#            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+#            COMMENT "Generating API documentation with Doxygen"
+#            VERBATIM )
+else (DOXYGEN_FOUND)
+    message("Doxygen need to be installed to generate the doxygen documentation")
+endif (DOXYGEN_FOUND)
+
+
 
 #find_path(LIBUUID_INCLUDE_DIR uuid.h PATH_SUFFIXES uuid)
 #find_library(LIBUUID_LIBRARY libuuid.a)

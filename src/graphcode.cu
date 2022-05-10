@@ -163,53 +163,6 @@ void threadLoader(int i, const std::vector<std::string> &files, std::vector<json
 
 }
 
-void gmaf::GraphCode::loadGraphCodes(char *directory, int limit,  std::vector<json> *arr) {
-
-
-
-    std::vector<std::string> files;
-
-
-    for (const auto &entry: fs::directory_iterator(directory)) {
-        files.push_back(entry.path().string());
-    }
-
-    int s = 4;
-    int x;
-    if (limit > files.size()) {
-        x = files.size() / s;
-    } else {
-        x = limit / s;
-    }
-    std::vector<std::thread> threads;
-
-    std::vector<json> tmp_jsons[s];
-
-    for (int i = 0; i < s; i++) {
-        std::vector<std::string> sub(&files[i * x + 1], &files[(i + 1) * x]);
-
-        threads.push_back(std::thread(threadLoader, i, sub, &tmp_jsons[i]));
-    }
-
-    for (auto &th: threads) {
-        th.join();
-    }
-
-    arr->reserve(tmp_jsons[0].size() + tmp_jsons[1].size() + tmp_jsons[2].size() + tmp_jsons[3].size());
-    arr->insert(arr->end(), tmp_jsons[0].begin(), tmp_jsons[0].end());
-    arr->insert(arr->end(), tmp_jsons[1].begin(), tmp_jsons[1].end());
-    arr->insert(arr->end(), tmp_jsons[2].begin(), tmp_jsons[2].end());
-    arr->insert(arr->end(), tmp_jsons[3].begin(), tmp_jsons[3].end());
-
-
-
-//        if (i++ > limit) {
-//            break;
-//        }
-
-
-}
-
 
 int calculateSimilaritySequential(json gc1, json gc2, float *results) {
     json gc1Dictionary = gc1["dictionary"];

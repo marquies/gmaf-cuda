@@ -142,8 +142,8 @@ void testSimpleQuery() {
     QueryHandler queryHandler;
     queryHandler.setStrategy(std::unique_ptr<Strategy>(new CpuSequentialTask1));
     loadUnit->loadArtificialGcs(10, 1);
-    int value = queryHandler.processQuery("Query by Example: 6.gc", loadUnit);
-    assert(value == 0);
+    Metrics *value = queryHandler.processQuery("Query by Example: 6.gc", loadUnit);
+    assert(value->compareValue >= 0);
 }
 
 void testValidation() {
