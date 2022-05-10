@@ -6,34 +6,68 @@
 #define GCSIM_GCLOADUNIT_CUH
 
 
-//typedef struct GraphCodeBlock {
-//    int *ptr;
-//    int size;
-//} GraphCodeBlock;
-
 #include <vector>
 #include <string>
 #include "cudaalgorithms.cuh"
 
+/**
+ * Load unit for loading Graph Codes and manage them in memory.
+ * This class can be used in two modes, MEMORY for CUDA algorithms
+ * and VECTOR for CPU algorithms.
+ */
 class GcLoadUnit {
 
 public:
+    /**
+     * Operation modes.
+     */
     enum Modes {
+        /**
+         * Used for CUDA pointers.
+         */
         MODE_MEMORY_MAP,
+
+        /**
+         * Used for VECTOR pointers.
+         */
         MODE_VECTOR_MAP
     };
 //    static  int const MODE_MEMORY_MAP = 0;
 //    static  int const MODE_VECTOR_MAP = 1;
 
+    /**
+    * Constructor.
+    * @param opMode select operation mode.
+    */
     GcLoadUnit(const Modes opMode);
 
-
+    /**
+     * Generate artificial data.
+     *
+     * @param count number of items to generate.
+     * @param dimension shape of the Graph Code.
+     */
     void loadArtificialGcs(int count, int dimension);
 
+    /**
+     * Load Graph Code data multiple times.
+     *
+     * @param count number of items to generate.
+     * @param code Graph Code to multiply.
+     */
     void loadMultipleByExample(int count, GraphCode code);
 
+    /**
+     * Load a Graph Code from a single json file.
+     * @param filepath path to file (json)
+     */
     void addGcFromFile(std::string filepath);
 
+    /**
+     * Load Graph Codes from a directory.
+     * @param cvalue path to directory of Graph Code json files.
+     * @param limit limit to a certain number of Graph Codes.
+     */
     void loadGraphCodes(const char *cvalue, int limit);
 
     unsigned short *getGcMatrixDataPtr();
