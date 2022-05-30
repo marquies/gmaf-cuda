@@ -12,21 +12,36 @@
 #include "algorithmstrategies.cuh"
 
 /**
- *
+ * Class to check and execute a query.
  */
 class QueryHandler {
 
+    /**
+     * Internal strategy pointer.
+     */
     std::unique_ptr<Strategy> strat_;
 
 public:
+    /**
+     * Process a user input query.
+     * @param query query string
+     * @param loadUnit load unit with the loaded graph code collection.
+     * @return the calculated metric values.
+     */
     Metrics * processQuery(const std::string &query, GcLoadUnit *loadUnit);
 
+    /**
+     * Validates a query string for correct syntax.
+     * @param query string.
+     * @return true if string is valid.
+     */
     static bool validate(const std::string& query);
 
-//    static void selectionSort(Metrics *pMetrics, int i);
-
-    Metrics *runQuery(GcLoadUnit &loadUnit);
-
+    /**
+     * Sets the strategy with the algorithm to use for calculation.
+     *
+     * @param strat the desired strategy.
+     */
     void setStrategy(std::unique_ptr<Strategy> strat) { strat_ = std::move(strat); }
 
 
