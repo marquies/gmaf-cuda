@@ -11,7 +11,9 @@
 #include "helper.h"
 #include "algorithmstrategies.cuh"
 
-
+/**
+ *
+ */
 class QueryHandler {
 
     std::unique_ptr<Strategy> strat_;

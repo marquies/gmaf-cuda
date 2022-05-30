@@ -84,6 +84,7 @@ void print_d_array(unsigned int *d_array, int len) {
     delete[] h_array;
 }
 
+
 Metrics demoCudaLinearMatrixMemoryCudaReduceSum(GraphCode json1, GraphCode json2) {
     checkNxNConstraint(json1, json2);
     cudaProfilerStart();
